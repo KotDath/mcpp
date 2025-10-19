@@ -39,3 +39,40 @@
 
 # debug information files
 *.dwo
+
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Logs
+*.log
+
+# Package files
+*.tar.gz
+*.zip
+*.7z
+
+# Test scripts (can be generated)
+scripts/test_*.sh
+
+# Third party (managed by git submodules)
+# thirdparty/*/

@@ -1,0 +1,9 @@
+[submodule "thirdparty/nlohmann_json"]
+	path = thirdparty/nlohmann_json
+	url = https://github.com/nlohmann/json.git
+[submodule "thirdparty/cpp_httplib"]
+	path = thirdparty/cpp_httplib
+	url = https://github.com/yhirose/cpp-httplib.git
+[submodule "thirdparty/spdlog"]
+	path = thirdparty/spdlog
+	url = https://github.com/gabime/spdlog.git
