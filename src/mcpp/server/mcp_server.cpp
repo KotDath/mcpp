@@ -498,5 +498,200 @@ void McpServer::send_list_changed_notification(const std::string& method) {
     (*transport_)->send_notification(notification);
 }
 
+nlohmann::json McpServer::handle_tasks_send(const nlohmann::json& params) {
+    // Extract optional TTL and poll interval
+    std::optional<uint64_t> ttl_ms;
+    if (params.contains("ttl") && !params["ttl"].is_null()) {
+        ttl_ms = params["ttl"].get<uint64_t>();
+    }
+
+    std::optional<uint64_t> poll_interval_ms;
+    if (params.contains("pollIntervalMs") && !params["pollIntervalMs"].is_null()) {
+        poll_interval_ms = params["pollIntervalMs"].get<uint64_t>();
+    }
+
+    // Create the task
+    std::string task_id = task_manager_.create_task(ttl_ms, poll_interval_ms);
+
+    // Get the created task metadata
+    std::optional<Task> task = task_manager_.get_task(task_id);
+    if (!task) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INTERNAL_ERROR},
+                {"message", "Failed to create task"}
+            }}
+        };
+    }
+
+    // Return MCP CreateTaskResult format
+    return nlohmann::json{
+        {"id", task->task_id},
+        {"status", to_string(task->status)},
+        {"createdAt", task->created_at},
+        {"lastUpdatedAt", task->last_updated_at},
+        {"ttlMs", task->ttl_ms.has_value() ? nlohmann::json(*task->ttl_ms) : nlohmann::json()},
+        {"pollIntervalMs", task->poll_interval_ms.has_value() ? nlohmann::json(*task->poll_interval_ms) : nlohmann::json()}
+    };
+}
+
+nlohmann::json McpServer::handle_tasks_get(const nlohmann::json& params) {
+    // Validate required parameters
+    if (!params.contains("id")) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Missing 'id' parameter"}
+            }}
+        };
+    }
+
+    std::string task_id = params["id"].get<std::string>();
+
+    // Get the task
+    std::optional<Task> task = task_manager_.get_task(task_id);
+    if (!task) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Task not found: " + task_id}
+            }}
+        };
+    }
+
+    // Build result object
+    nlohmann::json result = {
+        {"id", task->task_id},
+        {"status", to_string(task->status)},
+        {"createdAt", task->created_at},
+        {"lastUpdatedAt", task->last_updated_at}
+    };
+
+    if (task->status_message.has_value()) {
+        result["statusMessage"] = *task->status_message;
+    }
+    if (task->ttl_ms.has_value()) {
+        result["ttlMs"] = *task->ttl_ms;
+    }
+    if (task->poll_interval_ms.has_value()) {
+        result["pollIntervalMs"] = *task->poll_interval_ms;
+    }
+
+    return result;
+}
+
+nlohmann::json McpServer::handle_tasks_cancel(const nlohmann::json& params) {
+    // Validate required parameters
+    if (!params.contains("id")) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Missing 'id' parameter"}
+            }}
+        };
+    }
+
+    std::string task_id = params["id"].get<std::string>();
+
+    // Cancel the task
+    bool cancelled = task_manager_.cancel_task(task_id);
+    if (!cancelled) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Task not found or already terminal: " + task_id}
+            }}
+        };
+    }
+
+    // Get the updated task
+    std::optional<Task> task = task_manager_.get_task(task_id);
+
+    // Build result object
+    nlohmann::json result = {
+        {"id", task_id},
+        {"status", "cancelled"},
+        {"lastUpdatedAt", task_manager_.get_timestamp()}
+    };
+
+    if (task && task->status_message.has_value()) {
+        result["statusMessage"] = *task->status_message;
+    }
+
+    return result;
+}
+
+nlohmann::json McpServer::handle_tasks_result(const nlohmann::json& params) {
+    // Validate required parameters
+    if (!params.contains("id")) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Missing 'id' parameter"}
+            }}
+        };
+    }
+
+    std::string task_id = params["id"].get<std::string>();
+
+    // Get the task result
+    std::optional<nlohmann::json> result = task_manager_.get_result(task_id);
+    if (!result) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Task not found or no result available: " + task_id}
+            }}
+        };
+    }
+
+    return nlohmann::json{
+        {"id", task_id},
+        {"result", *result}
+    };
+}
+
+nlohmann::json McpServer::handle_tasks_list(const nlohmann::json& params) {
+    // Extract optional cursor
+    std::optional<std::string> cursor;
+    if (params.contains("cursor") && !params["cursor"].is_null()) {
+        cursor = params["cursor"].get<std::string>();
+    }
+
+    // List tasks
+    TaskManager::PaginatedResult<Task> page = task_manager_.list_tasks(cursor);
+
+    // Build result items array
+    nlohmann::json::array_t items_array;
+    for (const auto& task : page.items) {
+        nlohmann::json item = {
+            {"id", task.task_id},
+            {"status", to_string(task.status)},
+            {"createdAt", task.created_at},
+            {"lastUpdatedAt", task.last_updated_at}
+        };
+
+        if (task.status_message.has_value()) {
+            item["statusMessage"] = *task.status_message;
+        }
+        if (task.ttl_ms.has_value()) {
+            item["ttlMs"] = *task.ttl_ms;
+        }
+        if (task.poll_interval_ms.has_value()) {
+            item["pollIntervalMs"] = *task.poll_interval_ms;
+        }
+
+        items_array.push_back(std::move(item));
+    }
+
+    // Build result
+    nlohmann::json result = {{"items", items_array}};
+    if (page.nextCursor.has_value()) {
+        result["nextCursor"] = *page.nextCursor;
+    }
+
+    return result;
+}
+
 } // namespace server
 } // namespace mcpp

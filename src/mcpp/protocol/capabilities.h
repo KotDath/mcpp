@@ -22,6 +22,7 @@ struct RootsCapability;
 struct SamplingCapability;
 struct ElicitationCapability;
 struct LoggingCapability;
+struct TasksCapability;
 
 /**
  * Client capabilities advertised during initialization.
@@ -67,6 +68,7 @@ struct ServerCapabilities {
     std::optional<PromptCapability> prompts;
     std::optional<ResourceCapability> resources;
     std::optional<ToolCapability> tools;
+    std::optional<TasksCapability> tasks;
 };
 
 /**
@@ -140,6 +142,16 @@ struct ElicitationCapability {
  */
 struct LoggingCapability {
     // No fields defined in current spec
+};
+
+/**
+ * Tasks capability - experimental task lifecycle management
+ *
+ * Corresponds to "TasksCapability" in MCP 2025-11-25 schema (experimental).
+ * Indicates server supports the tasks API for long-running operations.
+ */
+struct TasksCapability {
+    // No fields defined in current spec - presence indicates support
 };
 
 /**

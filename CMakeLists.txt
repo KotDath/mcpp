@@ -19,7 +19,15 @@ option(MCPP_BUILD_TESTS "Build mcpp tests" ON)
 option(MCPP_BUILD_EXAMPLES "Build mcpp examples" ON)
 
 # Find dependencies
-find_package(nlohmann_json 3.11.0 REQUIRED)
+# Use local copy of nlohmann_json header-only library
+set(nlohmann_json_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nlohmann_json/include")
+if(NOT EXISTS "${nlohmann_json_INCLUDE_DIR}/nlohmann/json.hpp")
+    message(FATAL_ERROR "nlohmann/json.hpp not found. Please run: cp thirdparty/gopher-mcp/build/_deps/nlohmann_json-src/include/nlohmann/json.hpp thirdparty/nlohmann_json/include/nlohmann/")
+endif()
+add_library(nlohmann_json::nlohmann_json INTERFACE IMPORTED)
+set_target_properties(nlohmann_json::nlohmann_json PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${nlohmann_json_INCLUDE_DIR}"
+)
 
 # Source files
 set(MCPP_PUBLIC_HEADERS
@@ -41,10 +49,12 @@ set(MCPP_PUBLIC_HEADERS
     src/mcpp/transport/transport.h
     src/mcpp/transport/stdio_transport.h
     src/mcpp/content/pagination.h
+    src/mcpp/content/content.h
     src/mcpp/server/tool_registry.h
     src/mcpp/server/resource_registry.h
     src/mcpp/server/prompt_registry.h
     src/mcpp/server/request_context.h
+    src/mcpp/server/task_manager.h
     src/mcpp/server/mcp_server.h
 )
 
@@ -59,10 +69,12 @@ set(MCPP_SOURCES
     src/mcpp/core/json_rpc.cpp
     src/mcpp/core/request_tracker.cpp
     src/mcpp/transport/stdio_transport.cpp
+    src/mcpp/content/content.cpp
     src/mcpp/server/tool_registry.cpp
     src/mcpp/server/resource_registry.cpp
     src/mcpp/server/prompt_registry.cpp
     src/mcpp/server/request_context.cpp
+    src/mcpp/server/task_manager.cpp
     src/mcpp/server/mcp_server.cpp
 )
 
