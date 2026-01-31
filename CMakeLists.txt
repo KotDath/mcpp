@@ -69,7 +69,6 @@ set(MCPP_SOURCES
     src/mcpp/core/json_rpc.cpp
     src/mcpp/core/request_tracker.cpp
     src/mcpp/transport/stdio_transport.cpp
-    src/mcpp/content/content.cpp
     src/mcpp/server/tool_registry.cpp
     src/mcpp/server/resource_registry.cpp
     src/mcpp/server/prompt_registry.cpp

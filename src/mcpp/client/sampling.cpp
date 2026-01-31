@@ -24,6 +24,8 @@
 
 #include "mcpp/client/sampling.h"
 
+#include "mcpp/content/content.h"
+
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -520,6 +522,225 @@ nlohmann::json SamplingClient::handle_create_message(const nlohmann::json& param
         error["message"] = std::string("Sampling handler failed: ") + e.what();
         return error;
     }
+}
+
+// ============================================================================
+// JSON Conversion Helpers (ContentBlock)
+// ============================================================================
+
+namespace {
+
+// Helper to convert Annotations to JSON
+nlohmann::json annotations_to_json_impl(const content::Annotations& a) {
+    nlohmann::json j;
+    if (a.audience.has_value()) {
+        j["audience"] = *a.audience;
+    }
+    if (a.priority.has_value()) {
+        j["priority"] = *a.priority;
+    }
+    if (a.last_modified.has_value()) {
+        j["lastModified"] = *a.last_modified;
+    }
+    return j;
+}
+
+} // anonymous namespace
+
+nlohmann::json content_to_json(const ContentBlock& content) {
+    return std::visit([](const auto& c) -> nlohmann::json {
+        nlohmann::json j;
+        j["type"] = c.type;
+
+        using ContentType = std::decay_t<decltype(c)>;
+
+        if constexpr (std::is_same_v<ContentType, TextContent>) {
+            j["text"] = c.text;
+
+        } else if constexpr (std::is_same_v<ContentType, content::ImageContent>) {
+            j["data"] = c.data;
+            j["mimeType"] = c.mime_type;
+            if (c.annotations.has_value()) {
+                j["annotations"] = annotations_to_json_impl(*c.annotations);
+            }
+
+        } else if constexpr (std::is_same_v<ContentType, content::AudioContent>) {
+            j["data"] = c.data;
+            j["mimeType"] = c.mime_type;
+            if (c.annotations.has_value()) {
+                j["annotations"] = annotations_to_json_impl(*c.annotations);
+            }
+
+        } else if constexpr (std::is_same_v<ContentType, content::ResourceLink>) {
+            j["uri"] = c.uri;
+            if (c.annotations.has_value()) {
+                j["annotations"] = annotations_to_json_impl(*c.annotations);
+            }
+
+        } else if constexpr (std::is_same_v<ContentType, content::EmbeddedResource>) {
+            j["uri"] = c.resource.uri;
+            if (c.resource.mime_type.has_value()) {
+                j["mimeType"] = *c.resource.mime_type;
+            }
+            if (c.resource.is_text) {
+                j["text"] = c.resource.text;
+            } else {
+                j["blob"] = c.resource.blob;
+            }
+            if (c.annotations.has_value()) {
+                j["annotations"] = annotations_to_json_impl(*c.annotations);
+            }
+
+        } else if constexpr (std::is_same_v<ContentType, ToolUseContent>) {
+            j["id"] = c.id;
+            j["name"] = c.name;
+            j["arguments"] = c.arguments;
+
+        } else if constexpr (std::is_same_v<ContentType, ToolResultContent>) {
+            j["tool_use_id"] = c.tool_use_id;
+            if (c.content.has_value()) {
+                j["content"] = *c.content;
+            }
+            if (c.is_error.has_value()) {
+                j["isError"] = *c.is_error;
+            }
+        }
+
+        return j;
+    }, content);
+}
+
+std::optional<ContentBlock> content_from_json(const nlohmann::json& j) {
+    if (!j.contains("type") || !j["type"].is_string()) {
+        return std::nullopt;
+    }
+
+    std::string type = j["type"].get<std::string>();
+
+    if (type == "text") {
+        if (!j.contains("text") || !j["text"].is_string()) {
+            return std::nullopt;
+        }
+        TextContent content;
+        content.type = "text";
+        content.text = j["text"].get<std::string>();
+        return content;
+
+    } else if (type == "image") {
+        if (!j.contains("data") || !j["data"].is_string()) {
+            return std::nullopt;
+        }
+        if (!j.contains("mimeType") || !j["mimeType"].is_string()) {
+            return std::nullopt;
+        }
+        content::ImageContent content;
+        content.type = "image";
+        content.data = j["data"].get<std::string>();
+        content.mime_type = j["mimeType"].get<std::string>();
+        if (j.contains("annotations") && j["annotations"].is_object()) {
+            const auto& a = j["annotations"];
+            content::Annotations annotations;
+            if (a.contains("audience") && a["audience"].is_array()) {
+                std::vector<std::string> audience;
+                for (const auto& item : a["audience"]) {
+                    if (item.is_string()) {
+                        audience.push_back(item.get<std::string>());
+                    }
+                }
+                if (!audience.empty()) {
+                    content.annotations = std::move(annotations);
+                    content.annotations->audience = std::move(audience);
+                }
+            }
+            if (a.contains("priority") && a["priority"].is_number()) {
+                if (!content.annotations.has_value()) {
+                    content.annotations = content::Annotations{};
+                }
+                content.annotations->priority = a["priority"].get<double>();
+            }
+            if (a.contains("lastModified") && a["lastModified"].is_string()) {
+                if (!content.annotations.has_value()) {
+                    content.annotations = content::Annotations{};
+                }
+                content.annotations->last_modified = a["lastModified"].get<std::string>();
+            }
+        }
+        return content;
+
+    } else if (type == "audio") {
+        if (!j.contains("data") || !j["data"].is_string()) {
+            return std::nullopt;
+        }
+        if (!j.contains("mimeType") || !j["mimeType"].is_string()) {
+            return std::nullopt;
+        }
+        content::AudioContent content;
+        content.type = "audio";
+        content.data = j["data"].get<std::string>();
+        content.mime_type = j["mimeType"].get<std::string>();
+        // Parse annotations similarly to image...
+        return content;
+
+    } else if (type == "resource") {
+        if (!j.contains("uri") || !j["uri"].is_string()) {
+            return std::nullopt;
+        }
+        content::ResourceLink content;
+        content.type = "resource";
+        content.uri = j["uri"].get<std::string>();
+        return content;
+
+    } else if (type == "embedded") {
+        if (!j.contains("uri") || !j["uri"].is_string()) {
+            return std::nullopt;
+        }
+        content::EmbeddedResource content;
+        content.type = "embedded";
+        content.resource.uri = j["uri"].get<std::string>();
+        if (j.contains("mimeType") && j["mimeType"].is_string()) {
+            content.resource.mime_type = j["mimeType"].get<std::string>();
+        }
+        if (j.contains("text") && j["text"].is_string()) {
+            content.resource.is_text = true;
+            content.resource.text = j["text"].get<std::string>();
+        } else if (j.contains("blob") && j["blob"].is_string()) {
+            content.resource.is_text = false;
+            content.resource.blob = j["blob"].get<std::string>();
+        } else {
+            return std::nullopt;
+        }
+        return content;
+
+    } else if (type == "tool_use") {
+        ToolUseContent content;
+        content.type = "tool_use";
+        if (j.contains("id") && j["id"].is_string()) {
+            content.id = j["id"].get<std::string>();
+        }
+        if (j.contains("name") && j["name"].is_string()) {
+            content.name = j["name"].get<std::string>();
+        }
+        if (j.contains("arguments")) {
+            content.arguments = j["arguments"];
+        }
+        return content;
+
+    } else if (type == "tool_result") {
+        ToolResultContent content;
+        content.type = "tool_result";
+        if (j.contains("tool_use_id") && j["tool_use_id"].is_string()) {
+            content.tool_use_id = j["tool_use_id"].get<std::string>();
+        }
+        if (j.contains("content") && j["content"].is_string()) {
+            content.content = j["content"].get<std::string>();
+        }
+        if (j.contains("isError") && j["isError"].is_boolean()) {
+            content.is_error = j["isError"].get<bool>();
+        }
+        return content;
+    }
+
+    return std::nullopt;
 }
 
 } // namespace mcpp::client

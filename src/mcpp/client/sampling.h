@@ -34,6 +34,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "mcpp/content/content.h"
+
 namespace mcpp::client {
 
 // ============================================================================
@@ -80,10 +82,21 @@ struct ToolResultContent {
 /**
  * @brief Content block variant for sampling message content
  *
- * Supports TextContent, ToolUseContent, and ToolResultContent.
- * Extensible for future content types like ImageContent, AudioContent, etc.
+ * Supports all MCP content types: TextContent, ImageContent, AudioContent,
+ * ResourceLink, EmbeddedResource, ToolUseContent, and ToolResultContent.
+ *
+ * The variant order preserves backward compatibility (text first, then rich
+ * content types, then tool-related types).
  */
-using ContentBlock = std::variant<TextContent, ToolUseContent, ToolResultContent>;
+using ContentBlock = std::variant<
+    TextContent,
+    content::ImageContent,
+    content::AudioContent,
+    content::ResourceLink,
+    content::EmbeddedResource,
+    ToolUseContent,
+    ToolResultContent
+>;
 
 // ============================================================================
 // Sampling Message Types
@@ -378,84 +391,33 @@ private:
 // JSON Conversion Helpers (ContentBlock)
 // ============================================================================
 
+// Forward declarations - implementations are in content.cpp
+// These delegate to mcpp::content::content_to_json/content_from_json
+// to handle all content types including rich media (image, audio, resources)
+
 /**
  * @brief Convert ContentBlock to JSON
  *
- * Handles the variant serialization for different content types.
+ * Handles the variant serialization for all content types:
+ * TextContent, ImageContent, AudioContent, ResourceLink, EmbeddedResource,
+ * ToolUseContent, ToolResultContent.
+ *
+ * @param content ContentBlock variant to serialize
+ * @return JSON representation of the content
  */
-inline nlohmann::json content_to_json(const ContentBlock& content) {
-    return std::visit([](const auto& c) -> nlohmann::json {
-        nlohmann::json j;
-        j["type"] = c.type;
-        if constexpr (std::is_same_v<std::decay_t<decltype(c)>, TextContent>) {
-            j["text"] = c.text;
-        } else if constexpr (std::is_same_v<std::decay_t<decltype(c)>, ToolUseContent>) {
-            j["id"] = c.id;
-            j["name"] = c.name;
-            j["arguments"] = c.arguments;
-        } else if constexpr (std::is_same_v<std::decay_t<decltype(c)>, ToolResultContent>) {
-            j["tool_use_id"] = c.tool_use_id;
-            if (c.content.has_value()) {
-                j["content"] = *c.content;
-            }
-            if (c.is_error.has_value()) {
-                j["isError"] = *c.is_error;
-            }
-        }
-        return j;
-    }, content);
-}
+nlohmann::json content_to_json(const ContentBlock& content);
 
 /**
  * @brief Parse ContentBlock from JSON
  *
  * Handles the variant deserialization based on the "type" field.
+ * Supported types: "text", "image", "audio", "resource", "embedded",
+ * "tool_use", "tool_result"
+ *
+ * @param j JSON value to parse
+ * @return ContentBlock if parsing succeeds, nullopt otherwise
  */
-inline std::optional<ContentBlock> content_from_json(const nlohmann::json& j) {
-    if (!j.contains("type") || !j["type"].is_string()) {
-        return std::nullopt;
-    }
-
-    std::string type = j["type"].get<std::string>();
-
-    if (type == "text") {
-        if (j.contains("text") && j["text"].is_string()) {
-            TextContent content;
-            content.type = "text";
-            content.text = j["text"].get<std::string>();
-            return content;
-        }
-    } else if (type == "tool_use") {
-        ToolUseContent content;
-        content.type = "tool_use";
-        if (j.contains("id") && j["id"].is_string()) {
-            content.id = j["id"].get<std::string>();
-        }
-        if (j.contains("name") && j["name"].is_string()) {
-            content.name = j["name"].get<std::string>();
-        }
-        if (j.contains("arguments")) {
-            content.arguments = j["arguments"];
-        }
-        return content;
-    } else if (type == "tool_result") {
-        ToolResultContent content;
-        content.type = "tool_result";
-        if (j.contains("tool_use_id") && j["tool_use_id"].is_string()) {
-            content.tool_use_id = j["tool_use_id"].get<std::string>();
-        }
-        if (j.contains("content") && j["content"].is_string()) {
-            content.content = j["content"].get<std::string>();
-        }
-        if (j.contains("isError") && j["isError"].is_boolean()) {
-            content.is_error = j["isError"].get<bool>();
-        }
-        return content;
-    }
-
-    // Unknown content type
-    return std::nullopt;
-}
+std::optional<ContentBlock> content_from_json(const nlohmann::json& j);
 
 } // namespace mcpp::client
 

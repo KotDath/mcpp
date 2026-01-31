@@ -31,12 +31,10 @@
 
 #include <nlohmann/json.hpp>
 
-namespace mcpp::content {
+// Include for ResourceContent definition used by EmbeddedResource
+#include "mcpp/server/resource_registry.h"
 
-// Forward declaration for EmbeddedResource
-namespace server {
-struct ResourceContent;
-}
+namespace mcpp::content {
 
 /**
  * @brief Annotations for content metadata
@@ -151,6 +149,9 @@ struct ResourceLink {
  * Reuses ResourceContent from resource_registry.h for the resource data.
  *
  * Corresponds to the "embedded" content type in MCP 2025-11-25 schema.
+ *
+ * Note: ResourceContent must be defined before use. Include resource_registry.h
+ * or ensure the full definition is available when using this type.
  */
 struct EmbeddedResource {
     /// Content type identifier
@@ -162,34 +163,6 @@ struct EmbeddedResource {
     /// Optional annotations for content metadata
     std::optional<Annotations> annotations;
 };
-
-// ============================================================================
-// JSON Conversion Functions
-// ============================================================================
-
-/**
- * @brief Convert ContentBlock to JSON
- *
- * Handles serialization for all content types including:
- * TextContent, ImageContent, AudioContent, ResourceLink, EmbeddedResource,
- * ToolUseContent, ToolResultContent
- *
- * @param content ContentBlock variant to serialize
- * @return JSON representation of the content
- */
-nlohmann::json content_to_json(const ::mcpp::client::ContentBlock& content);
-
-/**
- * @brief Parse ContentBlock from JSON
- *
- * Handles deserialization for all content types based on the "type" field.
- * Supported types: "text", "image", "audio", "resource", "embedded",
- * "tool_use", "tool_result"
- *
- * @param j JSON value to parse
- * @return ContentBlock if parsing succeeds, nullopt otherwise
- */
-std::optional<::mcpp::client::ContentBlock> content_from_json(const nlohmann::json& j);
 
 } // namespace mcpp::content
 
