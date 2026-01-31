@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 2 of 7 (Core Server)
-Plan: 5 of TBD in current phase
+Plan: 6 of TBD in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed plan 02-05: McpServer main class integrating all registries with JSON-RPC request routing
+Last activity: 2026-01-31 — Completed plan 02-06: StdioTransport for subprocess communication with newline-delimited JSON messaging
 
-Progress: [█████░░░░░░] 28%
+Progress: [██████░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 5 min
-- Total execution time: 0.9 hours
+- Total execution time: 1.0 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
-| 02-core-server | 5 | TBD | 2 min |
+| 02-core-server | 6 | TBD | 2 min |
 
 **Recent Trend:**
-- Last 3 plans: 02-03, 02-04, 02-05
+- Last 3 plans: 02-04, 02-05, 02-06
 - Trend: Phase 2 in progress
 
 *Updated after each plan completion*
@@ -111,6 +111,13 @@ Recent decisions affecting current work:
 - JSON-RPC method-based routing to typed handlers
 - Progress token extracted from request._meta.progressToken
 
+**From 02-06 (StdioTransport):**
+- popen() for subprocess spawning (simpler than fork/exec but no direct PID)
+- Newline delimiter appended to all outgoing messages per MCP spec
+- Line buffering in read_loop handles partial reads and multiple messages
+- Non-blocking pipe with fcntl O_NONBLOCK for better read behavior
+- Callbacks stored by value to avoid lifetime issues
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -127,5 +134,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed plan 02-05 - McpServer main class integrating all registries with JSON-RPC request routing
+Stopped at: Completed plan 02-06 - StdioTransport for subprocess communication with newline-delimited JSON messaging
 Resume file: None
