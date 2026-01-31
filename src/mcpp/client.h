@@ -35,6 +35,8 @@
 
 #include "mcpp/async/callbacks.h"
 #include "mcpp/async/timeout.h"
+#include "mcpp/client/roots.h"
+#include "mcpp/client/sampling.h"
 #include "mcpp/core/json_rpc.h"
 #include "mcpp/core/request_tracker.h"
 #include "mcpp/protocol/initialize.h"
@@ -234,6 +236,32 @@ public:
      */
     void send_initialized_notification();
 
+    /**
+     * @brief Get the roots manager
+     *
+     * Provides access to the RootsManager for setting and getting roots.
+     *
+     * @return Reference to the roots manager
+     */
+    client::RootsManager& get_roots_manager() { return roots_manager_; }
+
+    /**
+     * @brief Get the roots manager (const overload)
+     *
+     * @return Const reference to the roots manager
+     */
+    const client::RootsManager& get_roots_manager() const { return roots_manager_; }
+
+    /**
+     * @brief Set the sampling handler for LLM text generation requests
+     *
+     * The handler will be invoked when the server sends a sampling/createMessage request.
+     * This enables the server to request LLM completions through the client's LLM provider.
+     *
+     * @param handler Function that processes sampling requests and returns LLM responses
+     */
+    void set_sampling_handler(client::SamplingHandler handler);
+
 private:
     /// Transport layer for sending/receiving messages
     std::unique_ptr<transport::Transport> transport_;
@@ -252,6 +280,12 @@ private:
 
     /// Handlers for incoming server notifications (method -> handler)
     std::unordered_map<std::string, NotificationHandler> notification_handlers_;
+
+    /// Roots manager for handling roots/list requests and list_changed notifications
+    client::RootsManager roots_manager_;
+
+    /// Sampling client for handling sampling/createMessage requests from server
+    client::SamplingClient sampling_client_;
 
     /// Callback invoked by transport when a message is received
     void on_message(std::string_view message);

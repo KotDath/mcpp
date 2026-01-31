@@ -65,6 +65,27 @@ McpClient::McpClient(
     transport_->set_error_callback([this](std::string_view error) {
         on_transport_error(error);
     });
+
+    // Set up roots notification callback
+    roots_manager_.set_notify_callback([this]() {
+        send_notification("notifications/roots/list_changed", nullptr);
+    });
+
+    // Register roots/list request handler
+    set_request_handler("roots/list",
+        [this](std::string_view /* method */, const JsonValue& /* params */) -> JsonValue {
+            client::ListRootsResult result;
+            result.roots = roots_manager_.get_roots();
+            return result.to_json();
+        }
+    );
+
+    // Register sampling/createMessage request handler
+    set_request_handler("sampling/createMessage",
+        [this](std::string_view /* method */, const JsonValue& params) -> JsonValue {
+            return sampling_client_.handle_create_message(params);
+        }
+    );
 }
 
 McpClient::~McpClient() {
