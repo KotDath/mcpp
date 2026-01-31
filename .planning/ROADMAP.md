@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Protocol Foundation** - JSON-RPC core, MCP initialization, transport abstraction, async core API
 - [x] **Phase 2: Core Server** - Tools, resources, prompts with stdio transport and progress support
-- [ ] **Phase 3: Client Capabilities** - Roots, sampling, elicitation with cancellation and futures
+- [x] **Phase 3: Client Capabilities** - Roots, sampling, elicitation with cancellation and futures
 - [ ] **Phase 4: Advanced Features & HTTP Transport** - SSE transport, streaming, subscriptions, completions
 - [ ] **Phase 5: Content & Tasks** - Rich content types, annotations, pagination, experimental tasks
 - [ ] **Phase 6: High-Level API** - Type-safe wrappers, thread safety, logging, utilities
@@ -100,8 +100,8 @@ Plans:
 - [x] 03-04-PLAN.md — Sampling with tool use (agentic loops with tool execution)
 - [x] 03-05-PLAN.md — Elicitation support (form mode with JSON Schema, URL mode for out-of-band)
 - [x] 03-06-PLAN.md — std::future wrapper API (ergonomic blocking API on async core)
-- [ ] 03-07-PLAN.md — Fix CMakeLists.txt build configuration (gap closure)
-- [ ] 03-08-PLAN.md — Add ClientCapabilities builder helper (gap closure)
+- [x] 03-07-PLAN.md — Fix CMakeLists.txt build configuration (gap closure)
+- [x] 03-08-PLAN.md — Add ClientCapabilities builder helper (gap closure)
 
 ### Phase 4: Advanced Features & HTTP Transport
 
@@ -205,7 +205,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Protocol Foundation | 6/6 | Complete | 2026-01-31 |
 | 2. Core Server | 6/6 | Complete | 2026-01-31 |
-| 3. Client Capabilities | 6/8 | Gap Closure | - |
+| 3. Client Capabilities | 8/8 | Complete | 2026-01-31 |
 | 4. Advanced Features & HTTP Transport | 0/0 | Not started | - |
 | 5. Content & Tasks | 0/0 | Not started | - |
 | 6. High-Level API | 0/0 | Not started | - |

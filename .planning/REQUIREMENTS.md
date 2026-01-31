@@ -34,18 +34,18 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Async & Lifecycle
 
 - [x] **ASYNC-01**: Progress tokens (opaque token attachment, progress notification emission)
-- [ ] **ASYNC-02**: Cancellation support (notifications/cancelled, race condition handling)
+- [x] **ASYNC-02**: Cancellation support (notifications/cancelled, race condition handling)
 - [ ] **ASYNC-03**: Callback-based core API for async operations
-- [ ] **ASYNC-04**: std::future wrappers for ergonomic blocking API
+- [x] **ASYNC-04**: std::future wrappers for ergonomic blocking API
 - [ ] **ASYNC-05**: Proper async lifetime management (no dangling references)
 
 ### Client Capabilities
 
-- [ ] **CLNT-01**: Roots support (roots/list, roots/list_changed notification, file:// URIs)
-- [ ] **CLNT-02**: Sampling createMessage (basic LLM completion requests)
-- [ ] **CLNT-03**: Sampling with tool use (agentic behaviors with tool loops)
-- [ ] **CLNT-04**: Elicitation form mode (structured user input with JSON Schema)
-- [ ] **CLNT-05**: Elicitation URL mode (secure out-of-band interactions)
+- [x] **CLNT-01**: Roots support (roots/list, roots/list_changed notification, file:// URIs)
+- [x] **CLNT-02**: Sampling createMessage (basic LLM completion requests)
+- [x] **CLNT-03**: Sampling with tool use (agentic behaviors with tool loops)
+- [x] **CLNT-04**: Elicitation form mode (structured user input with JSON Schema)
+- [x] **CLNT-05**: Elicitation URL mode (secure out-of-band interactions)
 
 ### Content & Metadata
 
@@ -133,15 +133,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PROTO-01 | Phase 1 | Pending |
-| PROTO-02 | Phase 1 | Pending |
-| PROTO-03 | Phase 1 | Pending |
-| PROTO-04 | Phase 1 | Pending |
-| PROTO-05 | Phase 1 | Pending |
-| TRAN-03 | Phase 1 | Pending |
-| ASYNC-03 | Phase 1 | Pending |
-| ASYNC-05 | Phase 1 | Pending |
-| API-01 | Phase 1 | Pending |
+| PROTO-01 | Phase 1 | Complete |
+| PROTO-02 | Phase 1 | Complete |
+| PROTO-03 | Phase 1 | Complete |
+| PROTO-04 | Phase 1 | Complete |
+| PROTO-05 | Phase 1 | Complete |
+| TRAN-03 | Phase 1 | Complete |
+| ASYNC-03 | Phase 1 | Complete |
+| ASYNC-05 | Phase 1 | Complete |
+| API-01 | Phase 1 | Complete |
 | SRVR-01 | Phase 2 | Complete |
 | SRVR-02 | Phase 2 | Complete |
 | SRVR-03 | Phase 2 | Complete |
@@ -150,13 +150,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRVR-06 | Phase 2 | Complete |
 | TRAN-01 | Phase 2 | Complete |
 | ASYNC-01 | Phase 2 | Complete |
-| CLNT-01 | Phase 3 | Pending |
-| CLNT-02 | Phase 3 | Pending |
-| CLNT-03 | Phase 3 | Pending |
-| CLNT-04 | Phase 3 | Pending |
-| CLNT-05 | Phase 3 | Pending |
-| ASYNC-02 | Phase 3 | Pending |
-| ASYNC-04 | Phase 3 | Pending |
+| CLNT-01 | Phase 3 | Complete |
+| CLNT-02 | Phase 3 | Complete |
+| CLNT-03 | Phase 3 | Complete |
+| CLNT-04 | Phase 3 | Complete |
+| CLNT-05 | Phase 3 | Complete |
+| ASYNC-02 | Phase 3 | Complete |
+| ASYNC-04 | Phase 3 | Complete |
 | TRAN-02 | Phase 4 | Pending |
 | TRAN-04 | Phase 4 | Pending |
 | ADV-01 | Phase 4 | Pending |
