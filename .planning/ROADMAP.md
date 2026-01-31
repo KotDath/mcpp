@@ -64,12 +64,15 @@ Plans:
 6. Library consumer can communicate over stdio transport with a spawned subprocess using newline-delimited JSON
 7. Library consumer can attach progress tokens to requests and emit progress notifications for long-running operations
 
-**Plans**: TBD
+**Plans**: 6 plans in 3 waves
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — Tool registration and execution with JSON Schema validation
+- [ ] 02-02-PLAN.md — Resource registration and serving (text/blob content)
+- [ ] 02-03-PLAN.md — Prompt registration and retrieval with argument substitution
+- [ ] 02-04-PLAN.md — RequestContext for progress reporting
+- [ ] 02-05-PLAN.md — McpServer main class integrating all registries
+- [ ] 02-06-PLAN.md — StdioTransport with subprocess spawning
 
 ### Phase 3: Client Capabilities
 
@@ -195,8 +198,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Protocol Foundation | 6/6 | ✓ Complete | 2026-01-31 |
-| 2. Core Server | 0/0 | Not started | - |
+| 1. Protocol Foundation | 6/6 | Complete | 2026-01-31 |
+| 2. Core Server | 0/6 | Ready to execute | - |
 | 3. Client Capabilities | 0/0 | Not started | - |
 | 4. Advanced Features & HTTP Transport | 0/0 | Not started | - |
 | 5. Content & Tasks | 0/0 | Not started | - |
