@@ -29,7 +29,6 @@
 #include <thread>
 #include <chrono>
 #include <string>
-#include <nlohmann/json.hpp>
 
 using namespace mcpp;
 using namespace mcpp::server;
@@ -43,11 +42,11 @@ using json = nlohmann::json;
 /**
  * @brief Simple calculator tool
  */
-json handle_calculate(const json& params) {
+json handle_calculate(const std::string& name, const json& args, RequestContext& ctx) {
     try {
-        std::string operation = params.value("operation", "add");
-        double a = params.value("a", 0.0);
-        double b = params.value("b", 0.0);
+        std::string operation = args.value("operation", "add");
+        double a = args.value("a", 0.0);
+        double b = args.value("b", 0.0);
 
         double result = 0.0;
         if (operation == "add") {
@@ -95,8 +94,8 @@ json handle_calculate(const json& params) {
 /**
  * @brief Echo tool - returns the input text
  */
-json handle_echo(const json& params) {
-    std::string text = params.value("text", "");
+json handle_echo(const std::string& name, const json& args, RequestContext& ctx) {
+    std::string text = args.value("text", "");
     return json{
         {"content", json::array({
             {{"type", "text"}, {"text", "Echo: " + text}}
@@ -107,7 +106,7 @@ json handle_echo(const json& params) {
 /**
  * @brief Get current time
  */
-json handle_get_time(const json& params) {
+json handle_get_time(const std::string& name, const json& args, RequestContext& ctx) {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
 
@@ -131,47 +130,51 @@ json handle_get_time(const json& params) {
 /**
  * @brief Read a text file resource
  */
-json handle_read_file(const std::string& uri_str) {
+ResourceContent handle_read_file(const std::string& uri) {
     // Extract file path from URI (file://path or just path)
-    std::string path = uri_str;
+    std::string path = uri;
     if (path.find("file://") == 0) {
         path = path.substr(7);
     }
 
     // For security, only allow reading from /tmp directory
     if (path.find("/tmp/") != 0 && path != "/tmp/mcpp_test.txt") {
-        return json{
-            {"contents", json::array()},
-            {"error", "Access denied: only /tmp directory is allowed"}
+        return ResourceContent{
+            .uri = uri,
+            .mime_type = "text/plain",
+            .is_text = true,
+            .text = "",
+            .blob = ""
         };
     }
 
     std::ifstream file(path);
     if (!file.is_open()) {
-        return json{
-            {"contents", json::array()},
-            {"error", "File not found: " + path}
+        return ResourceContent{
+            .uri = uri,
+            .mime_type = "text/plain",
+            .is_text = true,
+            .text = "",
+            .blob = ""
         };
     }
 
     std::stringstream buffer;
     buffer << file.rdbuf();
 
-    return json{
-        {"contents", json::array({
-            {
-                {"uri", uri_str},
-                {"mimeType", "text/plain"},
-                {"text", buffer.str()}
-            }
-        })}
+    return ResourceContent{
+        .uri = uri,
+        .mime_type = "text/plain",
+        .is_text = true,
+        .text = buffer.str(),
+        .blob = ""
     };
 }
 
 /**
  * @brief Get server info as a resource
  */
-json handle_server_info(const std::string& uri) {
+ResourceContent handle_server_info(const std::string& uri) {
     json info = {
         {"name", "mcpp Inspector Server"},
         {"version", "0.1.0"},
@@ -183,14 +186,12 @@ json handle_server_info(const std::string& uri) {
         }}
     };
 
-    return json{
-        {"contents", json::array({
-            {
-                {"uri", uri},
-                {"mimeType", "application/json"},
-                {"text", info.dump(2)}
-            }
-        })}
+    return ResourceContent{
+        .uri = uri,
+        .mime_type = "application/json",
+        .is_text = true,
+        .text = info.dump(2),
+        .blob = ""
     };
 }
 
@@ -201,36 +202,23 @@ json handle_server_info(const std::string& uri) {
 /**
  * @brief Generate a greeting prompt
  */
-json handle_greeting(const json& args) {
-    std::string name = args.value("name", "World");
-    std::string tone = args.value("tone", "friendly");
+std::vector<PromptMessage> handle_greeting(const std::string& name, const json& args) {
+    std::string target_name = args.value("name", "World");
 
-    std::string greeting;
-    if (tone == "formal") {
-        greeting = "Good day, " + name + ". How may I assist you today?";
-    } else if (tone == "casual") {
-        greeting = "Hey " + name + "! What's up?";
-    } else {
-        greeting = "Hello, " + name + "! Nice to meet you.";
-    }
-
-    return json{
-        {"messages", json::array({
-            {
-                {"role", "user"},
-                {"content", json::array({
-                    {{"type", "text"}, {"text", greeting}}
-                })}
-            }
-        })},
-        {"description", "A " + tone + " greeting for " + name}
+    return std::vector<PromptMessage>{
+        PromptMessage{
+            .role = "user",
+            .content = json::array({
+                {{"type", "text"}, {"text", "Hello, " + target_name + "!"}}
+            })
+        }
     };
 }
 
 /**
  * @brief Generate a code review prompt template
  */
-json handle_code_review(const json& args) {
+std::vector<PromptMessage> handle_code_review(const std::string& name, const json& args) {
     std::string language = args.value("language", "C++");
     std::string focus = args.value("focus", "general");
 
@@ -238,16 +226,13 @@ json handle_code_review(const json& args) {
     prompt_text += "Focus on: " + focus + "\n\n";
     prompt_text += "[Code will be provided here]";
 
-    return json{
-        {"messages", json::array({
-            {
-                {"role", "user"},
-                {"content", json::array({
-                    {{"type", "text"}, {"text", prompt_text}}
-                })}
-            }
-        })},
-        {"description", "Code review prompt for " + language + " with focus on " + focus}
+    return std::vector<PromptMessage>{
+        PromptMessage{
+            .role = "user",
+            .content = json::array({
+                {{"type", "text"}, {"text", prompt_text}}
+            })
+        }
     };
 }
 
@@ -326,55 +311,28 @@ int main(int argc, char* argv[]) {
     );
 
     // Register prompts
-    json greeting_args = json::parse(R"({
-        "type": "object",
-        "properties": {
-            "name": {
-                "type": "string",
-                "description": "Name to greet"
-            },
-            "tone": {
-                "type": "string",
-                "enum": ["friendly", "formal", "casual"],
-                "description": "Tone of the greeting"
-            }
-        }
-    })");
+    PromptArgument name_arg;
+    name_arg.name = "name";
+    name_arg.description = "Name to greet";
+    name_arg.required = false;
 
-    server.register_prompt(
-        "greeting",
-        "Generate a personalized greeting",
-        {{"name", "name"}, {"description", "Name to greet"}, {"required", false}},
-        handle_greeting
-    );
+    PromptArgument lang_arg;
+    lang_arg.name = "language";
+    lang_arg.description = "Programming language";
+    lang_arg.required = false;
 
-    server.register_prompt(
-        "greeting",
-        "Generate a personalized greeting",
-        {{"name", "tone"}, {"description", "Tone of greeting"}, {"required", false}},
-        handle_greeting
-    );
+    PromptArgument focus_arg;
+    focus_arg.name = "focus";
+    focus_arg.description = "Review focus area";
+    focus_arg.required = false;
 
-    json review_args = json::parse(R"({
-        "type": "object",
-        "properties": {
-            "language": {
-                "type": "string",
-                "description": "Programming language",
-                "default": "C++"
-            },
-            "focus": {
-                "type": "string",
-                "description": "Review focus area",
-                "default": "general"
-            }
-        }
-    })");
+    std::vector<PromptArgument> greeting_args = {name_arg};
+    std::vector<PromptArgument> review_args = {lang_arg, focus_arg};
 
     server.register_prompt(
         "code_review",
         "Generate a code review prompt template",
-        {{"name", "language"}, {"description", "Programming language"}, {"required", false}},
+        review_args,
         handle_code_review
     );
 
