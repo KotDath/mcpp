@@ -170,11 +170,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONT-03 | Phase 5 | Complete |
 | CONT-04 | Phase 5 | Complete |
 | ADV-07 | Phase 5 | Complete |
-| API-02 | Phase 6 | Pending |
-| API-03 | Phase 6 | Pending |
-| UTIL-01 | Phase 6 | Pending |
-| UTIL-02 | Phase 6 | Pending |
-| UTIL-03 | Phase 6 | Pending |
+| API-02 | Phase 6 | Complete |
+| API-03 | Phase 6 | Complete |
+| UTIL-01 | Phase 6 | Complete |
+| UTIL-02 | Phase 6 | Complete |
+| UTIL-03 | Phase 6 | Complete |
 | BUILD-01 | Phase 7 | Pending |
 | BUILD-02 | Phase 7 | Pending |
 | BUILD-03 | Phase 7 | Pending |
