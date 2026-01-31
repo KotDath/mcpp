@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 4 of 7 (Advanced Features & HTTP Transport)
-Plan: 3 of 6 in current phase
+Plan: 4 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed 04-03: Tool metadata and output validation
+Last activity: 2026-01-31 — Completed 04-04: Resource templates and subscriptions
 
-Progress: [███████░░░] 50%
+Progress: [████████░░] 58%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 25
+- Total plans completed: 26
 - Average duration: 4 min
 - Total execution time: 1.7 hours
 
@@ -30,11 +30,11 @@ Progress: [███████░░░] 50%
 | 01-protocol-foundation | 6 | 6 | 6 min |
 | 02-core-server | 6 | 6 | 2 min |
 | 03-client-capabilities | 8 | 8 | 3 min |
-| 04-advanced-features--http-transport | 6 | 3 | 3 min |
+| 04-advanced-features--http-transport | 6 | 4 | 3 min |
 
 **Recent Trend:**
-- Last 3 plans: 04-01, 04-02, 04-03 (SSE formatter, URI template, HTTP transport, tool annotations)
-- Trend: Phase 4 at 50% completion, tool metadata enhancements complete
+- Last 3 plans: 04-02, 04-03, 04-04 (HTTP transport, tool annotations, resource templates)
+- Trend: Phase 4 at 58% completion, resource subscriptions complete
 
 *Updated after each plan completion*
 
@@ -208,6 +208,17 @@ Recent decisions affecting current work:
 - Extended tool discovery includes annotations and outputSchema fields
 - Output validation failures return CallToolResult with isError=true (not JSON-RPC error)
 
+**From 04-04 (Resource Templates and Subscriptions):**
+- TemplateResourceHandler type receiving expanded URI and extracted parameters
+- TemplateResourceRegistration struct with URI template pattern and parameter names
+- register_template() for parameterized resource registration
+- Regex-based template matching for URI-to-template resolution
+- Subscription tracking via unordered_map<uri, vector<Subscription>>
+- subscribe/unsubscribe methods for resource change monitoring
+- notify_updated() to send notifications/resources/updated via transport
+- Non-owning transport pointer following RequestContext pattern
+- Resource list includes templates with template field per MCP spec
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -223,5 +234,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 04-03 (Tool metadata and output validation).
+Stopped at: Completed 04-04 (Resource templates and subscriptions).
 Resume file: None
