@@ -35,29 +35,12 @@
 #include <nlohmann/json.hpp>
 
 #include "mcpp/content/pagination.h"
+#include "mcpp/server/prompt_registry.h"  // For shared Completion struct
 #include "mcpp/util/uri_template.h"
 
 namespace mcpp {
 
 namespace server {
-
-/**
- * @brief Completion suggestion for argument autocompletion
- *
- * Represents a single completion value with an optional description.
- * Matches the MCP CompleteResult format which returns an array of
- * completion values with optional descriptions.
- *
- * Note: This struct is shared between PromptRegistry and ResourceRegistry
- * for consistency in completion handling across both registries.
- */
-struct Completion {
-    /// The completion value to insert
-    std::string value;
-
-    /// Optional human-readable description of this completion
-    std::optional<std::string> description;
-};
 
 /**
  * @brief Completion handler function type
@@ -75,6 +58,9 @@ struct Completion {
  *
  * Thread safety: Handlers may be called from multiple threads.
  * Implementations must be thread-safe or use external synchronization.
+ *
+ * Note: Completion struct is defined in prompt_registry.h and shared here
+ * to avoid duplication.
  */
 using CompletionHandler = std::function<std::vector<Completion>(
     const std::string& argument_name,

@@ -7,9 +7,12 @@
 #include "mcpp/server/tool_registry.h"
 
 #include <cstdint>
-#include <nlohmann/json-schema.hpp>
 #include <sstream>
 #include <string>
+
+#if MCPP_HAS_JSON_SCHEMA
+    #include <nlohmann/json-schema.hpp>
+#endif
 
 namespace mcpp {
 namespace server {
@@ -124,6 +127,7 @@ bool ToolRegistry::register_tool(
     // - array constraints (minItems, maxItems, uniqueItems)
     // - pattern (regex) validation
     //
+#if MCPP_HAS_JSON_SCHEMA
     auto validator = std::make_unique<nlohmann::json_schema::json_validator>();
     try {
         validator->set_root_schema(input_schema);
@@ -133,6 +137,11 @@ bool ToolRegistry::register_tool(
         // Callers should check the return value and handle the error appropriately
         return false;
     }
+#else
+    // When json-schema-validator is not available, use a null validator
+    // The unique_ptr will be empty and validation will be skipped
+    auto validator = std::unique_ptr<nlohmann::json_schema::json_validator>();
+#endif
 
     // Create output validator if output schema is provided
     //
@@ -145,6 +154,7 @@ bool ToolRegistry::register_tool(
     //
     // Validation happens after the handler returns but before the result is sent
     // to the client. If validation fails, an error response is returned instead.
+#if MCPP_HAS_JSON_SCHEMA
     std::unique_ptr<nlohmann::json_schema::json_validator> output_validator;
     if (output_schema) {
         output_validator = std::make_unique<nlohmann::json_schema::json_validator>();
@@ -156,6 +166,10 @@ bool ToolRegistry::register_tool(
             return false;
         }
     }
+#else
+    // When json-schema-validator is not available, output validation is skipped
+    std::unique_ptr<nlohmann::json_schema::json_validator> output_validator;
+#endif
 
     // Create and store the tool registration
     // The initializer list must match the ToolRegistration struct order
@@ -293,13 +307,17 @@ std::optional<nlohmann::json> ToolRegistry::call_tool(
     // The validate() method throws std::exception on validation failure
     // with a descriptive message about what failed.
     //
+#if MCPP_HAS_JSON_SCHEMA
     try {
-        registration.validator->validate(args);
+        if (registration.validator) {
+            registration.validator->validate(args);
+        }
     } catch (const std::exception& e) {
         // Validation failed - return JSON-RPC INVALID_PARAMS error
         // This is a protocol-level error, not a tool error
         return make_validation_error(e.what());
     }
+#endif
 
     // Call the handler with validated arguments
     nlohmann::json result = registration.handler(name, args, ctx);
@@ -317,6 +335,7 @@ std::optional<nlohmann::json> ToolRegistry::call_tool(
     // - Tool errors (handler failed) → CallToolResult with isError=true
     // - Validation errors (output mismatch) → CallToolResult with isError=true
     //
+#if MCPP_HAS_JSON_SCHEMA
     if (registration.output_validator) {
         try {
             registration.output_validator->validate(result);
@@ -326,6 +345,7 @@ std::optional<nlohmann::json> ToolRegistry::call_tool(
             return make_output_validation_error(e.what());
         }
     }
+#endif
 
     return result;
 }

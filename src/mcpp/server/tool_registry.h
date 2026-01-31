@@ -41,6 +41,15 @@
     #define MCPP_HAS_JSON_SCHEMA 1
 #else
     #define MCPP_HAS_JSON_SCHEMA 0
+    // Placeholder validator type when json-schema-validator is not available
+    namespace nlohmann {
+    namespace json_schema {
+    struct json_validator {
+        void set_root_schema(const nlohmann::json&) {}
+        void validate(const nlohmann::json&) {}
+    };
+    }
+    }
 #endif
 
 #include "mcpp/content/pagination.h"
