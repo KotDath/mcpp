@@ -24,9 +24,24 @@
 
 #include "mcpp/client.h"
 
+#include <cstdio>
 #include <utility>
 
 namespace mcpp {
+
+namespace {
+
+// Helper to parse RequestId from JSON value
+std::optional<core::RequestId> parse_request_id(const nlohmann::json& j) {
+    if (j.is_number_integer()) {
+        return j.get<int64_t>();
+    } else if (j.is_string()) {
+        return j.get<std::string>();
+    }
+    return std::nullopt;
+}
+
+} // namespace
 
 namespace {
 
@@ -86,6 +101,26 @@ McpClient::McpClient(
             return sampling_client_.handle_create_message(params);
         }
     );
+
+    // Register notifications/cancelled handler for server-side cancellation
+    set_notification_handler("notifications/cancelled",
+        [this](std::string_view /* method */, const JsonValue& params) {
+            std::optional<core::RequestId> request_id;
+            if (params.contains("requestId")) {
+                request_id = parse_request_id(params["requestId"]);
+            }
+            std::optional<std::string> reason;
+            if (params.contains("reason")) {
+                const auto& reason_val = params["reason"];
+                if (reason_val.is_string()) {
+                    reason = reason_val.get<std::string>();
+                }
+            }
+            if (request_id) {
+                cancellation_manager_.handle_cancelled(*request_id, reason);
+            }
+        }
+    );
 }
 
 McpClient::~McpClient() {
@@ -110,6 +145,10 @@ bool McpClient::is_connected() const {
     return transport_->is_connected();
 }
 
+void McpClient::cancel_request(core::RequestId id) {
+    cancellation_manager_.handle_cancelled(id, std::nullopt);
+}
+
 // ============================================================================
 // Sending requests
 // ============================================================================
@@ -123,6 +162,10 @@ void McpClient::send_request(
 ) {
     // Generate request ID
     core::RequestId id = request_tracker_.next_id();
+
+    // Create cancellation source and register for this request
+    client::CancellationSource cancel_source;
+    cancellation_manager_.register_request(id, cancel_source);
 
     // Create JSON-RPC request
     core::JsonRpcRequest request;
@@ -154,6 +197,7 @@ void McpClient::send_request(
         [this, id](core::RequestId timeout_id) {
             // Request timed out - remove from pending and invoke error callback
             auto pending = request_tracker_.complete(timeout_id);
+            cancellation_manager_.unregister_request(timeout_id);
             if (pending && pending->on_error) {
                 core::JsonRpcError timeout_error{
                     core::INTERNAL_ERROR,
@@ -406,6 +450,9 @@ void McpClient::handle_response(const core::JsonRpcResponse& response) {
 
     // Complete the pending request (removes from tracker)
     auto pending = request_tracker_.complete(response.id);
+
+    // Unregister from cancellation tracking
+    cancellation_manager_.unregister_request(response.id);
 
     if (!pending) {
         // No pending request found - response without matching request

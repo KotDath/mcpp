@@ -26,6 +26,7 @@ set(MCPP_PUBLIC_HEADERS
     src/mcpp/client.h
     src/mcpp/async/callbacks.h
     src/mcpp/async/timeout.h
+    src/mcpp/client/cancellation.h
     src/mcpp/client/roots.h
     src/mcpp/client/sampling.h
     src/mcpp/core/error.h
@@ -46,6 +47,7 @@ set(MCPP_PUBLIC_HEADERS
 set(MCPP_SOURCES
     src/mcpp/client.cpp
     src/mcpp/async/timeout.cpp
+    src/mcpp/client/cancellation.cpp
     src/mcpp/client/roots.cpp
     src/mcpp/client/sampling.cpp
     src/mcpp/core/json_rpc.cpp

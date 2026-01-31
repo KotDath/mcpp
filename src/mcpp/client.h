@@ -35,6 +35,7 @@
 
 #include "mcpp/async/callbacks.h"
 #include "mcpp/async/timeout.h"
+#include "mcpp/client/cancellation.h"
 #include "mcpp/client/roots.h"
 #include "mcpp/client/sampling.h"
 #include "mcpp/core/json_rpc.h"
@@ -152,6 +153,18 @@ public:
      * @return true if connected, false otherwise
      */
     bool is_connected() const;
+
+    /**
+     * @brief Cancel a pending request
+     *
+     * Requests cancellation for the specified request ID.
+     * This is useful for user-initiated cancellation (e.g., UI cancel button).
+     *
+     * If the request is not found (already completed), this is a no-op.
+     *
+     * @param id Request ID to cancel
+     */
+    void cancel_request(core::RequestId id);
 
     /**
      * @brief Send a JSON-RPC request to the server
@@ -286,6 +299,9 @@ private:
 
     /// Sampling client for handling sampling/createMessage requests from server
     client::SamplingClient sampling_client_;
+
+    /// Cancellation manager for handling request cancellation
+    client::CancellationManager cancellation_manager_;
 
     /// Callback invoked by transport when a message is received
     void on_message(std::string_view message);
