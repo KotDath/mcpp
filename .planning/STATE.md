@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 6 of 7 (High-Level API)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-01-31 — Completed Phase 5 (Content & Tasks)
+Plan: 1 of TBD in current phase
+Status: In progress
+Last activity: 2026-02-01 — Completed 06-01 (High-Level API Foundation)
 
-Progress: [████████░░] 71%
+Progress: [█████████░] 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 33
+- Total plans completed: 34
 - Average duration: 3 min
 - Total execution time: 1.8 hours
 
@@ -32,10 +32,11 @@ Progress: [████████░░] 71%
 | 03-client-capabilities | 8 | 8 | 3 min |
 | 04-advanced-features--http-transport | 6 | 6 | 2 min |
 | 05-content---tasks | 4 | 4 | 3 min |
+| 06-high-level-api | 1 | 1 | 3 min |
 
 **Recent Trend:**
-- Last 4 plans: 05-01, 05-02, 05-03, 05-04
-- Trend: Phase 5 complete with rich content types, pagination, list_changed notifications, and experimental task lifecycle. Verification passed (5/5 must-haves).
+- Last 5 plans: 05-01, 05-02, 05-03, 05-04, 06-01
+- Trend: Phase 6 foundation complete with role-based typing, Service trait abstraction, and thread-safe Peer state.
 
 *Updated after each plan completion*
 
@@ -261,6 +262,17 @@ Recent decisions affecting current work:
 - All three registries (tools, resources, prompts) support list_changed notifications
 - Automatic notification on successful registration via notify_changed() call
 
+**From 06-01 (High-Level API Foundation):**
+- Role marker types (RoleClient, RoleServer) with IS_CLIENT constexpr bool for compile-time role distinction
+- ServiceRole concept using std::same_as for simple role validation (C++20 concepts over SFINAE)
+- memory_order_relaxed for atomic ID generation - strict ordering not required for uniqueness
+- std::shared_mutex for peer_info access - concurrent reads with exclusive writes
+- Non-copyable/non-movable types for ID provider and Peer - prevents accidental ID collisions
+- Stub send_request/send_notification return std::future - establishes async pattern for 06-02
+- RoleTypes trait for role-specific type aliases (PeerReq, PeerResp, PeerNot, Info, PeerInfo)
+- Service trait as pure virtual interface for polymorphic handlers
+- Experimental capabilities field in ClientInfo/ServerInfo using std::map<std::string, nlohmann::json> (UTIL-03)
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -275,15 +287,11 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31
-Stopped at: Completed Phase 5 (Content & Tasks). All 4 plans delivered: rich content types, pagination, list_changed notifications, experimental task lifecycle. Verification passed (5/5 must-haves).
+Last session: 2026-02-01
+Stopped at: Completed 06-01 (High-Level API Foundation). Role marker types, Service trait abstraction, AtomicRequestIdProvider, and Peer template with thread-safe state.
 Resume file: None
-- TasksCapability added to protocol capabilities
-- McpServer routes tasks/send, tasks/get, tasks/cancel, tasks/result, tasks/list
-- Tasks capability advertised in initialize response
-
-## Session Continuity
-
-Last session: 2026-01-31
-Stopped at: Completed 05-01 (Rich Content Type Support). Image, audio, and resource content types with Annotations metadata implemented per MCP 2025-11-25 spec.
-Resume file: None
+- RoleClient/RoleServer marker types with ServiceRole concept
+- Service<Role> trait with pure virtual handler methods
+- ClientInfo/ServerInfo with experimental capabilities (UTIL-03)
+- AtomicRequestIdProvider for lock-free ID generation
+- Peer<Role> template with std::shared_mutex for thread-safe access
