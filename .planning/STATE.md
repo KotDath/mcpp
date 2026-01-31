@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2025-01-31)
 
 **Core value:** Developers can build MCP clients and servers in C++ that are fast, correct, and support the complete protocol spec without wrestling with JSON-RPC details or transport plumbing
-**Current focus:** Client Capabilities (Phase 3)
+**Current focus:** Advanced Features & HTTP Transport (Phase 4)
 
 ## Current Position
 
-Phase: 3 of 7 (Client Capabilities)
-Plan: 8 of 8 in current phase
-Status: Phase complete
-Last activity: 2026-01-31 — Completed 03-08: ClientCapabilities builder helper with fluent API and build_client_capabilities() free function
+Phase: 4 of 7 (Advanced Features & HTTP Transport)
+Plan: 1 of 6 in current phase
+Status: In progress
+Last activity: 2026-01-31 — Completed 04-01: SSE formatter and RFC 6570 URI template expander utilities
 
-Progress: [███████████] 100%
+Progress: [█████░░░░░] 17%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
+- Total plans completed: 24
 - Average duration: 4 min
-- Total execution time: 1.5 hours
+- Total execution time: 1.6 hours
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [███████████] 100%
 | 01-protocol-foundation | 6 | 6 | 6 min |
 | 02-core-server | 6 | 6 | 2 min |
 | 03-client-capabilities | 8 | 8 | 3 min |
+| 04-advanced-features--http-transport | 6 | 1 | 2 min |
 
 **Recent Trend:**
-- Last 8 plans: 03-01, 03-02, 03-03, 03-04, 03-05, 03-06, 03-07, 03-08
-- Trend: Phase 3 complete with all client capabilities and ergonomics improvements
+- Last 1 plan: 04-01 (SSE formatter, URI template expander)
+- Trend: Started Phase 4 with HTTP transport foundation utilities
 
 *Updated after each plan completion*
 
@@ -183,6 +184,13 @@ Recent decisions affecting current work:
 - Convenience free function build_client_capabilities() for simple boolean-based configuration
 - Constructors added to RootsCapability, SamplingCapability for easy initialization
 
+**From 04-01 (HTTP Transport Foundation Utilities):**
+- Header-only SseFormatter class with static methods for text/event-stream formatting
+- Header-only UriTemplate class with RFC 6570 Level 1-2 template expansion
+- Inline implementation instead of external SSE/URI template library dependencies
+- Reserve-style path expansion (preserves /, :, @) for proper file:// URI handling
+- mcpp::util namespace established for utility classes
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -198,5 +206,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed Phase 3 (Client Capabilities) with gap closure. All 8 plans delivered: cancellation, roots, sampling, tool use, elicitation, futures, build config, builder. Verification passed (23/23 must-haves).
+Stopped at: Completed 04-01 (SSE formatter and URI template expander). Auto-fixed path encoding bug in URI template expansion.
 Resume file: None
