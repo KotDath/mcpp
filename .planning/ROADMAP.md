@@ -169,13 +169,20 @@ Plans:
 4. Library consumer can reset timeout clocks on progress updates via progress reset notification
 5. Library consumer can negotiate custom experimental capabilities via the experimental capabilities field
 
-**Plans**: 4 plans in 3 waves
+**Plans**: 7 plans (5 original + 2 gap closure)
 
 Plans:
-- [ ] 06-01-PLAN.md — Role-based types, Service trait abstraction, Peer connection handling
-- [ ] 06-02-PLAN.md — RunningService RAII wrapper with message passing and event loop
-- [ ] 06-03-PLAN.md — Structured logging with spdlog and request-scoped contexts
-- [ ] 06-04-PLAN.md — Utility features: pagination helpers, error hierarchy, retry strategies
+- [x] 06-01-PLAN.md — Role-based types, Service trait with experimental capabilities, Peer, AtomicRequestIdProvider
+- [x] 06-02-PLAN.md — RunningService RAII wrapper, message passing, progress timeout reset
+- [x] 06-03-PLAN.md — Structured logging with spdlog and request-scoped contexts
+- [x] 06-04-PLAN.md — Utility features: pagination helpers, error hierarchy
+- [x] 06-05-PLAN.md — Retry strategies and CMakeLists.txt updates
+- [ ] 06-06-PLAN.md — Export api/context.h in CMakeLists.txt (gap closure)
+- [ ] 06-07-PLAN.md — Add MIT license header to util/retry.h (gap closure)
+
+**Gap Closure (from VERIFICATION.md):**
+- [ ] 06-06-PLAN.md — Export api/context.h in CMakeLists.txt (critical gap: 354-line file not exported)
+- [ ] 06-07-PLAN.md — Add MIT license header to util/retry.h (minor polish issue)
 
 ### Phase 7: Build & Validation
 
@@ -215,6 +222,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Client Capabilities | 8/8 | Complete | 2026-01-31 |
 | 4. Advanced Features & HTTP Transport | 6/6 | Complete | 2026-01-31 |
 | 5. Content & Tasks | 4/4 | Complete | 2026-01-31 |
-| 6. High-Level API | 0/4 | Ready | - |
-| 7. Build & Validation | 0/0 | Not started | - |
+| 6. High-Level API | 5/7 | In progress | 2026-02-01 |
 | 7. Build & Validation | 0/0 | Not started | - |
