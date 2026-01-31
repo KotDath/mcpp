@@ -81,6 +81,33 @@ using ToolHandler = std::function<nlohmann::json(
 )>;
 
 /**
+ * @brief Tool annotations for rich tool discovery
+ *
+ * Annotations provide metadata about tool behavior for UI/UX purposes:
+ * - Audience filtering (user/assistant/system)
+ * - Priority sorting (lower = higher priority)
+ * - Destructive operation warnings
+ * - Read-only indication
+ */
+struct ToolAnnotations {
+    bool destructive = false;           ///< Indicates destructive operation
+    bool read_only = true;              ///< Indicates read-only operation
+    std::string audience = "user";      ///< "user" | "assistant" | "system"
+    int priority = 0;                   ///< Lower = higher priority
+
+    /**
+     * @brief Default constructor with sensible defaults
+     */
+    ToolAnnotations() = default;
+
+    /**
+     * @brief Constructor with explicit values
+     */
+    ToolAnnotations(bool destr, bool ro, const std::string& aud, int prio)
+        : destructive(destr), read_only(ro), audience(aud), priority(prio) {}
+};
+
+/**
  * @brief Registration data for a single tool
  *
  * Stores all metadata needed for tool discovery and execution.
@@ -91,7 +118,10 @@ struct ToolRegistration {
     std::string name;                      ///< Tool identifier (unique in registry)
     std::string description;               ///< Human-readable description
     nlohmann::json input_schema;           ///< JSON Schema for argument validation
-    std::unique_ptr<nlohmann::json_schema::json_validator> validator;  ///< Compiled validator
+    std::unique_ptr<nlohmann::json_schema::json_validator> validator;  ///< Compiled validator for input
+    std::optional<nlohmann::json> output_schema;  ///< JSON Schema for output validation
+    std::unique_ptr<nlohmann::json_schema::json_validator> output_validator;  ///< Compiled validator for output
+    ToolAnnotations annotations;          ///< Tool metadata for discovery
     ToolHandler handler;                   ///< Function to call when tool is invoked
 };
 
@@ -168,6 +198,31 @@ public:
     );
 
     /**
+     * @brief Register a tool with annotations and output schema
+     *
+     * Extended registration with tool annotations (audience, priority, destructive/read-only)
+     * and optional output schema for result validation.
+     *
+     * @param name Unique tool identifier
+     * @param description Human-readable description of what the tool does
+     * @param input_schema JSON Schema for argument validation (Draft 7)
+     * @param output_schema Optional JSON Schema for output validation
+     * @param annotations Tool metadata (audience, priority, destructive, read_only)
+     * @param handler Function to invoke when the tool is called
+     * @return true if registration succeeded, false if a tool with this name exists
+     *
+     * @note Output schema validation ensures tool results match declared structure
+     */
+    bool register_tool(
+        const std::string& name,
+        const std::string& description,
+        const nlohmann::json& input_schema,
+        const std::optional<nlohmann::json>& output_schema,
+        const ToolAnnotations& annotations,
+        ToolHandler handler
+    );
+
+    /**
      * @brief List all registered tools for discovery
      *
      * Returns an array of tool metadata in the format required by the
@@ -175,6 +230,8 @@ public:
      * - name: Tool identifier
      * - description: Human-readable description
      * - inputSchema: JSON Schema for arguments
+     * - annotations: Tool metadata (destructive, readOnly, audience, priority)
+     * - outputSchema: JSON Schema for output (if declared)
      *
      * @return Array of tool objects
      */
