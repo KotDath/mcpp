@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 1 of 7 (Protocol Foundation)
-Plan: 5 of 6 in current phase
-Status: In progress
-Last activity: 2026-01-31 — Completed plan 01-04: Request tracking implementation
+Plan: 6 of 6 in current phase
+Status: Phase complete
+Last activity: 2026-01-31 — Completed plan 01-06: McpClient implementation
 
-Progress: [█████░░░░░] 83%
+Progress: [█████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 6 min
-- Total execution time: 0.5 hours
+- Total execution time: 0.6 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-protocol-foundation | 5 | 6 | 6 min |
+| 01-protocol-foundation | 6 | 6 | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 01-02, 01-03, 01-04, 01-05
-- Trend: Steady progress
+- Last 6 plans: 01-01, 01-02, 01-03, 01-04, 01-05, 01-06
+- Trend: Steady progress, Phase 1 complete
 
 *Updated after each plan completion*
 
@@ -72,6 +72,12 @@ Recent decisions affecting current work:
 - Callbacks invoked after mutex release to prevent re-entrancy deadlock
 - TimeoutManager returns expired IDs for caller cleanup coordination
 
+**From 01-06 (McpClient):**
+- Client owns transport via unique_ptr for clear lifecycle management
+- Request IDs generated automatically - user code never chooses IDs
+- All async operations use std::function callbacks stored by value
+- Initialize method automatically sends initialized notification on success
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -87,5 +93,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed plan 01-04 - Request tracker with atomic ID generation and thread-safe pending request tracking
+Stopped at: Completed plan 01-06 - McpClient with full request/response correlation, timeout handling, and MCP initialization handshake
 Resume file: None
