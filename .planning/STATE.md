@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 6 of 7 (High-Level API)
-Plan: 1 of TBD in current phase
+Plan: 2 of TBD in current phase
 Status: In progress
-Last activity: 2026-02-01 — Completed 06-01 (High-Level API Foundation)
+Last activity: 2026-02-01 — Completed 06-02 (RunningService & Message Passing)
 
-Progress: [█████████░] 75%
+Progress: [█████████░] 76%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
+- Total plans completed: 35
 - Average duration: 3 min
 - Total execution time: 1.8 hours
 
@@ -32,11 +32,11 @@ Progress: [█████████░] 75%
 | 03-client-capabilities | 8 | 8 | 3 min |
 | 04-advanced-features--http-transport | 6 | 6 | 2 min |
 | 05-content---tasks | 4 | 4 | 3 min |
-| 06-high-level-api | 1 | 1 | 3 min |
+| 06-high-level-api | 2 | 2 | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-01, 05-02, 05-03, 05-04, 06-01
-- Trend: Phase 6 foundation complete with role-based typing, Service trait abstraction, and thread-safe Peer state.
+- Last 5 plans: 05-02, 05-03, 05-04, 06-01, 06-02
+- Trend: Phase 6 progressing with message passing and RAII service lifecycle management.
 
 *Updated after each plan completion*
 
@@ -273,6 +273,17 @@ Recent decisions affecting current work:
 - Service trait as pure virtual interface for polymorphic handlers
 - Experimental capabilities field in ClientInfo/ServerInfo using std::map<std::string, nlohmann::json> (UTIL-03)
 
+**From 06-02 (RunningService & Message Passing):**
+- Message passing channel with std::variant<NotificationMessage, RequestMessage> for type-safe dispatch
+- shared_ptr<promise> pattern ensures promise lifetime until callback is invoked
+- std::condition_variable_any for blocking wait with std::stop_token support
+- std::jthread for automatic background thread cleanup on destruction (RAII)
+- steady_clock for timeout tracking (immune to system time changes)
+- 5-minute default timeout with progress notifications resetting the clock (UTIL-02)
+- Message queue with mutex + condition_variable for thread-safe mpsc communication
+- Future-based async API with std::future return types for request/response pattern
+- QuitReason enum for service termination cause tracking
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -288,10 +299,8 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 06-01 (High-Level API Foundation). Role marker types, Service trait abstraction, AtomicRequestIdProvider, and Peer template with thread-safe state.
+Stopped at: Completed 06-02 (RunningService & Message Passing). Message channel, RAII service wrapper, and timeout reset on progress (UTIL-02).
 Resume file: None
-- RoleClient/RoleServer marker types with ServiceRole concept
-- Service<Role> trait with pure virtual handler methods
-- ClientInfo/ServerInfo with experimental capabilities (UTIL-03)
-- AtomicRequestIdProvider for lock-free ID generation
-- Peer<Role> template with std::shared_mutex for thread-safe access
+- Peer message passing with RequestMessage/NotificationMessage types
+- RunningService RAII wrapper with std::jthread
+- Timeout tracking with deadline reset on progress (UTIL-02)
