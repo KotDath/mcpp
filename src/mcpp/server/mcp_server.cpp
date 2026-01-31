@@ -184,43 +184,37 @@ nlohmann::json McpServer::handle_tools_call(const nlohmann::json& params) {
     // We need a request ID - extract from params or use a default
     std::string request_id = params.value("__request_id", "unknown");
 
-    if (transport_) {
-        RequestContext ctx(request_id, **transport_);
-        if (progress_token) {
-            ctx.set_progress_token(*progress_token);
-        }
+    if (!transport_) {
+        // No transport set - cannot create RequestContext (requires Transport reference)
+        // Return error response indicating transport must be set
+        return nlohmann::json{
+            {"jsonrpc", "2.0"},
+            {"error", {
+                {"code", JSONRPC_INTERNAL_ERROR},
+                {"message", "Transport not set. Call set_transport() before handling requests."}
+            }}
+        };
+    }
 
-        // Call the tool
-        std::optional<nlohmann::json> result = tools_.call_tool(name, arguments, ctx);
-        if (result) {
-            return std::move(*result);
-        } else {
-            return nlohmann::json{
-                {"error", {
-                    {"code", JSONRPC_INVALID_PARAMS},
-                    {"message", "Tool not found: " + name}
-                }}
-            };
-        }
+    // Create RequestContext with transport reference
+    transport::Transport& transport = **transport_;
+    RequestContext ctx(request_id, transport);
+
+    if (progress_token) {
+        ctx.set_progress_token(*progress_token);
+    }
+
+    // Call the tool
+    std::optional<nlohmann::json> result = tools_.call_tool(name, arguments, ctx);
+    if (result) {
+        return std::move(*result);
     } else {
-        // No transport set - create context without transport (progress won't work)
-        // This is a fallback; ideally transport should be set
-        RequestContext ctx(request_id, **transport_);
-        if (progress_token) {
-            ctx.set_progress_token(*progress_token);
-        }
-
-        std::optional<nlohmann::json> result = tools_.call_tool(name, arguments, ctx);
-        if (result) {
-            return std::move(*result);
-        } else {
-            return nlohmann::json{
-                {"error", {
-                    {"code", JSONRPC_INVALID_PARAMS},
-                    {"message", "Tool not found: " + name}
-                }}
-            };
-        }
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Tool not found: " + name}
+            }}
+        };
     }
 }
 
