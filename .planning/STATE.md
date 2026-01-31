@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2025-01-31)
 
 **Core value:** Developers can build MCP clients and servers in C++ that are fast, correct, and support the complete protocol spec without wrestling with JSON-RPC details or transport plumbing
-**Current focus:** Core Server (Phase 2)
+**Current focus:** Client Capabilities (Phase 3)
 
 ## Current Position
 
 Phase: 3 of 7 (Client Capabilities)
-Plan: 2 of 6 in current phase
+Plan: 3 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed 03-02: Roots management with file:// URI validation and RootsManager class
+Last activity: 2026-01-31 — Completed 03-03: Basic sampling support with CreateMessageRequest/Result and SamplingClient integration
 
-Progress: [██████████░] 30%
+Progress: [██████████░] 32%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: 4 min
 - Total execution time: 1.1 hours
 
@@ -29,11 +29,11 @@ Progress: [██████████░] 30%
 |-------|-------|-------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
 | 02-core-server | 6 | 2 min | 2 min |
-| 03-client-capabilities | 2 | 1 min | 1 min |
+| 03-client-capabilities | 3 | 2 min | 1 min |
 
 **Recent Trend:**
-- Last 6 plans: 02-01, 02-02, 02-03, 02-04, 02-05, 02-06
-- Trend: Phase 2 complete, Phase 3 in progress
+- Last 6 plans: 02-06, 03-01, 03-02, 03-03
+- Trend: Phase 3 in progress, sampling support added
 
 *Updated after each plan completion*
 
@@ -125,6 +125,15 @@ Recent decisions affecting current work:
 - roots/list handler registered in McpClient constructor
 - RootsManager accessible via get_roots_manager() for user code
 
+**From 03-03 (Basic Sampling):**
+- ContentBlock as std::variant for extensibility (future ImageContent, AudioContent)
+- SamplingHandler as std::function for flexible LLM provider integration
+- Content parsing supports string shorthand for text content
+- CreateMessageRequest with from_json parsing, max_tokens validation
+- CreateMessageResult with to_json serialization
+- SamplingClient with handler registration and JSON-RPC error returns
+- sampling/createMessage handler registered in McpClient constructor
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -140,5 +149,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 03-02 - Roots management with Root type, RootsManager class, and McpClient integration with roots/list handler and roots/list_changed notification support.
+Stopped at: Completed 03-03 - Basic sampling support with CreateMessageRequest/Result types, SamplingHandler callback, SamplingClient class, and McpClient integration with sampling/createMessage request handler.
 Resume file: None
