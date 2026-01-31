@@ -38,11 +38,10 @@
 // Users must link against nlohmann_json_schema_validator.
 #include <nlohmann/json-schema.hpp>
 
+#include "mcpp/server/request_context.h"
+
 namespace mcpp {
 namespace server {
-
-// Forward declaration - RequestContext will be defined in plan 02-04
-class RequestContext;
 
 /**
  * @brief Tool handler function type
