@@ -49,10 +49,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Content & Metadata
 
-- [ ] **CONT-01**: Rich content types (text, image, audio, resource links, embedded resources)
-- [ ] **CONT-02**: Content annotations (metadata on content items)
-- [ ] **CONT-03**: Pagination (cursor-based pagination, nextCursor handling)
-- [ ] **CONT-04**: List changed notifications (tools/prompts/resources/list_changed)
+- [x] **CONT-01**: Rich content types (text, image, audio, resource links, embedded resources)
+- [x] **CONT-02**: Content annotations (metadata on content items)
+- [x] **CONT-03**: Pagination (cursor-based pagination, nextCursor handling)
+- [x] **CONT-04**: List changed notifications (tools/prompts/resources/list_changed)
 
 ### Advanced Features
 
@@ -62,7 +62,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **ADV-04**: Completion (argument completion for prompts/resources with reference values)
 - [x] **ADV-05**: Tool annotations (metadata: audience, priority, destructive/read-only indicators)
 - [x] **ADV-06**: Structured output (outputSchema for tools, JSON Schema validation)
-- [ ] **ADV-07**: Tasks experimental (task lifecycle, polling, status notifications, result retrieval, TTL management)
+- [x] **ADV-07**: Tasks experimental (task lifecycle, polling, status notifications, result retrieval, TTL management)
 
 ### API Design
 
