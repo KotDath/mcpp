@@ -25,23 +25,39 @@
 #ifndef MCPP_SERVER_REQUEST_CONTEXT_H
 #define MCPP_SERVER_REQUEST_CONTEXT_H
 
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
 
 #include "mcpp/transport/transport.h"
+#include "mcpp/util/sse_formatter.h"
 
 namespace mcpp {
 namespace server {
 
 /**
- * @brief Context object passed to handlers for progress reporting
+ * @brief Context object passed to handlers for progress reporting and streaming
  *
  * RequestContext provides handlers with access to the transport layer
  * for sending notifications and encapsulates the progress token from
  * the request metadata.
  *
  * This enables handlers to report progress for long-running operations
- * via the MCP notifications/progress mechanism.
+ * via the MCP notifications/progress mechanism, and to send incremental
+ * results via the streaming support.
+ *
+ * Streaming mode:
+ * - When enabled via set_streaming(true), handlers can send incremental results
+ * - send_stream_result() sends partial results before completion
+ * - For HTTP/SSE transport, results are formatted as SSE events
+ * - For stdio transport, results are sent as regular JSON messages
+ * - The final tool return value marks completion (no explicit "done" needed)
+ *
+ * Streaming initialization:
+ * - McpServer or tool handler calls set_streaming(true) before tool execution
+ * - Typically enabled when client indicates streaming capability in initialization
+ * - HTTP transport always supports streaming via SSE
+ * - stdio transport uses progress notification mechanism for streaming
  *
  * Typical usage:
  * ```cpp
@@ -51,13 +67,22 @@ namespace server {
  *     // Report progress at 25%
  *     ctx.report_progress(25.0, "Processing data...");
  *
+ *     // Send incremental result
+ *     ctx.send_stream_result({{"status", "partial"}, {"data", "..."}}):
+ *
  *     // Do work...
  *
  *     // Report progress at 50%
  *     ctx.report_progress(50.0, "Still processing...");
  *
+ *     // Send another incremental result
+ *     ctx.send_stream_result({{"status", "partial"}, {"data", "more..."}}):
+ *
  *     // Report completion
  *     ctx.report_progress(100.0, "Done");
+ *
+ *     // Final return value completes the operation
+ *     return {{"content", "Final result"}};
  * }
  * ```
  */
@@ -146,10 +171,52 @@ public:
      */
     transport::Transport& transport();
 
+    /**
+     * @brief Check if streaming mode is enabled
+     *
+     * Streaming mode allows handlers to send incremental results
+     * before the operation completes.
+     *
+     * @return true if streaming is enabled, false otherwise
+     */
+    bool is_streaming() const;
+
+    /**
+     * @brief Enable or disable streaming mode
+     *
+     * When enabled, handlers can use send_stream_result() to send
+     * incremental results. Streaming is typically enabled by the server
+     * when the client indicates streaming capability.
+     *
+     * @param enable true to enable streaming, false to disable
+     */
+    void set_streaming(bool enable);
+
+    /**
+     * @brief Send a streaming (incremental) result
+     *
+     * Sends a partial result to the client before the operation completes.
+     * This is useful for long-running tools that generate results over time.
+     *
+     * The result format:
+     * - For HTTP/SSE transport: wrapped in SSE format via SseFormatter
+     * - For stdio transport: sent as regular JSON-RPC message
+     *
+     * If no progress token is available, this method is a no-op.
+     *
+     * @param partial_result The partial result to send (any JSON-serializable value)
+     *
+     * @note The final tool return value marks completion. There is no explicit
+     *       "done" message - the client receives the final result when the
+     *       tool handler returns.
+     */
+    void send_stream_result(const nlohmann::json& partial_result);
+
 private:
     std::string request_id_;
     transport::Transport& transport_;
     std::optional<std::string> progress_token_;
+    bool streaming_ = false;
 };
 
 } // namespace server
