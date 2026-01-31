@@ -10,17 +10,17 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 2 of 7 (Core Server)
-Plan: 2 of TBD in current phase
+Plan: 3 of TBD in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed plan 02-02: Resource Registry with text/blob content support, URI-based lookup, and MCP-compliant responses
+Last activity: 2026-01-31 — Completed plan 02-03: Prompt Registry with handler registration, argument substitution, and MCP-compliant prompts/list and prompts/get responses
 
-Progress: [███░░░░░░░░] 19%
+Progress: [███░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 6 min
+- Total plans completed: 8
+- Average duration: 5 min
 - Total execution time: 0.7 hours
 
 **By Phase:**
@@ -28,10 +28,10 @@ Progress: [███░░░░░░░░] 19%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
-| 02-core-server | 1 | TBD | 1 min |
+| 02-core-server | 2 | TBD | 1 min |
 
 **Recent Trend:**
-- Last 3 plans: 01-06, 02-01, 02-02
+- Last 3 plans: 02-01, 02-02, 02-03
 - Trend: Phase 2 in progress
 
 *Updated after each plan completion*
@@ -92,6 +92,11 @@ Recent decisions affecting current work:
 - MIME type at registration with optional per-read override
 - MCP ReadResourceResult format with contents array
 
+**From 02-03 (Prompt Registry):**
+- Handler receives raw arguments JSON for flexible template substitution
+- PromptRegistry returns MCP GetPromptResult format directly from get_prompt()
+- Argument substitution is handler's responsibility (not enforced by registry)
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -108,5 +113,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed plan 02-02 - Resource Registry with text/blob content support, URI-based lookup, and MCP-compliant responses
+Stopped at: Completed plan 02-03 - Prompt Registry with handler registration, argument substitution, and MCP-compliant prompts/list and prompts/get responses
 Resume file: None
