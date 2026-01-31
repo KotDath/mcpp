@@ -34,6 +34,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "mcpp/content/pagination.h"
 #include "mcpp/util/uri_template.h"
 
 namespace mcpp {
@@ -299,6 +300,19 @@ public:
      * @return Vector of JSON objects describing each resource
      */
     std::vector<nlohmann::json> list_resources() const;
+
+    /**
+     * @brief List all registered resources with pagination
+     *
+     * Returns paginated results for both regular and template resources.
+     * The cursor is an opaque token; clients should not interpret its contents.
+     *
+     * @param cursor Optional cursor from previous page for continuation
+     * @return PaginatedResult containing resource metadata and optional next cursor
+     */
+    content::PaginatedResult<nlohmann::json> list_resources_paginated(
+        const std::optional<std::string>& cursor = std::nullopt
+    ) const;
 
     /**
      * @brief Read a resource by URI

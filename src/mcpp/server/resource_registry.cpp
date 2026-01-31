@@ -6,6 +6,7 @@
 
 #include "mcpp/server/resource_registry.h"
 
+#include <cstdint>
 #include <regex>
 #include <sstream>
 
@@ -59,6 +60,56 @@ std::vector<std::string> extract_parameter_names(const std::string& uri_template
     return names;
 }
 
+/**
+ * @brief Build JSON for a static resource
+ *
+ * Helper function that builds the resource JSON object following
+ * MCP resources/list response format for static resources.
+ *
+ * @param registration The resource registration to convert
+ * @return JSON object representing the resource
+ */
+nlohmann::json static_resource_to_json(const ResourceRegistration& registration) {
+    nlohmann::json resource;
+    resource["uri"] = registration.uri;
+    resource["name"] = registration.name;
+
+    if (registration.description.has_value()) {
+        resource["description"] = *registration.description;
+    }
+
+    resource["mimeType"] = registration.mime_type;
+    return resource;
+}
+
+/**
+ * @brief Build JSON for a template resource
+ *
+ * Helper function that builds the resource JSON object following
+ * MCP resources/list response format for template resources.
+ *
+ * @param registration The template resource registration to convert
+ * @return JSON object representing the template resource
+ */
+nlohmann::json template_resource_to_json(const TemplateResourceRegistration& registration) {
+    nlohmann::json resource;
+    resource["uri"] = registration.uri_template;
+    resource["name"] = registration.name;
+
+    if (registration.description.has_value()) {
+        resource["description"] = *registration.description;
+    }
+
+    resource["mimeType"] = registration.mime_type;
+
+    // Mark this as a template resource per MCP spec
+    nlohmann::json template_obj;
+    template_obj["uri"] = registration.uri_template;
+    resource["template"] = std::move(template_obj);
+
+    return resource;
+}
+
 } // anonymous namespace
 
 bool ResourceRegistry::register_resource(
@@ -87,38 +138,63 @@ std::vector<nlohmann::json> ResourceRegistry::list_resources() const {
 
     // Add static resources
     for (const auto& [uri, registration] : resources_) {
-        nlohmann::json resource;
-        resource["uri"] = registration.uri;
-        resource["name"] = registration.name;
-
-        if (registration.description.has_value()) {
-            resource["description"] = *registration.description;
-        }
-
-        resource["mimeType"] = registration.mime_type;
-        result.push_back(std::move(resource));
+        result.push_back(static_resource_to_json(registration));
     }
 
     // Add template resources
     for (const auto& [uri_template, registration] : template_resources_) {
-        nlohmann::json resource;
-        resource["uri"] = registration.uri_template;
-        resource["name"] = registration.name;
-
-        if (registration.description.has_value()) {
-            resource["description"] = *registration.description;
-        }
-
-        resource["mimeType"] = registration.mime_type;
-
-        // Mark this as a template resource per MCP spec
-        nlohmann::json template_obj;
-        template_obj["uri"] = registration.uri_template;
-        resource["template"] = std::move(template_obj);
-
-        result.push_back(std::move(resource));
+        result.push_back(template_resource_to_json(registration));
     }
 
+    return result;
+}
+
+content::PaginatedResult<nlohmann::json> ResourceRegistry::list_resources_paginated(
+    const std::optional<std::string>& cursor
+) const {
+    constexpr size_t PAGE_SIZE = 50;  // Server-determined page size
+
+    // Decode cursor (offset-based encoding)
+    size_t start_index = 0;
+    if (cursor.has_value()) {
+        try {
+            start_index = std::stoull(*cursor);
+        } catch (...) {
+            // Invalid cursor - start from beginning
+            start_index = 0;
+        }
+    }
+
+    content::PaginatedResult<nlohmann::json> result;
+    size_t count = 0;
+
+    // Helper to add items from a map
+    auto add_items = [&]<typename Map>(const Map& map, auto&& to_json_fn) {
+        for (const auto& [key, registration] : map) {
+            (void)key; // Suppress unused warning
+            if (count++ < start_index) continue;
+            if (result.items.size() >= PAGE_SIZE) {
+                // More results exist
+                result.nextCursor = std::to_string(start_index + PAGE_SIZE);
+                return;
+            }
+            result.items.push_back(to_json_fn(registration));
+        }
+    };
+
+    // Add static resources first
+    add_items(resources_, [](const ResourceRegistration& reg) {
+        return static_resource_to_json(reg);
+    });
+
+    // Continue with template resources if page not full
+    if (result.items.size() < PAGE_SIZE) {
+        add_items(template_resources_, [](const TemplateResourceRegistration& reg) {
+            return template_resource_to_json(reg);
+        });
+    }
+
+    result.total = resources_.size() + template_resources_.size();
     return result;
 }
 
