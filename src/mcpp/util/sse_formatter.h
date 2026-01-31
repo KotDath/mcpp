@@ -26,8 +26,8 @@
 #define MCPP_UTIL_SSE_FORMATTER_H
 
 #include <nlohmann/json.hpp>
-#include <string>
 #include <sstream>
+#include <string>
 
 namespace mcpp {
 namespace util {
@@ -35,17 +35,19 @@ namespace util {
 /**
  * @brief Server-Sent Events (SSE) formatter for HTTP transport
  *
- * Provides static methods for formatting SSE events according to the
- * text/event-stream specification. SSE is used for server-to-client
- * streaming in the MCP Streamable HTTP transport.
+ * SseFormatter provides static methods for formatting messages according to
+ * the SSE (text/event-stream) specification. This is used by HttpTransport
+ * to send messages to clients via HTTP GET with SSE.
  *
- * Format specification:
- * - Each event has "data:" line(s) containing the JSON payload
- * - Optional "id:" line for event identification
- * - Optional "event:" line for event type naming
- * - Double newline ("\n\n") terminates each event
+ * SSE format per W3C spec:
+ * - Each event consists of one or more fields
+ * - Each field: "field_name: value\n"
+ * - Events terminated by double newline ("\n\n")
+ * - Required fields: data (contains the JSON payload)
+ * - Optional fields: event (event type), id (event ID for reconnection), retry
  *
- * @see https://modelcontextprotocol.io/specification/2025-11-25/basic/transports
+ * @note This is a header-only utility with no external SSE library dependency.
+ *       The SSE format is simple enough to inline correctly.
  */
 class SseFormatter {
 public:
@@ -53,20 +55,21 @@ public:
      * @brief Format a JSON-RPC message as an SSE event
      *
      * Creates a properly formatted SSE event with the JSON message as data.
-     * The event ID is optional but recommended for reconnection support.
+     * The message is serialized using nlohmann::json::dump().
      *
-     * @param message The JSON-RPC message to format (typically a notification)
-     * @param event_id Optional event identifier for reconnection tracking
-     * @return Formatted SSE event string ready to send
+     * Format:
+     *   data: {"json":"rpc"}\n
+     *   id: 123\n
+     *   \n
      *
-     * Example output:
-     *   data: {"jsonrpc":"2.0","method":"notifications/message"}
-     *   id: 123
+     * @param message The JSON-RPC message to format
+     * @param event_id Optional event ID for reconnection support (Last-Event-ID header)
+     * @return Formatted SSE event as a string
      *
-     *   (note: trailing blank line is event terminator)
+     * @note The double newline at the end terminates the event per SSE spec.
      */
     static std::string format_event(const nlohmann::json& message,
-                                    const std::string& event_id = "") {
+                                     const std::string& event_id = "") {
         std::ostringstream oss;
         oss << "data: " << message.dump() << "\n";
         if (!event_id.empty()) {
@@ -79,6 +82,8 @@ public:
     /**
      * @brief Get the Content-Type header value for SSE responses
      *
+     * HTTP responses with SSE must set Content-Type to "text/event-stream".
+     *
      * @return "text/event-stream"
      */
     static const char* content_type() {
@@ -88,7 +93,7 @@ public:
     /**
      * @brief Get the Cache-Control header value for SSE responses
      *
-     * SSE requires disabling caching to ensure real-time delivery.
+     * SSE responses should disable caching to ensure real-time delivery.
      *
      * @return "no-cache"
      */
@@ -99,19 +104,13 @@ public:
     /**
      * @brief Get the Connection header value for SSE responses
      *
-     * SSE requires persistent connections for streaming.
+     * SSE responses should keep the connection open for streaming.
      *
      * @return "keep-alive"
      */
     static const char* connection() {
         return "keep-alive";
     }
-
-private:
-    // Static utility class - no instantiation
-    SseFormatter() = delete;
-    SseFormatter(const SseFormatter&) = delete;
-    SseFormatter& operator=(const SseFormatter&) = delete;
 };
 
 } // namespace util
