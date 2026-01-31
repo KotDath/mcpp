@@ -55,11 +55,11 @@ public:
      * @brief Expand a URI template with provided parameters
      *
      * Supports:
-     * - {var} - Simple variable substitution from params["var"]
+     * - {var} - Path-style variable substitution from params["var"]
      * - {?var*} - Query parameter expansion from params["var"] object
      *
-     * Special characters in path/query components are percent-encoded
-     * per RFC 3986.
+     * Path variables use RFC 6570 reserve-style expansion (preserves /, ?, etc.).
+     * Query parameters use percent-encoding per RFC 3986.
      *
      * @param template_str The URI template (e.g., "file://{path}")
      * @param params JSON object containing template variables
@@ -126,8 +126,8 @@ public:
                 }
             }
 
-            // Percent-encode the value for path component
-            value = percent_encode(value);
+            // Percent-encode for path component (preserves / and other path-safe chars)
+            value = percent_encode_path(value);
             result.replace(pos, end - pos + 1, value);
             pos = pos + value.length();
         }
@@ -183,10 +183,39 @@ private:
     }
 
     /**
+     * @brief Percent-encode a string for path components
+     *
+     * Uses RFC 6570 reserve-style encoding which preserves path segment
+     * characters like / and ?. Similar to {+var} expansion in RFC 6570.
+     * Encodes: space, ", #, <, >, ?, `, {, }, |, \, ^, [, ], control chars
+     * Preserves: unreserved chars + /, : @, $ & , + = ; !
+     */
+    static std::string percent_encode_path(const std::string& input) {
+        std::ostringstream oss;
+        oss << std::hex << std::uppercase << std::setfill('0');
+
+        for (unsigned char c : input) {
+            // Unreserved characters per RFC 3986
+            if (is_unreserved(c)) {
+                oss << c;
+            } else if (c == '/' || c == ':' || c == '@' || c == '$' ||
+                       c == '&' || c == ',' || c == '+' || c == '=' ||
+                       c == ';' || c == '!') {
+                // Path-safe characters (RFC 6570 reserve expansion)
+                oss << c;
+            } else {
+                oss << '%' << std::setw(2) << static_cast<int>(c);
+            }
+        }
+
+        return oss.str();
+    }
+
+    /**
      * @brief Percent-encode a string for URI components
      *
      * Encodes reserved characters per RFC 3986.
-     * Path encoding: space -> %20, # -> %23, etc.
+     * Used for query parameter encoding.
      */
     static std::string percent_encode(const std::string& input) {
         std::ostringstream oss;
