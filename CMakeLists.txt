@@ -32,6 +32,7 @@ set_target_properties(nlohmann_json::nlohmann_json PROPERTIES
 # Source files
 set(MCPP_PUBLIC_HEADERS
     # API headers (Phase 6: High-Level API)
+    src/mcpp/api/context.h
     src/mcpp/api/peer.h
     src/mcpp/api/role.h
     src/mcpp/api/running_service.h
