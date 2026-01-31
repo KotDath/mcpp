@@ -29,6 +29,7 @@ set(MCPP_PUBLIC_HEADERS
     src/mcpp/client/cancellation.h
     src/mcpp/client/roots.h
     src/mcpp/client/sampling.h
+    src/mcpp/client/elicitation.h
     src/mcpp/core/error.h
     src/mcpp/core/json_rpc.h
     src/mcpp/core/request_tracker.h
@@ -50,6 +51,7 @@ set(MCPP_SOURCES
     src/mcpp/client/cancellation.cpp
     src/mcpp/client/roots.cpp
     src/mcpp/client/sampling.cpp
+    src/mcpp/client/elicitation.cpp
     src/mcpp/core/json_rpc.cpp
     src/mcpp/core/request_tracker.cpp
     src/mcpp/transport/stdio_transport.cpp
