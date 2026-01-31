@@ -146,13 +146,13 @@ Plans:
 4. Library consumer can send and receive tools/prompts/resources/list_changed notifications
 5. Library consumer can create and manage experimental tasks with polling, status notifications, result retrieval, and TTL management
 
-**Plans**: 4 plans in 2 waves
+**Plans**: 4 plans in 1 wave
 
 Plans:
-- [ ] 05-01-PLAN.md — Rich content types (ImageContent, AudioContent, ResourceLink, EmbeddedResource, Annotations)
-- [ ] 05-02-PLAN.md — Cursor-based pagination for all list operations
-- [ ] 05-03-PLAN.md — List changed notifications (tools, resources, prompts)
-- [ ] 05-04-PLAN.md — Experimental task lifecycle management (TaskManager)
+- [x] 05-01-PLAN.md — Rich content types (ImageContent, AudioContent, ResourceLink, EmbeddedResource, Annotations)
+- [x] 05-02-PLAN.md — Cursor-based pagination for all list operations
+- [x] 05-03-PLAN.md — List changed notifications (tools, resources, prompts)
+- [x] 05-04-PLAN.md — Experimental task lifecycle management (TaskManager)
 
 ### Phase 6: High-Level API
 
@@ -212,6 +212,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Core Server | 6/6 | Complete | 2026-01-31 |
 | 3. Client Capabilities | 8/8 | Complete | 2026-01-31 |
 | 4. Advanced Features & HTTP Transport | 6/6 | Complete | 2026-01-31 |
-| 5. Content & Tasks | 0/4 | Ready to execute | - |
+| 5. Content & Tasks | 4/4 | Complete | 2026-01-31 |
 | 6. High-Level API | 0/0 | Not started | - |
 | 7. Build & Validation | 0/0 | Not started | - |
