@@ -86,7 +86,12 @@ target_include_directories(mcpp_compliance_tests PRIVATE
 )
 
 target_compile_definitions(mcpp_compliance_tests PRIVATE
-    TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+    TEST_DATA_DIR="${CMAKE_CURRENT_BINARY_DIR}/data"
+)
+
+# Ensure test data is available in build directory
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/jsonrpc_examples.json
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data
 )
 
 gtest_discover_tests(mcpp_compliance_tests
