@@ -146,11 +146,13 @@ Plans:
 4. Library consumer can send and receive tools/prompts/resources/list_changed notifications
 5. Library consumer can create and manage experimental tasks with polling, status notifications, result retrieval, and TTL management
 
-**Plans**: TBD
+**Plans**: 4 plans in 2 waves
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — Rich content types (ImageContent, AudioContent, ResourceLink, EmbeddedResource, Annotations)
+- [ ] 05-02-PLAN.md — Cursor-based pagination for all list operations
+- [ ] 05-03-PLAN.md — List changed notifications (tools, resources, prompts)
+- [ ] 05-04-PLAN.md — Experimental task lifecycle management (TaskManager)
 
 ### Phase 6: High-Level API
 
