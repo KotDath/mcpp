@@ -379,6 +379,18 @@ private:
         const std::string& uri_template,
         const std::vector<std::string>& parameter_names
     ) const;
+
+    /**
+     * @brief Build resource result in MCP format from content
+     *
+     * @param content The resource content
+     * @param default_mime_type Fallback MIME type
+     * @return JSON object in MCP ReadResourceResult format
+     */
+    nlohmann::json build_resource_result(
+        const ResourceContent& content,
+        const std::string& default_mime_type
+    ) const;
 };
 
 } // namespace server
