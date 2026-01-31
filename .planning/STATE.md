@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 2 of 7 (Core Server)
-Plan: 3 of TBD in current phase
+Plan: 4 of TBD in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed plan 02-03: Prompt Registry with handler registration, argument substitution, and MCP-compliant prompts/list and prompts/get responses
+Last activity: 2026-01-31 — Completed plan 02-04: RequestContext for handler access to transport and progress token support
 
-Progress: [███░░░░░░░░] 20%
+Progress: [████░░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: 5 min
-- Total execution time: 0.7 hours
+- Total execution time: 0.8 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
-| 02-core-server | 2 | TBD | 1 min |
+| 02-core-server | 3 | TBD | 1 min |
 
 **Recent Trend:**
-- Last 3 plans: 02-01, 02-02, 02-03
+- Last 3 plans: 02-02, 02-03, 02-04
 - Trend: Phase 2 in progress
 
 *Updated after each plan completion*
@@ -97,6 +97,13 @@ Recent decisions affecting current work:
 - PromptRegistry returns MCP GetPromptResult format directly from get_prompt()
 - Argument substitution is handler's responsibility (not enforced by registry)
 
+**From 02-04 (RequestContext):**
+- Progress values as 0-100 percentage (universally understood, maps cleanly to JSON)
+- Optional message parameter in progress notifications
+- No-op behavior when no progress token is set (graceful degradation)
+- Progress value clamping to 0-100 range for safety
+- Transport held by reference (not owned) - server manages lifecycle
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -113,5 +120,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed plan 02-03 - Prompt Registry with handler registration, argument substitution, and MCP-compliant prompts/list and prompts/get responses
+Stopped at: Completed plan 02-04 - RequestContext for handler access to transport and progress token support
 Resume file: None
