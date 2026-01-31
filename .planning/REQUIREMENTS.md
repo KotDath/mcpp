@@ -27,9 +27,9 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Transports
 
 - [x] **TRAN-01**: stdio transport (subprocess spawning, stdin/out messaging, newline-delimited JSON)
-- [ ] **TRAN-02**: Streamable HTTP transport (HTTP POST/SSE, session management, resumability)
+- [x] **TRAN-02**: Streamable HTTP transport (HTTP POST/SSE, session management, resumability)
 - [ ] **TRAN-03**: Transport abstraction interface (pluggable transport design)
-- [ ] **TRAN-04**: Non-blocking I/O for all transports (avoid event loop blocking)
+- [x] **TRAN-04**: Non-blocking I/O for all transports (avoid event loop blocking)
 
 ### Async & Lifecycle
 
@@ -56,12 +56,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Advanced Features
 
-- [ ] **ADV-01**: Tool result streaming (incremental results for long-running tools)
-- [ ] **ADV-02**: Resource templates (parameterized resources with URI template expansion)
-- [ ] **ADV-03**: Resource subscriptions (resources/subscribe, resources/unsubscribe, notifications/resources/updated)
-- [ ] **ADV-04**: Completion (argument completion for prompts/resources with reference values)
-- [ ] **ADV-05**: Tool annotations (metadata: audience, priority, destructive/read-only indicators)
-- [ ] **ADV-06**: Structured output (outputSchema for tools, JSON Schema validation)
+- [x] **ADV-01**: Tool result streaming (incremental results for long-running tools)
+- [x] **ADV-02**: Resource templates (parameterized resources with URI template expansion)
+- [x] **ADV-03**: Resource subscriptions (resources/subscribe, resources/unsubscribe, notifications/resources/updated)
+- [x] **ADV-04**: Completion (argument completion for prompts/resources with reference values)
+- [x] **ADV-05**: Tool annotations (metadata: audience, priority, destructive/read-only indicators)
+- [x] **ADV-06**: Structured output (outputSchema for tools, JSON Schema validation)
 - [ ] **ADV-07**: Tasks experimental (task lifecycle, polling, status notifications, result retrieval, TTL management)
 
 ### API Design
@@ -157,14 +157,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLNT-05 | Phase 3 | Complete |
 | ASYNC-02 | Phase 3 | Complete |
 | ASYNC-04 | Phase 3 | Complete |
-| TRAN-02 | Phase 4 | Pending |
-| TRAN-04 | Phase 4 | Pending |
-| ADV-01 | Phase 4 | Pending |
-| ADV-02 | Phase 4 | Pending |
-| ADV-03 | Phase 4 | Pending |
-| ADV-04 | Phase 4 | Pending |
-| ADV-05 | Phase 4 | Pending |
-| ADV-06 | Phase 4 | Pending |
+| TRAN-02 | Phase 4 | Complete |
+| TRAN-04 | Phase 4 | Complete |
+| ADV-01 | Phase 4 | Complete |
+| ADV-02 | Phase 4 | Complete |
+| ADV-03 | Phase 4 | Complete |
+| ADV-04 | Phase 4 | Complete |
+| ADV-05 | Phase 4 | Complete |
+| ADV-06 | Phase 4 | Complete |
 | CONT-01 | Phase 5 | Pending |
 | CONT-02 | Phase 5 | Pending |
 | CONT-03 | Phase 5 | Pending |

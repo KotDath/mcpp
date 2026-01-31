@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Protocol Foundation** - JSON-RPC core, MCP initialization, transport abstraction, async core API
 - [x] **Phase 2: Core Server** - Tools, resources, prompts with stdio transport and progress support
 - [x] **Phase 3: Client Capabilities** - Roots, sampling, elicitation with cancellation and futures
-- [ ] **Phase 4: Advanced Features & HTTP Transport** - SSE transport, streaming, subscriptions, completions
+- [x] **Phase 4: Advanced Features & HTTP Transport** - SSE transport, streaming, subscriptions, completions
 - [ ] **Phase 5: Content & Tasks** - Rich content types, annotations, pagination, experimental tasks
 - [ ] **Phase 6: High-Level API** - Type-safe wrappers, thread safety, logging, utilities
 - [ ] **Phase 7: Build & Validation** - CMake build, libraries, testing, Inspector integration
@@ -124,12 +124,12 @@ Plans:
 **Plans**: 6 plans in 3 waves
 
 Plans:
-- [ ] 04-01-PLAN.md — SSE formatter and URI template expander utilities
-- [ ] 04-02-PLAN.md — Streamable HTTP transport with session management
-- [ ] 04-03-PLAN.md — Tool annotations and structured output
-- [ ] 04-04-PLAN.md — Resource templates and subscriptions
-- [ ] 04-05-PLAN.md — Argument completion for prompts and resources
-- [ ] 04-06-PLAN.md — Tool result streaming
+- [x] 04-01-PLAN.md — SSE formatter and URI template expander utilities
+- [x] 04-02-PLAN.md — Streamable HTTP transport with session management
+- [x] 04-03-PLAN.md — Tool annotations and structured output
+- [x] 04-04-PLAN.md — Resource templates and subscriptions
+- [x] 04-05-PLAN.md — Argument completion for prompts and resources
+- [x] 04-06-PLAN.md — Tool result streaming
 
 ### Phase 5: Content & Tasks
 
@@ -209,7 +209,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Protocol Foundation | 6/6 | Complete | 2026-01-31 |
 | 2. Core Server | 6/6 | Complete | 2026-01-31 |
 | 3. Client Capabilities | 8/8 | Complete | 2026-01-31 |
-| 4. Advanced Features & HTTP Transport | 0/6 | Planned | - |
+| 4. Advanced Features & HTTP Transport | 6/6 | Complete | 2026-01-31 |
 | 5. Content & Tasks | 0/0 | Not started | - |
 | 6. High-Level API | 0/0 | Not started | - |
 | 7. Build & Validation | 0/0 | Not started | - |
