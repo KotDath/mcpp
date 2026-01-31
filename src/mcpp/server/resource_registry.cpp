@@ -6,6 +6,9 @@
 
 #include "mcpp/server/resource_registry.h"
 
+// Include prompt_registry.h for shared Completion struct definition
+#include "mcpp/server/prompt_registry.h"
+
 #include <cstdint>
 #include <regex>
 #include <sstream>

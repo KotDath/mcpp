@@ -495,7 +495,7 @@ void McpServer::send_list_changed_notification(const std::string& method) {
         {"params", nlohmann::json::object()}
     };
 
-    (*transport_)->send_notification(notification);
+    (*transport_)->send(notification.dump());
 }
 
 nlohmann::json McpServer::handle_tasks_send(const nlohmann::json& params) {
