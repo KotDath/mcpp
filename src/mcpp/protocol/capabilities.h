@@ -107,7 +107,7 @@ struct RootsCapability {
  * Corresponds to "SamplingCapability" in MCP 2025-11-25 schema.
  */
 struct SamplingCapability {
-    // No fields defined in current spec
+    std::optional<bool> tools;  // Client supports tool use in sampling (CLNT-03)
 };
 
 /**
