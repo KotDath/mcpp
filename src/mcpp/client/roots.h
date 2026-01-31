@@ -91,6 +91,14 @@ struct ListRootsResult {
      * @return JSON value in MCP roots/list response format
      */
     JsonValue to_json() const;
+
+    /**
+     * @brief Parse ListRootsResult from JSON
+     *
+     * @param j JSON value to parse
+     * @return Parsed result, or nullopt if parsing fails
+     */
+    static std::optional<ListRootsResult> from_json(const JsonValue& j);
 };
 
 /**

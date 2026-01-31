@@ -54,6 +54,34 @@ JsonValue ListRootsResult::to_json() const {
     return result;
 }
 
+std::optional<ListRootsResult> ListRootsResult::from_json(const JsonValue& j) {
+    if (!j.contains("roots") || !j["roots"].is_array()) {
+        return std::nullopt;
+    }
+
+    ListRootsResult result;
+
+    for (const auto& root_json : j["roots"]) {
+        Root root;
+
+        if (!root_json.contains("uri") || !root_json["uri"].is_string()) {
+            return std::nullopt;
+        }
+        root.uri = root_json["uri"].get<std::string>();
+
+        if (root_json.contains("name") && root_json["name"].is_string()) {
+            std::string name = root_json["name"].get<std::string>();
+            if (!name.empty()) {
+                root.name = name;
+            }
+        }
+
+        result.roots.push_back(std::move(root));
+    }
+
+    return result;
+}
+
 // ============================================================================
 // RootsManager
 // ============================================================================
