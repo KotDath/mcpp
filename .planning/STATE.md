@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 3 of 7 (Client Capabilities)
-Plan: 3 of 6 in current phase
+Plan: 5 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed 03-01: C++20 upgrade with std::stop_token-based cooperative cancellation
+Last activity: 2026-01-31 — Completed 03-05: Elicitation support with form mode (CLNT-04) and URL mode (CLNT-05)
 
-Progress: [██████████░] 33%
+Progress: [██████████░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 20
 - Average duration: 4 min
-- Total execution time: 1.2 hours
+- Total execution time: 1.4 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [██████████░] 33%
 |-------|-------|----------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
 | 02-core-server | 6 | 6 | 2 min |
-| 03-client-capabilities | 6 | 3 | 3 min |
+| 03-client-capabilities | 6 | 5 | 3 min |
 
 **Recent Trend:**
-- Last 6 plans: 02-06, 03-02, 03-03, 03-01
-- Trend: Phase 3 in progress, cancellation support added (03-01 executed after 03-02/03-03)
+- Last 6 plans: 03-03, 03-01, 03-04, 03-05
+- Trend: Phase 3 nearly complete, elicitation support added (03-05)
 
 *Updated after each plan completion*
 
@@ -144,6 +144,23 @@ Recent decisions affecting current work:
 - notifications/cancelled handler registered in McpClient constructor
 - cancel_request() public method for user-initiated cancellation
 
+**From 03-04 (Sampling with Tool Use):**
+- Tool types (Tool, ToolChoice) added for agentic sampling loops
+- ToolResultContent for structured tool return values with isError flag
+- CreateMessageRequest extended with optional tools and tool_choice parameters
+- CreateMessageResult extended with toolUseContent for multi-step tool loops
+- SamplingClient::handle_create_message_with_tools for tool loop execution
+- Maximum of 10 tool iterations to prevent infinite loops
+
+**From 03-05 (Elicitation Support):**
+- PrimitiveSchema restricted to top-level properties only per MCP spec (no nested objects)
+- Form mode synchronous (immediate ElicitResult) vs URL mode asynchronous (notification completes)
+- Variant-based request discrimination using std::variant<ElicitRequestForm, ElicitRequestURL>
+- ElicitationClient with pending_url_requests_ map for URL mode correlation by elicitation_id
+- ElicitationCapability added to protocol types with form and url flags
+- elicitation/create request handler registered in McpClient constructor
+- notifications/elicitation/complete notification handler registered in McpClient constructor
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -159,5 +176,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 03-01 - C++20 upgrade with std::stop_token-based cooperative cancellation, CancellationToken/CancellationSource types, CancellationManager for request tracking, and McpClient integration with notifications/cancelled handler.
+Stopped at: Completed 03-05 - Elicitation support with form mode (in-app prompts with JSON Schema validation) and URL mode (out-of-band interactions like OAuth with completion notification). PrimitiveSchema for form field types, ElicitationClient for both modes, ElicitationCapability in protocol types, McpClient integration with handlers.
 Resume file: None
