@@ -40,6 +40,7 @@ set(MCPP_PUBLIC_HEADERS
     src/mcpp/protocol/types.h
     src/mcpp/transport/transport.h
     src/mcpp/transport/stdio_transport.h
+    src/mcpp/content/pagination.h
     src/mcpp/server/tool_registry.h
     src/mcpp/server/resource_registry.h
     src/mcpp/server/prompt_registry.h
