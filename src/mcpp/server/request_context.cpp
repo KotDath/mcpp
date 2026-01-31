@@ -14,11 +14,14 @@ namespace server {
 
 RequestContext::RequestContext(
     const std::string& request_id,
-    transport::Transport& transport
+    transport::Transport& transport,
+    Duration default_timeout
 ) : request_id_(request_id),
     transport_(transport),
     progress_token_(std::nullopt),
-    streaming_(false) {}
+    streaming_(false),
+    default_timeout_(default_timeout),
+    deadline_(Clock::now() + default_timeout) {}
 
 void RequestContext::set_progress_token(const std::string& token) {
     progress_token_ = token;
@@ -63,6 +66,25 @@ void RequestContext::report_progress(double progress, const std::string& message
     // Send via transport with newline delimiter (stdio spec)
     std::string serialized = notification.dump() + "\n";
     transport_.send(serialized);
+
+    // UTIL-02: Reset timeout on progress notification
+    reset_timeout_on_progress();
+}
+
+void RequestContext::reset_timeout_on_progress() {
+    // Reset the deadline to now + default_timeout
+    std::lock_guard lock(deadline_mutex_);
+    deadline_ = Clock::now() + default_timeout_;
+}
+
+bool RequestContext::is_timeout_expired() const {
+    std::lock_guard lock(deadline_mutex_);
+    return Clock::now() > deadline_;
+}
+
+RequestContext::TimePoint RequestContext::deadline() const {
+    std::lock_guard lock(deadline_mutex_);
+    return deadline_;
 }
 
 transport::Transport& RequestContext::transport() {

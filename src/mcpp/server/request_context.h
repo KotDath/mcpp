@@ -25,6 +25,8 @@
 #ifndef MCPP_SERVER_REQUEST_CONTEXT_H
 #define MCPP_SERVER_REQUEST_CONTEXT_H
 
+#include <chrono>
+#include <mutex>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
@@ -36,6 +38,14 @@ namespace mcpp {
 namespace server {
 
 /**
+ * @brief Default timeout for requests (5 minutes per MCP spec)
+ *
+ * Long-running operations should send progress notifications to reset
+ * the timeout clock and prevent premature timeout (UTIL-02).
+ */
+inline constexpr std::chrono::milliseconds DEFAULT_REQUEST_TIMEOUT{300000}; // 5 minutes
+
+/**
  * @brief Context object passed to handlers for progress reporting and streaming
  *
  * RequestContext provides handlers with access to the transport layer
@@ -45,6 +55,11 @@ namespace server {
  * This enables handlers to report progress for long-running operations
  * via the MCP notifications/progress mechanism, and to send incremental
  * results via the streaming support.
+ *
+ * UTIL-02: Progress notifications reset the timeout clock to prevent
+ * long-running operations from timing out. When a progress notification
+ * with a matching progress_token is received, the deadline is reset to
+ * now + default_timeout.
  *
  * Streaming mode:
  * - When enabled via set_streaming(true), handlers can send incremental results
@@ -64,7 +79,7 @@ namespace server {
  * void my_tool_handler(const std::string& name,
  *                      const json& args,
  *                      RequestContext& ctx) {
- *     // Report progress at 25%
+ *     // Report progress at 25% (also resets timeout)
  *     ctx.report_progress(25.0, "Processing data...");
  *
  *     // Send incremental result
@@ -72,7 +87,7 @@ namespace server {
  *
  *     // Do work...
  *
- *     // Report progress at 50%
+ *     // Report progress at 50% (also resets timeout)
  *     ctx.report_progress(50.0, "Still processing...");
  *
  *     // Send another incremental result
@@ -89,14 +104,27 @@ namespace server {
 class RequestContext {
 public:
     /**
+     * @brief Clock type for timeout tracking
+     *
+     * Uses steady_clock for timeout tracking to be immune to system time changes.
+     */
+    using Clock = std::chrono::steady_clock;
+    using TimePoint = Clock::time_point;
+    using Duration = std::chrono::milliseconds;
+
+    /**
      * @brief Construct a RequestContext with request ID and transport
+     *
+     * Initializes the deadline to now + DEFAULT_REQUEST_TIMEOUT.
      *
      * @param request_id The JSON-RPC request ID for this request
      * @param transport Reference to the transport for sending notifications
+     * @param default_timeout Optional custom timeout (defaults to 5 minutes)
      */
     RequestContext(
         const std::string& request_id,
-        transport::Transport& transport
+        transport::Transport& transport,
+        Duration default_timeout = DEFAULT_REQUEST_TIMEOUT
     );
 
     /**
@@ -151,6 +179,10 @@ public:
      *
      * If no progress token is set, this method is a no-op.
      *
+     * UTIL-02: This also resets the timeout deadline to now + default_timeout,
+     * preventing long-running operations from timing out while they're actively
+     * sending progress updates.
+     *
      * @param progress Progress value from 0 to 100 (percentage)
      * @param message Optional status message to include with the progress update
      *
@@ -161,6 +193,46 @@ public:
         double progress,
         const std::string& message = ""
     );
+
+    /**
+     * @brief Reset the timeout deadline (UTIL-02)
+     *
+     * Resets the deadline to now + default_timeout. This is called when
+     * a progress notification with a matching progress_token is received.
+     *
+     * Thread-safe: Uses mutex lock for deadline access.
+     *
+     * This allows long-running operations to keep the request alive by
+     * sending periodic progress notifications.
+     */
+    void reset_timeout_on_progress();
+
+    /**
+     * @brief Check if the request timeout has expired
+     *
+     * @return true if the current time is past the deadline, false otherwise
+     *
+     * Thread-safe: Uses mutex lock for deadline access.
+     */
+    bool is_timeout_expired() const;
+
+    /**
+     * @brief Get the current deadline
+     *
+     * @return The time point when this request will timeout
+     *
+     * Thread-safe: Uses mutex lock for deadline access.
+     */
+    TimePoint deadline() const;
+
+    /**
+     * @brief Get the default timeout duration
+     *
+     * @return The timeout duration in milliseconds
+     */
+    Duration default_timeout() const noexcept {
+        return default_timeout_;
+    }
 
     /**
      * @brief Get the transport reference
@@ -217,6 +289,15 @@ private:
     transport::Transport& transport_;
     std::optional<std::string> progress_token_;
     bool streaming_ = false;
+
+    /// Default timeout duration (5 minutes by default)
+    Duration default_timeout_;
+
+    /// Deadline for request timeout (UTIL-02)
+    TimePoint deadline_;
+
+    /// Mutex protecting deadline_ for thread-safe access
+    mutable std::mutex deadline_mutex_;
 };
 
 } // namespace server
