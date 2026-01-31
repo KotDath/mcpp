@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 4 of 7 (Advanced Features & HTTP Transport)
-Plan: 2 of 6 in current phase
+Plan: 3 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed 04-02: Streamable HTTP transport with SSE and session management
+Last activity: 2026-01-31 — Completed 04-03: Tool metadata and output validation
 
-Progress: [██████░░░░] 33%
+Progress: [███████░░░] 50%
 
 ## Performance Metrics
 
@@ -30,11 +30,11 @@ Progress: [██████░░░░] 33%
 | 01-protocol-foundation | 6 | 6 | 6 min |
 | 02-core-server | 6 | 6 | 2 min |
 | 03-client-capabilities | 8 | 8 | 3 min |
-| 04-advanced-features--http-transport | 6 | 2 | 4 min |
+| 04-advanced-features--http-transport | 6 | 3 | 3 min |
 
 **Recent Trend:**
-- Last 2 plans: 04-01, 04-02 (SSE formatter, URI template expander, HTTP transport)
-- Trend: Phase 4 progressing with HTTP transport implementation
+- Last 3 plans: 04-01, 04-02, 04-03 (SSE formatter, URI template, HTTP transport, tool annotations)
+- Trend: Phase 4 at 50% completion, tool metadata enhancements complete
 
 *Updated after each plan completion*
 
@@ -201,6 +201,13 @@ Recent decisions affecting current work:
 - SseFormatter used for SSE event formatting (format_event, content_type, etc.)
 - Template-based adapter pattern supports any HTTP server (cpp-httplib, drogon, oat++)
 
+**From 04-03 (Tool Metadata and Output Validation):**
+- ToolAnnotations struct with destructive, read_only, audience, priority fields
+- Output schema validation using nlohmann/json_schema_validator
+- Backward compatible API via overloaded register_tool method
+- Extended tool discovery includes annotations and outputSchema fields
+- Output validation failures return CallToolResult with isError=true (not JSON-RPC error)
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -216,5 +223,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 04-02 (Streamable HTTP transport with SSE and session management). Created SseFormatter as blocking dependency (Rule 3).
+Stopped at: Completed 04-03 (Tool metadata and output validation).
 Resume file: None
