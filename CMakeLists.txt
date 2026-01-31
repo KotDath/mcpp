@@ -90,6 +90,7 @@ set(MCPP_SOURCES
     src/mcpp/core/json_rpc.cpp
     src/mcpp/core/request_tracker.cpp
     src/mcpp/transport/stdio_transport.cpp
+    src/mcpp/transport/http_transport.cpp
     src/mcpp/server/mcp_server.cpp
     src/mcpp/server/prompt_registry.cpp
     src/mcpp/server/request_context.cpp
@@ -101,39 +102,90 @@ set(MCPP_SOURCES
     src/mcpp/util/logger.cpp
 )
 
-# Create the mcpp library
-add_library(mcpp ${MCPP_SOURCES})
-target_include_directories(mcpp PUBLIC
+# Build both static and shared libraries
+add_library(mcpp_static STATIC ${MCPP_SOURCES})
+add_library(mcpp_shared SHARED ${MCPP_SOURCES})
+
+# Common include directories for both libraries
+target_include_directories(mcpp_static PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<INSTALL_INTERFACE:include>
+)
+target_include_directories(mcpp_shared PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(mcpp PUBLIC nlohmann_json::nlohmann_json)
+# Link nlohmann_json to both libraries
+target_link_libraries(mcpp_static PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(mcpp_shared PUBLIC nlohmann_json::nlohmann_json)
 
 # Set library properties
-set_target_properties(mcpp PROPERTIES
+set_target_properties(mcpp_static PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    OUTPUT_NAME mcpp
+    ARCHIVE_OUTPUT_NAME mcpp
+)
+
+set_target_properties(mcpp_shared PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
+    OUTPUT_NAME mcpp
+    LIBRARY_OUTPUT_NAME mcpp
     PUBLIC_HEADER "${MCPP_PUBLIC_HEADERS}"
 )
 
-# Enable warnings
+# Apply warning flags to both libraries
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(mcpp PRIVATE
-        -Wall
-        -Wextra
-        -Wpedantic
-        -Wno-unused-parameter
+    target_compile_options(mcpp_static PRIVATE
+        -Wall -Wextra -Wpedantic -Wno-unused-parameter
+    )
+    target_compile_options(mcpp_shared PRIVATE
+        -Wall -Wextra -Wpedantic -Wno-unused-parameter
     )
 endif()
 
 # Installation
 include(GNUInstallDirs)
-install(TARGETS mcpp
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+include(CMakePackageConfigHelpers)
+
+# Generate version file
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/mcppConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+
+# Configure package config
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mcppConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/mcppConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mcpp
+)
+
+# Install both static and shared libraries
+install(TARGETS mcpp_static mcpp_shared
+    EXPORT mcppTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mcpp
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+# Install exported targets
+install(EXPORT mcppTargets
+    FILE mcppTargets.cmake
+    NAMESPACE mcpp::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mcpp
+)
+
+# Install package config files
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/mcppConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/mcppConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mcpp
 )
 
 # Tests
