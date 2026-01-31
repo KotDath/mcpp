@@ -42,6 +42,12 @@ Progress: [██░░░░░░░░░] 33%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
+**From 01-01 (JSON-RPC core types):**
+- Request ID as std::variant<int64_t, std::string> for full JSON-RPC spec compliance
+- Return std::optional for fallible parsing instead of throwing exceptions
+- Separate header/implementation for testability and future optimization
+- Static factory methods on JsonRpcError for consistent error creation
+
 **From 01-02 (Transport abstraction):**
 - Non-copyable, non-movable base class prevents accidental slicing
 - Library owns std::function copies - user can discard originals after registration
