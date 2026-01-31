@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 1 of 7 (Protocol Foundation)
-Plan: 3 of 6 in current phase
+Plan: 5 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed plan 01-03: MCP protocol types
+Last activity: 2026-01-31 — Completed plan 01-05: Async callbacks and timeout manager
 
-Progress: [███░░░░░░░░] 50%
+Progress: [█████░░░░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: - min
-- Total execution time: 0.0 hours
+- Total plans completed: 5
+- Average duration: 8 min
+- Total execution time: 0.7 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-protocol-foundation | 3 | 6 | - |
+| 01-protocol-foundation | 5 | 6 | 8 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 01-02, 01-03
-- Trend: -
+- Last 5 plans: 01-01, 01-02, 01-03, 01-04, 01-05
+- Trend: Steady progress
 
 *Updated after each plan completion*
 
@@ -60,6 +60,18 @@ Recent decisions affecting current work:
 - Exact match protocol version validation (simplest approach for MVP)
 - Empty structs for notifications with no parameters provide type safety
 
+**From 01-04 (RequestTracker):**
+- Atomic counter for ID generation (lock-free, simple)
+- std::unordered_map for pending request storage
+- Mutex protection for concurrent access
+- std::optional return for fallible completion
+
+**From 01-05 (Async callbacks and timeout manager):**
+- std::function-based callback type aliases for all async operations
+- steady_clock for timeout tracking (immune to system time changes)
+- Callbacks invoked after mutex release to prevent re-entrancy deadlock
+- TimeoutManager returns expired IDs for caller cleanup coordination
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -75,5 +87,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed plan 01-03 - MCP protocol types defined
+Stopped at: Completed plan 01-05 - Async callback infrastructure and TimeoutManager implemented
 Resume file: None
