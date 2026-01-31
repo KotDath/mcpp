@@ -32,6 +32,8 @@
 #include <optional>
 #include <vector>
 
+#include "mcpp/content/pagination.h"
+
 namespace mcpp::server {
 
 /**
@@ -177,6 +179,19 @@ public:
      * @return JSON array of prompt definitions
      */
     std::vector<nlohmann::json> list_prompts() const;
+
+    /**
+     * @brief List all registered prompts with pagination
+     *
+     * Returns paginated results with cursor-based navigation.
+     * The cursor is an opaque token; clients should not interpret its contents.
+     *
+     * @param cursor Optional cursor from previous page for continuation
+     * @return PaginatedResult containing prompt metadata and optional next cursor
+     */
+    content::PaginatedResult<nlohmann::json> list_prompts_paginated(
+        const std::optional<std::string>& cursor = std::nullopt
+    ) const;
 
     /**
      * Get a prompt by name with argument substitution.

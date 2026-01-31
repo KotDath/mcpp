@@ -6,7 +6,50 @@
 
 #include "mcpp/server/prompt_registry.h"
 
+#include <cstdint>
+
 namespace mcpp::server {
+
+namespace {
+
+/**
+ * @brief Convert a PromptRegistration to JSON format
+ *
+ * Helper function that builds the prompt object following MCP prompts/list
+ * response format. Used by both list_prompts() and list_prompts_paginated().
+ *
+ * @param registration The prompt registration to convert
+ * @return JSON object representing the prompt
+ */
+nlohmann::json prompt_to_json(const PromptRegistration& registration) {
+    nlohmann::json prompt_entry;
+    prompt_entry["name"] = registration.name;
+
+    if (registration.description.has_value()) {
+        prompt_entry["description"] = *registration.description;
+    }
+
+    // Build arguments array
+    if (!registration.arguments.empty()) {
+        nlohmann::json::array_t args_array;
+        for (const auto& arg : registration.arguments) {
+            nlohmann::json arg_entry;
+            arg_entry["name"] = arg.name;
+            if (arg.description.has_value()) {
+                arg_entry["description"] = *arg.description;
+            }
+            if (arg.required) {
+                arg_entry["required"] = true;
+            }
+            args_array.push_back(std::move(arg_entry));
+        }
+        prompt_entry["arguments"] = std::move(args_array);
+    }
+
+    return prompt_entry;
+}
+
+} // anonymous namespace
 
 bool PromptRegistry::register_prompt(
     const std::string& name,
@@ -37,33 +80,43 @@ std::vector<nlohmann::json> PromptRegistry::list_prompts() const {
     result.reserve(prompts_.size());
 
     for (const auto& [name, registration] : prompts_) {
-        nlohmann::json prompt_entry;
-        prompt_entry["name"] = registration.name;
-
-        if (registration.description.has_value()) {
-            prompt_entry["description"] = *registration.description;
-        }
-
-        // Build arguments array
-        if (!registration.arguments.empty()) {
-            nlohmann::json::array_t args_array;
-            for (const auto& arg : registration.arguments) {
-                nlohmann::json arg_entry;
-                arg_entry["name"] = arg.name;
-                if (arg.description.has_value()) {
-                    arg_entry["description"] = *arg.description;
-                }
-                if (arg.required) {
-                    arg_entry["required"] = true;
-                }
-                args_array.push_back(std::move(arg_entry));
-            }
-            prompt_entry["arguments"] = std::move(args_array);
-        }
-
-        result.push_back(std::move(prompt_entry));
+        result.push_back(prompt_to_json(registration));
     }
 
+    return result;
+}
+
+content::PaginatedResult<nlohmann::json> PromptRegistry::list_prompts_paginated(
+    const std::optional<std::string>& cursor
+) const {
+    constexpr size_t PAGE_SIZE = 50;  // Server-determined page size
+
+    // Decode cursor (offset-based encoding)
+    size_t start_index = 0;
+    if (cursor.has_value()) {
+        try {
+            start_index = std::stoull(*cursor);
+        } catch (...) {
+            // Invalid cursor - start from beginning
+            start_index = 0;
+        }
+    }
+
+    content::PaginatedResult<nlohmann::json> result;
+    size_t count = 0;
+
+    // Iterate through prompts (unordered_map iteration order is stable within single run)
+    for (const auto& [name, registration] : prompts_) {
+        if (count++ < start_index) continue;
+        if (result.items.size() >= PAGE_SIZE) {
+            // More results exist
+            result.nextCursor = std::to_string(start_index + PAGE_SIZE);
+            break;
+        }
+        result.items.push_back(prompt_to_json(registration));
+    }
+
+    result.total = prompts_.size();
     return result;
 }
 
