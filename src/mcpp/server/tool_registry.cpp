@@ -6,8 +6,33 @@
 
 #include "mcpp/server/tool_registry.h"
 
+#include <nlohmann/json-schema.hpp>
+
 namespace mcpp {
 namespace server {
+
+namespace {
+
+// JSON-RPC error codes for tool validation
+constexpr int JSONRPC_INVALID_PARAMS = -32602;
+
+/**
+ * @brief Create a JSON-RPC error response for invalid arguments
+ *
+ * @param message Error message describing what failed validation
+ * @return JSON error object in JSON-RPC format
+ */
+nlohmann::json make_validation_error(const std::string& message) {
+    return nlohmann::json{
+        {"error", {
+            {"code", JSONRPC_INVALID_PARAMS},
+            {"message", "Invalid arguments"},
+            {"data", message}
+        }}
+    };
+}
+
+} // anonymous namespace
 
 bool ToolRegistry::register_tool(
     const std::string& name,
@@ -20,15 +45,26 @@ bool ToolRegistry::register_tool(
         return false;
     }
 
+    // Create the validator and compile the schema
+    // The schema is compiled once during registration for efficient validation
+    auto validator = std::make_unique<nlohmann::json_schema::json_validator>();
+    try {
+        validator->set_root_schema(input_schema);
+    } catch (const std::exception& e) {
+        // Schema compilation failed - invalid schema
+        // We return false to indicate registration failure
+        return false;
+    }
+
     // Create and store the tool registration
     ToolRegistration registration{
         name,
         description,
         input_schema,
+        std::move(validator),
         std::move(handler)
     };
 
-    // Note: validator will be compiled in Task 3
     tools_[name] = std::move(registration);
     return true;
 }
@@ -60,11 +96,20 @@ std::optional<nlohmann::json> ToolRegistry::call_tool(
         return std::nullopt;
     }
 
-    // Note: JSON Schema validation will be added in Task 3
-    // For now, call the handler directly
+    const ToolRegistration& registration = it->second;
 
-    // Call the handler
-    return it->second.handler(name, args, ctx);
+    // Validate arguments against the compiled schema
+    try {
+        // The validate() method throws a std::exception if validation fails
+        // and returns the validated JSON if it succeeds
+        registration.validator->validate(args);
+    } catch (const std::exception& e) {
+        // Validation failed - return JSON-RPC INVALID_PARAMS error
+        return make_validation_error(e.what());
+    }
+
+    // Call the handler with validated arguments
+    return registration.handler(name, args, ctx);
 }
 
 bool ToolRegistry::has_tool(const std::string& name) const {

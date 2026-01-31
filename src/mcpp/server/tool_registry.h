@@ -26,11 +26,17 @@
 #define MCPP_SERVER_TOOL_REGISTRY_H
 
 #include <functional>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+// JSON Schema validator - using nlohmann/json-schema-validator
+// Note: The include path assumes the library is available.
+// Users must link against nlohmann_json_schema_validator.
+#include <nlohmann/json-schema.hpp>
 
 namespace mcpp {
 namespace server {
@@ -86,10 +92,8 @@ struct ToolRegistration {
     std::string name;                      ///< Tool identifier (unique in registry)
     std::string description;               ///< Human-readable description
     nlohmann::json input_schema;           ///< JSON Schema for argument validation
+    std::unique_ptr<nlohmann::json_schema::json_validator> validator;  ///< Compiled validator
     ToolHandler handler;                   ///< Function to call when tool is invoked
-
-    // Validator will be added in Task 3
-    // std::unique_ptr<nlohmann::json_schema::json_validator> validator;
 };
 
 /**
@@ -188,8 +192,6 @@ public:
      * @param args Arguments to pass to the tool handler
      * @param ctx Request context for progress reporting
      * @return Tool result (CallToolResult), or std::nullopt if tool not found
-     *
-     * @note Validation will be added in Task 3
      */
     std::optional<nlohmann::json> call_tool(
         const std::string& name,
