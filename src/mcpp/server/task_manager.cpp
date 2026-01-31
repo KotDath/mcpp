@@ -13,6 +13,28 @@
 #include <sstream>
 #include <ctime>
 
+namespace {
+
+/**
+ * @brief Parse ISO 8601 timestamp to time_t
+ *
+ * @param ts ISO 8601 timestamp string (e.g., "2025-01-31T12:34:56Z")
+ * @return time_t value, or 0 if parsing fails
+ */
+std::time_t parse_iso8601(const std::string& ts) {
+    std::tm tm = {};
+    std::istringstream ss(ts);
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
+    if (ss.fail()) {
+        return 0;
+    }
+    // Use timegm to convert UTC tm to time_t (Linux-specific)
+    // For portability, we assume mktime with UTC adjustment
+    return timegm(&tm);
+}
+
+} // anonymous namespace
+
 namespace mcpp {
 namespace server {
 
@@ -210,18 +232,13 @@ bool TaskManager::is_expired(const Task& task) const {
         return false;  // No TTL = never expires
     }
 
-    // Parse the ISO 8601 timestamp
-    std::tm tm = {};
-    std::istringstream ss(task.created_at);
-    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
-    if (ss.fail()) {
+    // Parse the ISO 8601 timestamp to time_t
+    std::time_t created_time = parse_iso8601(task.created_at);
+    if (created_time == 0) {
         return false;  // Failed to parse, assume not expired
     }
 
-    std::time_t created_time = std::gmtime(&tm) ? std::mktime(&tm) : 0;
-    // Note: mktime uses local time, so we need to adjust for UTC
-    // For simplicity, we'll use system_clock directly
-
+    // Calculate elapsed time since creation
     auto now = std::chrono::system_clock::now();
     auto created = std::chrono::system_clock::from_time_t(created_time);
 

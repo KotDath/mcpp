@@ -85,6 +85,11 @@ struct Task {
     std::optional<uint64_t> poll_interval_ms;     ///< Suggested poll interval for clients
 
     /**
+     * @brief Default constructor (for unordered_map compatibility)
+     */
+    Task() = default;
+
+    /**
      * @brief Construct a Task with current timestamp
      *
      * @param id Unique task identifier
@@ -262,15 +267,21 @@ public:
      */
     size_t cleanup_expired();
 
+    /**
+     * @brief Get current ISO 8601 timestamp
+     *
+     * Public static method for timestamp generation.
+     *
+     * @return ISO 8601 formatted timestamp string
+     */
+    static std::string get_timestamp();
+
 private:
     /// Page size for task listing
     static constexpr size_t PAGE_SIZE = 50;
 
     /// Generate a unique task ID (UUID-like format)
     std::string generate_task_id() const;
-
-    /// Get current ISO 8601 timestamp
-    static std::string get_timestamp();
 
     /// Check if task has expired based on TTL
     bool is_expired(const Task& task) const;
