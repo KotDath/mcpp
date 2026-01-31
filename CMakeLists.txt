@@ -31,50 +31,73 @@ set_target_properties(nlohmann_json::nlohmann_json PROPERTIES
 
 # Source files
 set(MCPP_PUBLIC_HEADERS
-    src/mcpp/client.h
+    # API headers (Phase 6: High-Level API)
+    src/mcpp/api/peer.h
+    src/mcpp/api/role.h
+    src/mcpp/api/running_service.h
+    src/mcpp/api/service.h
+    # Async headers
     src/mcpp/async/callbacks.h
     src/mcpp/async/timeout.h
+    # Client headers
+    src/mcpp/client.h
     src/mcpp/client/cancellation.h
-    src/mcpp/client/roots.h
-    src/mcpp/client/sampling.h
     src/mcpp/client/elicitation.h
     src/mcpp/client/future_wrapper.h
+    src/mcpp/client/roots.h
+    src/mcpp/client/sampling.h
     src/mcpp/client_blocking.h
+    # Core headers
     src/mcpp/core/error.h
     src/mcpp/core/json_rpc.h
     src/mcpp/core/request_tracker.h
+    # Content headers
+    src/mcpp/content/content.h
+    src/mcpp/content/pagination.h
+    # Protocol headers
     src/mcpp/protocol/capabilities.h
     src/mcpp/protocol/initialize.h
     src/mcpp/protocol/types.h
-    src/mcpp/transport/transport.h
-    src/mcpp/transport/stdio_transport.h
-    src/mcpp/content/pagination.h
-    src/mcpp/content/content.h
-    src/mcpp/server/tool_registry.h
-    src/mcpp/server/resource_registry.h
+    # Server headers
+    src/mcpp/server/mcp_server.h
     src/mcpp/server/prompt_registry.h
     src/mcpp/server/request_context.h
+    src/mcpp/server/resource_registry.h
     src/mcpp/server/task_manager.h
-    src/mcpp/server/mcp_server.h
+    src/mcpp/server/tool_registry.h
+    # Transport headers
+    src/mcpp/transport/stdio_transport.h
+    src/mcpp/transport/transport.h
+    # Util headers (Phase 4: HTTP Transport, Phase 6: High-Level API)
+    src/mcpp/util/atomic_id.h
+    src/mcpp/util/error.h
+    src/mcpp/util/logger.h
+    src/mcpp/util/pagination.h
+    src/mcpp/util/retry.h
+    src/mcpp/util/sse_formatter.h
+    src/mcpp/util/uri_template.h
 )
 
 set(MCPP_SOURCES
     src/mcpp/client.cpp
     src/mcpp/async/timeout.cpp
     src/mcpp/client/cancellation.cpp
-    src/mcpp/client/roots.cpp
-    src/mcpp/client/sampling.cpp
     src/mcpp/client/elicitation.cpp
     src/mcpp/client/future_wrapper.cpp
+    src/mcpp/client/roots.cpp
+    src/mcpp/client/sampling.cpp
     src/mcpp/core/json_rpc.cpp
     src/mcpp/core/request_tracker.cpp
     src/mcpp/transport/stdio_transport.cpp
-    src/mcpp/server/tool_registry.cpp
-    src/mcpp/server/resource_registry.cpp
+    src/mcpp/server/mcp_server.cpp
     src/mcpp/server/prompt_registry.cpp
     src/mcpp/server/request_context.cpp
+    src/mcpp/server/resource_registry.cpp
     src/mcpp/server/task_manager.cpp
-    src/mcpp/server/mcp_server.cpp
+    src/mcpp/server/tool_registry.cpp
+    # Util sources
+    src/mcpp/util/error.cpp
+    src/mcpp/util/logger.cpp
 )
 
 # Create the mcpp library
