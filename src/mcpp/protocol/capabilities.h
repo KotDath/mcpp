@@ -41,6 +41,9 @@ struct ClientCapabilities {
     std::optional<RootsCapability> roots;
     std::optional<SamplingCapability> sampling;
     std::optional<ElicitationCapability> elicitation;
+
+    // Builder typedef for fluent API
+    class Builder;
 };
 
 /**
@@ -101,6 +104,9 @@ struct PromptCapability {
  */
 struct RootsCapability {
     std::optional<bool> listChanged;  // Client supports listChanged notifications
+
+    RootsCapability() = default;
+    explicit RootsCapability(bool list_changed) : listChanged(list_changed) {}
 };
 
 /**
@@ -110,6 +116,9 @@ struct RootsCapability {
  */
 struct SamplingCapability {
     std::optional<bool> tools;  // Client supports tool use in sampling (CLNT-03)
+
+    SamplingCapability() = default;
+    explicit SamplingCapability(bool tools_enabled) : tools(tools_enabled) {}
 };
 
 /**
@@ -120,6 +129,8 @@ struct SamplingCapability {
 struct ElicitationCapability {
     std::optional<bool> form;  // Client supports form mode (CLNT-04)
     std::optional<bool> url;   // Client supports URL mode (CLNT-05)
+
+    ElicitationCapability() = default;
 };
 
 /**
@@ -130,6 +141,106 @@ struct ElicitationCapability {
 struct LoggingCapability {
     // No fields defined in current spec
 };
+
+/**
+ * Builder helper for constructing ClientCapabilities.
+ *
+ * Provides a fluent interface for configuring which capabilities
+ * the client advertises during initialization.
+ *
+ * Example usage:
+ *   auto caps = ClientCapabilities::Builder()
+ *       .with_roots(true)           // Enable roots with listChanged
+ *       .with_sampling(true)        // Enable sampling without tool use
+ *       .with_elicitation_form()    // Enable elicitation form mode
+ *       .build();
+ */
+class ClientCapabilities::Builder {
+public:
+    Builder() = default;
+
+    // Enable roots capability
+    Builder& with_roots(bool list_changed = true) {
+        caps_.roots = RootsCapability{list_changed};
+        return *this;
+    }
+
+    // Enable sampling capability
+    Builder& with_sampling(bool tools = false) {
+        caps_.sampling = SamplingCapability{tools};
+        return *this;
+    }
+
+    // Enable elicitation form mode
+    Builder& with_elicitation_form() {
+        if (!caps_.elicitation) {
+            caps_.elicitation = ElicitationCapability{};
+        }
+        caps_.elicitation->form = true;
+        return *this;
+    }
+
+    // Enable elicitation URL mode
+    Builder& with_elicitation_url() {
+        if (!caps_.elicitation) {
+            caps_.elicitation = ElicitationCapability{};
+        }
+        caps_.elicitation->url = true;
+        return *this;
+    }
+
+    // Enable both elicitation modes
+    Builder& with_elicitation() {
+        return with_elicitation_form().with_elicitation_url();
+    }
+
+    // Add experimental capabilities
+    Builder& with_experimental(CapabilitySet experimental) {
+        caps_.experimental = std::move(experimental);
+        return *this;
+    }
+
+    // Build the ClientCapabilities struct (rvalue)
+    ClientCapabilities build() && {
+        return std::move(caps_);
+    }
+
+    // Build the ClientCapabilities struct (lvalue)
+    ClientCapabilities build() const & {
+        return caps_;
+    }
+
+private:
+    ClientCapabilities caps_;
+};
+
+/**
+ * Convenience free function for simple client capability configuration.
+ *
+ * Provides a quick way to create ClientCapabilities for common cases.
+ * For more complex configurations, use ClientCapabilities::Builder.
+ *
+ * @param roots Enable roots capability with listChanged
+ * @param sampling Enable sampling capability without tool use
+ * @param elicitation_form Enable elicitation form mode
+ * @param elicitation_url Enable elicitation URL mode
+ * @return Configured ClientCapabilities
+ */
+inline ClientCapabilities build_client_capabilities(
+    bool roots = false,
+    bool sampling = false,
+    bool elicitation_form = false,
+    bool elicitation_url = false
+) {
+    ClientCapabilities::Builder builder;
+    if (roots) builder.with_roots();
+    if (sampling) builder.with_sampling();
+    if (elicitation_form || elicitation_url) {
+        if (elicitation_form) builder.with_elicitation_form();
+        if (elicitation_url) builder.with_elicitation_url();
+    }
+    return std::move(builder).build();
+}
 
 } // namespace mcpp::protocol
 
