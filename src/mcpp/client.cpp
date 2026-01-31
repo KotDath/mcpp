@@ -191,6 +191,10 @@ void McpClient::set_notification_handler(std::string_view method, NotificationHa
     notification_handlers_[std::string(method)] = std::move(handler);
 }
 
+void McpClient::set_sampling_handler(client::SamplingHandler handler) {
+    sampling_client_.set_sampling_handler(std::move(handler));
+}
+
 // ============================================================================
 // MCP initialization
 // ============================================================================
