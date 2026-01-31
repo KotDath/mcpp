@@ -125,6 +125,16 @@ std::optional<nlohmann::json> McpServer::handle_request(
         result = handle_prompts_complete(params);
     } else if (method == "resources/complete") {
         result = handle_resources_complete(params);
+    } else if (method == "tasks/send") {
+        result = handle_tasks_send(params);
+    } else if (method == "tasks/get") {
+        result = handle_tasks_get(params);
+    } else if (method == "tasks/cancel") {
+        result = handle_tasks_cancel(params);
+    } else if (method == "tasks/result") {
+        result = handle_tasks_result(params);
+    } else if (method == "tasks/list") {
+        result = handle_tasks_list(params);
     } else {
         return make_error(JSONRPC_METHOD_NOT_FOUND, "Method not found", id);
     }
@@ -138,11 +148,31 @@ std::optional<nlohmann::json> McpServer::handle_request(
 }
 
 nlohmann::json McpServer::handle_initialize(const nlohmann::json& params) {
+    // Extract and store client capabilities if provided
+    if (params.contains("capabilities") && params["capabilities"].is_object()) {
+        const nlohmann::json& caps_json = params["capabilities"];
+
+        // Build ClientCapabilities from JSON
+        protocol::ClientCapabilities client_caps;
+
+        // Parse experimental capabilities (contains tools/resources/prompts with listChanged)
+        if (caps_json.contains("experimental")) {
+            client_caps.experimental = caps_json["experimental"];
+        }
+
+        // Store client capabilities
+        client_capabilities_ = client_caps;
+
+        // Set up registry callbacks now that we have client capabilities
+        setup_registry_callbacks();
+    }
+
     // Build server capabilities
     nlohmann::json capabilities = {
         {"tools", nlohmann::json::object()},
         {"resources", {{"subscribe", false}}},
-        {"prompts", nlohmann::json::object()}
+        {"prompts", nlohmann::json::object()},
+        {"tasks", nlohmann::json::object()}  // Experimental tasks capability
     };
 
     // Return initialize result
@@ -414,6 +444,58 @@ nlohmann::json McpServer::handle_resources_complete(const nlohmann::json& params
     return nlohmann::json{
         {"completion", std::move(completion_array)}
     };
+}
+
+void McpServer::setup_registry_callbacks() {
+    // Set up tools list_changed callback
+    tools_.set_notify_callback([this]() {
+        if (client_capabilities_ &&
+            client_capabilities_->experimental &&
+            client_capabilities_->experimental.value().contains("tools")) {
+            auto tools_cap = client_capabilities_->experimental.value()["tools"];
+            if (tools_cap.contains("listChanged") && tools_cap["listChanged"].get<bool>()) {
+                send_list_changed_notification("notifications/tools/list_changed");
+            }
+        }
+    });
+
+    // Set up resources list_changed callback
+    resources_.set_notify_callback([this]() {
+        if (client_capabilities_ &&
+            client_capabilities_->experimental &&
+            client_capabilities_->experimental.value().contains("resources")) {
+            auto res_cap = client_capabilities_->experimental.value()["resources"];
+            if (res_cap.contains("listChanged") && res_cap["listChanged"].get<bool>()) {
+                send_list_changed_notification("notifications/resources/list_changed");
+            }
+        }
+    });
+
+    // Set up prompts list_changed callback
+    prompts_.set_notify_callback([this]() {
+        if (client_capabilities_ &&
+            client_capabilities_->experimental &&
+            client_capabilities_->experimental.value().contains("prompts")) {
+            auto prompts_cap = client_capabilities_->experimental.value()["prompts"];
+            if (prompts_cap.contains("listChanged") && prompts_cap["listChanged"].get<bool>()) {
+                send_list_changed_notification("notifications/prompts/list_changed");
+            }
+        }
+    });
+}
+
+void McpServer::send_list_changed_notification(const std::string& method) {
+    if (!transport_.has_value()) {
+        return;  // No transport - cannot send notification
+    }
+
+    nlohmann::json notification = {
+        {"jsonrpc", "2.0"},
+        {"method", method},
+        {"params", nlohmann::json::object()}
+    };
+
+    (*transport_)->send_notification(notification);
 }
 
 } // namespace server

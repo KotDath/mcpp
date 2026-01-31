@@ -30,9 +30,11 @@
 
 #include <nlohmann/json.hpp>
 
+#include "mcpp/protocol/capabilities.h"
 #include "mcpp/protocol/types.h"
 #include "mcpp/server/prompt_registry.h"
 #include "mcpp/server/resource_registry.h"
+#include "mcpp/server/task_manager.h"
 #include "mcpp/server/tool_registry.h"
 
 namespace mcpp {
@@ -204,6 +206,11 @@ public:
      * - prompts/list: List all registered prompts
      * - prompts/get: Get a prompt with arguments
      * - prompts/complete: Get completion suggestions for prompts
+     * - tasks/send: Create a new task
+     * - tasks/get: Get task metadata
+     * - tasks/cancel: Cancel a task
+     * - tasks/result: Get task result
+     * - tasks/list: List all tasks
      *
      * @param request_json The JSON-RPC request object
      * @return Optional JSON-RPC response (nullopt for notifications)
@@ -289,6 +296,56 @@ private:
     nlohmann::json handle_resources_complete(const nlohmann::json& params);
 
     /**
+     * @brief Handle tasks/send request
+     *
+     * Creates a new task and returns task metadata.
+     *
+     * @param params Request parameters
+     * @return CreateTaskResult with task metadata
+     */
+    nlohmann::json handle_tasks_send(const nlohmann::json& params);
+
+    /**
+     * @brief Handle tasks/get request
+     *
+     * Returns task status and metadata.
+     *
+     * @param params Request parameters containing id
+     * @return Task metadata
+     */
+    nlohmann::json handle_tasks_get(const nlohmann::json& params);
+
+    /**
+     * @brief Handle tasks/cancel request
+     *
+     * Cancels a running task.
+     *
+     * @param params Request parameters containing id
+     * @return Cancelled task metadata
+     */
+    nlohmann::json handle_tasks_cancel(const nlohmann::json& params);
+
+    /**
+     * @brief Handle tasks/result request
+     *
+     * Returns the result of a completed task.
+     *
+     * @param params Request parameters containing id
+     * @return Task result
+     */
+    nlohmann::json handle_tasks_result(const nlohmann::json& params);
+
+    /**
+     * @brief Handle tasks/list request
+     *
+     * Lists all tasks with pagination.
+     *
+     * @param params Request parameters with optional cursor
+     * @return Paginated list of tasks
+     */
+    nlohmann::json handle_tasks_list(const nlohmann::json& params);
+
+    /**
      * @brief Extract progress token from request parameters
      *
      * Looks for params._meta.progressToken and returns it if present.
@@ -298,11 +355,31 @@ private:
      */
     std::optional<std::string> extract_progress_token(const nlohmann::json& params);
 
+    /**
+     * @brief Set up registry notification callbacks
+     *
+     * Wires up list_changed notifications from each registry to transport.
+     * Callbacks check client capabilities before sending notifications.
+     */
+    void setup_registry_callbacks();
+
+    /**
+     * @brief Send list_changed notification for a given registry type
+     *
+     * Sends the notification if transport is available and client capability is enabled.
+     *
+     * @param method Notification method (e.g., "notifications/tools/list_changed")
+     */
+    void send_list_changed_notification(const std::string& method);
+
     /// Server implementation info (name, version)
     protocol::Implementation server_info_;
 
     /// Optional pointer to transport (non-owning) for notifications
     std::optional<transport::Transport*> transport_;
+
+    /// Client capabilities from initialize (for feature detection)
+    std::optional<protocol::ClientCapabilities> client_capabilities_;
 
     /// Tool registry
     ToolRegistry tools_;
@@ -312,6 +389,9 @@ private:
 
     /// Prompt registry
     PromptRegistry prompts_;
+
+    /// Task manager for experimental tasks API
+    TaskManager task_manager_;
 };
 
 } // namespace server
