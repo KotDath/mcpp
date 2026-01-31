@@ -91,12 +91,15 @@ Plans:
 6. Library consumer can cancel in-flight requests via notifications/cancelled with proper race condition handling
 7. Library consumer can use std::future wrappers for ergonomic blocking API on top of async core
 
-**Plans**: TBD
+**Plans**: 6 plans in 3 waves
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03-01-PLAN.md — C++20 upgrade and cancellation support (std::stop_token, CancellationManager)
+- [ ] 03-02-PLAN.md — Roots management (file:// URIs, roots/list, list_changed notification)
+- [ ] 03-03-PLAN.md — Sampling support (sampling/createMessage for LLM completions)
+- [ ] 03-04-PLAN.md — Sampling with tool use (agentic loops with tool execution)
+- [ ] 03-05-PLAN.md — Elicitation support (form mode with JSON Schema, URL mode for out-of-band)
+- [ ] 03-06-PLAN.md — std::future wrapper API (ergonomic blocking API on async core)
 
 ### Phase 4: Advanced Features & HTTP Transport
 
@@ -200,7 +203,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Protocol Foundation | 6/6 | Complete | 2026-01-31 |
 | 2. Core Server | 6/6 | Complete | 2026-01-31 |
-| 3. Client Capabilities | 0/0 | Not started | - |
+| 3. Client Capabilities | 0/6 | Planning | - |
 | 4. Advanced Features & HTTP Transport | 0/0 | Not started | - |
 | 5. Content & Tasks | 0/0 | Not started | - |
 | 6. High-Level API | 0/0 | Not started | - |
