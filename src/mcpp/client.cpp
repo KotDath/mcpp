@@ -121,6 +121,20 @@ McpClient::McpClient(
             }
         }
     );
+
+    // Register elicitation/create request handler
+    set_request_handler("elicitation/create",
+        [this](std::string_view /* method */, const JsonValue& params) -> JsonValue {
+            return elicitation_client_.handle_elicitation_create(params);
+        }
+    );
+
+    // Register notifications/elicitation/complete handler for URL mode completion
+    set_notification_handler("notifications/elicitation/complete",
+        [this](std::string_view /* method */, const JsonValue& params) {
+            elicitation_client_.handle_elicitation_complete(params);
+        }
+    );
 }
 
 McpClient::~McpClient() {
@@ -237,6 +251,10 @@ void McpClient::set_notification_handler(std::string_view method, NotificationHa
 
 void McpClient::set_sampling_handler(client::SamplingHandler handler) {
     sampling_client_.set_sampling_handler(std::move(handler));
+}
+
+void McpClient::set_elicitation_handler(client::ElicitationHandler handler) {
+    elicitation_client_.set_elicitation_handler(std::move(handler));
 }
 
 // ============================================================================

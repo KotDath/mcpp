@@ -36,6 +36,7 @@
 #include "mcpp/async/callbacks.h"
 #include "mcpp/async/timeout.h"
 #include "mcpp/client/cancellation.h"
+#include "mcpp/client/elicitation.h"
 #include "mcpp/client/roots.h"
 #include "mcpp/client/sampling.h"
 #include "mcpp/core/json_rpc.h"
@@ -275,6 +276,17 @@ public:
      */
     void set_sampling_handler(client::SamplingHandler handler);
 
+    /**
+     * @brief Set the elicitation handler for user input requests
+     *
+     * The handler will be invoked when the server sends an elicitation/create request.
+     * This enables the server to request structured user input via forms (CLNT-04)
+     * or out-of-band interactions via URLs (CLNT-05).
+     *
+     * @param handler Function that presents UI and returns user's response
+     */
+    void set_elicitation_handler(client::ElicitationHandler handler);
+
 private:
     /// Transport layer for sending/receiving messages
     std::unique_ptr<transport::Transport> transport_;
@@ -299,6 +311,9 @@ private:
 
     /// Sampling client for handling sampling/createMessage requests from server
     client::SamplingClient sampling_client_;
+
+    /// Elicitation client for handling elicitation/create requests from server
+    client::ElicitationClient elicitation_client_;
 
     /// Cancellation manager for handling request cancellation
     client::CancellationManager cancellation_manager_;
