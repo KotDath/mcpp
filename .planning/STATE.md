@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 3 of 7 (Client Capabilities)
-Plan: 6 of 6 in current phase
+Plan: 7 of 7 in current phase
 Status: Phase complete
-Last activity: 2026-01-31 — Completed 03-06: std::future wrappers with FutureBuilder template and McpClientBlocking synchronous API
+Last activity: 2026-01-31 — Completed 03-07: CMakeLists.txt updated with all Phase 3 client capability files (elicitation, future_wrapper, client_blocking)
 
 Progress: [███████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
+- Total plans completed: 22
 - Average duration: 4 min
 - Total execution time: 1.5 hours
 
@@ -29,11 +29,11 @@ Progress: [███████████] 100%
 |-------|-------|----------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
 | 02-core-server | 6 | 6 | 2 min |
-| 03-client-capabilities | 6 | 6 | 3 min |
+| 03-client-capabilities | 7 | 7 | 3 min |
 
 **Recent Trend:**
-- Last 6 plans: 03-03, 03-01, 03-04, 03-05, 03-06
-- Trend: Phase 3 complete, all client capabilities delivered
+- Last 7 plans: 03-01, 03-02, 03-03, 03-04, 03-05, 03-06, 03-07
+- Trend: Phase 3 complete with build gap closure
 
 *Updated after each plan completion*
 
@@ -170,6 +170,12 @@ Recent decisions affecting current work:
 - McpClientBlockingError provides typed exceptions with JSON-RPC error codes
 - Added ListRootsResult::from_json() for parsing JSON responses in blocking context
 
+**From 03-07 (Build Configuration Gap Closure):**
+- Header organization: client/* headers grouped together in MCPP_PUBLIC_HEADERS for logical subsystem organization
+- client_blocking.h placement: at top level (not client/) since it's the main public blocking API
+- CMakeLists.txt must be updated when new source files are added to prevent linker errors
+- Files grouped by subsystem directory structure (client/, core/, async/, etc.)
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -185,5 +191,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 03-06 - std::future wrappers with FutureBuilder template and McpClientBlocking synchronous API. Phase 3 (Client Capabilities) complete. All 6 plans delivered: cancellation, roots, sampling, tool use, elicitation, futures.
+Stopped at: Completed 03-07 - CMakeLists.txt updated with elicitation, future_wrapper, and client_blocking files. Phase 3 (Client Capabilities) complete. All 7 plans delivered: cancellation, roots, sampling, tool use, elicitation, futures, build config.
 Resume file: None
