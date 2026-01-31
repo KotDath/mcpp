@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 5 of 7 (Content & Tasks)
-Plan: 4 of TBD in current phase
+Plan: 1 of TBD in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed 05-04 (Task Lifecycle Management)
+Last activity: 2026-01-31 — Completed 05-01 (Rich Content Type Support)
 
-Progress: [████████░░] 61%
+Progress: [████████░░] 57%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
+- Total plans completed: 30
 - Average duration: 3 min
-- Total execution time: 1.8 hours
+- Total execution time: 1.6 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [████████░░] 61%
 | 02-core-server | 6 | 6 | 2 min |
 | 03-client-capabilities | 8 | 8 | 3 min |
 | 04-advanced-features--http-transport | 6 | 6 | 2 min |
-| 05-content---tasks | 4 | 4 | 2 min |
+| 05-content---tasks | 1 | 1 | 13 min |
 
 **Recent Trend:**
-- Last 4 plans: 05-01, 05-02, 05-03, 05-04
-- Trend: Phase 5 in progress. List changed notifications, cursor-based pagination, task lifecycle management implemented.
+- Last 1 plan: 05-01
+- Trend: Phase 5 started. Rich content types (ImageContent, AudioContent, ResourceLink, EmbeddedResource) implemented with Annotations metadata.
 
 *Updated after each plan completion*
 
@@ -237,6 +237,13 @@ Recent decisions affecting current work:
 - Progress notifications work independently of streaming mode
 - Compatible with both stdio and HTTP transports
 
+**From 05-01 (Rich Content Type Support):**
+- ContentBlock variant extended with 7 content types (TextContent, ImageContent, AudioContent, ResourceLink, EmbeddedResource, ToolUseContent, ToolResultContent)
+- Annotations struct with audience (vector<string>), priority (double 0-1), last_modified (ISO 8601 string)
+- Base64 encoding is caller's responsibility - data field stores pre-encoded base64 strings
+- Content conversion implemented in sampling.cpp to avoid nlohmann::to_json naming conflicts
+- Forward declaration for server::ResourceContent used in content.h to avoid circular dependency
+
 **From 05-02 (Cursor-Based Pagination):**
 - PaginatedResult<T> template with items, nextCursor, total, and has_more() method
 - Offset-based cursor encoding: Simple string representation of integer offset
@@ -287,5 +294,5 @@ Resume file: None
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 05-04 (Task Lifecycle Management). Experimental task API with TaskManager, state validation, TTL support, and JSON-RPC handlers.
+Stopped at: Completed 05-01 (Rich Content Type Support). Image, audio, and resource content types with Annotations metadata implemented per MCP 2025-11-25 spec.
 Resume file: None
