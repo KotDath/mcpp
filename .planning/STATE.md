@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 2 of 7 (Core Server)
-Plan: 4 of TBD in current phase
+Plan: 5 of TBD in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed plan 02-04: RequestContext for handler access to transport and progress token support
+Last activity: 2026-01-31 — Completed plan 02-05: McpServer main class integrating all registries with JSON-RPC request routing
 
-Progress: [████░░░░░░░] 25%
+Progress: [█████░░░░░░] 28%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 11
 - Average duration: 5 min
-- Total execution time: 0.8 hours
+- Total execution time: 0.9 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
-| 02-core-server | 3 | TBD | 1 min |
+| 02-core-server | 5 | TBD | 2 min |
 
 **Recent Trend:**
-- Last 3 plans: 02-02, 02-03, 02-04
+- Last 3 plans: 02-03, 02-04, 02-05
 - Trend: Phase 2 in progress
 
 *Updated after each plan completion*
@@ -104,6 +104,13 @@ Recent decisions affecting current work:
 - Progress value clamping to 0-100 range for safety
 - Transport held by reference (not owned) - server manages lifecycle
 
+**From 02-05 (McpServer):**
+- Registries held by value for clear ownership and lifecycle management
+- Transport stored as optional non-owning pointer (set after construction)
+- RequestContext created per tool call for progress notification support
+- JSON-RPC method-based routing to typed handlers
+- Progress token extracted from request._meta.progressToken
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -120,5 +127,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed plan 02-04 - RequestContext for handler access to transport and progress token support
+Stopped at: Completed plan 02-05 - McpServer main class integrating all registries with JSON-RPC request routing
 Resume file: None
