@@ -1,3 +1,27 @@
+// mcpp - MCP C++ library
+// https://github.com/mcpp-project/mcpp
+//
+// Copyright (c) 2025 mcpp contributors
+// Distributed under MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #ifndef MCPP_SERVER_PROMPT_REGISTRY_H
 #define MCPP_SERVER_PROMPT_REGISTRY_H
 
@@ -9,6 +33,44 @@
 #include <vector>
 
 namespace mcpp::server {
+
+/**
+ * @brief Completion suggestion for argument autocompletion
+ *
+ * Represents a single completion value with an optional description.
+ * Matches the MCP CompleteResult format which returns an array of
+ * completion values with optional descriptions.
+ */
+struct Completion {
+    /// The completion value to insert
+    std::string value;
+
+    /// Optional human-readable description of this completion
+    std::optional<std::string> description;
+};
+
+/**
+ * @brief Completion handler function type
+ *
+ * User-provided function that generates completion suggestions for
+ * prompt arguments. Called when a client requests completion via
+ * prompts/complete.
+ *
+ * The handler receives:
+ * - argument_name: The name of the argument being completed
+ * - current_value: The current partial value in the argument field
+ * - reference: Optional reference context (e.g., cursor position)
+ *
+ * Returns a vector of Completion suggestions. Empty vector means no completions.
+ *
+ * Thread safety: Handlers may be called from multiple threads.
+ * Implementations must be thread-safe or use external synchronization.
+ */
+using CompletionHandler = std::function<std::vector<Completion>(
+    const std::string& argument_name,
+    const nlohmann::json& current_value,
+    const std::optional<nlohmann::json>& reference
+)>;
 
 /**
  * PromptMessage represents a single message in a prompt template.
@@ -133,8 +195,45 @@ public:
      */
     bool has_prompt(const std::string& name) const;
 
+    /**
+     * @brief Set a completion handler for a prompt argument
+     *
+     * Registers a completion handler for the specified prompt.
+     * The handler will be called when clients request completion
+     * via prompts/complete for this prompt's arguments.
+     *
+     * @param prompt_name Name of the prompt
+     * @param handler Function to generate completion suggestions
+     */
+    void set_completion_handler(
+        const std::string& prompt_name,
+        CompletionHandler handler
+    );
+
+    /**
+     * @brief Get completion suggestions for a prompt argument
+     *
+     * Calls the completion handler registered for the prompt
+     * and returns suggestions for the given argument and value.
+     *
+     * @param prompt_name Name of the prompt
+     * @param argument_name Name of the argument being completed
+     * @param current_value Current partial value in the argument field
+     * @param reference Optional reference context (e.g., cursor position)
+     * @return Vector of completion suggestions, or nullopt if no handler registered
+     */
+    std::optional<std::vector<Completion>> get_completion(
+        const std::string& prompt_name,
+        const std::string& argument_name,
+        const nlohmann::json& current_value,
+        const std::optional<nlohmann::json>& reference
+    ) const;
+
 private:
     std::unordered_map<std::string, PromptRegistration> prompts_;
+
+    /// Completion handlers keyed by prompt name
+    std::unordered_map<std::string, CompletionHandler> completion_handlers_;
 };
 
 } // namespace mcpp::server
