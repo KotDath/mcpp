@@ -121,12 +121,15 @@ Plans:
 7. Library consumer can annotate tools with metadata (audience, priority, destructive/read-only indicators)
 8. Library consumer can validate tool outputs against JSON Schema via structured output
 
-**Plans**: TBD
+**Plans**: 6 plans in 3 waves
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md — SSE formatter and URI template expander utilities
+- [ ] 04-02-PLAN.md — Streamable HTTP transport with session management
+- [ ] 04-03-PLAN.md — Tool annotations and structured output
+- [ ] 04-04-PLAN.md — Resource templates and subscriptions
+- [ ] 04-05-PLAN.md — Argument completion for prompts and resources
+- [ ] 04-06-PLAN.md — Tool result streaming
 
 ### Phase 5: Content & Tasks
 
@@ -206,7 +209,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Protocol Foundation | 6/6 | Complete | 2026-01-31 |
 | 2. Core Server | 6/6 | Complete | 2026-01-31 |
 | 3. Client Capabilities | 8/8 | Complete | 2026-01-31 |
-| 4. Advanced Features & HTTP Transport | 0/0 | Not started | - |
+| 4. Advanced Features & HTTP Transport | 0/6 | Planned | - |
 | 5. Content & Tasks | 0/0 | Not started | - |
 | 6. High-Level API | 0/0 | Not started | - |
 | 7. Build & Validation | 0/0 | Not started | - |
