@@ -38,6 +38,7 @@
 // Users must link against nlohmann_json_schema_validator.
 #include <nlohmann/json-schema.hpp>
 
+#include "mcpp/content/pagination.h"
 #include "mcpp/server/request_context.h"
 
 namespace mcpp {
@@ -243,6 +244,19 @@ public:
      * @return Array of tool objects
      */
     std::vector<nlohmann::json> list_tools() const;
+
+    /**
+     * @brief List all registered tools with pagination
+     *
+     * Returns paginated results with cursor-based navigation.
+     * The cursor is an opaque token; clients should not interpret its contents.
+     *
+     * @param cursor Optional cursor from previous page for continuation
+     * @return PaginatedResult containing tool metadata and optional next cursor
+     */
+    content::PaginatedResult<nlohmann::json> list_tools_paginated(
+        const std::optional<std::string>& cursor = std::nullopt
+    ) const;
 
     /**
      * @brief Call a tool by name with validated arguments

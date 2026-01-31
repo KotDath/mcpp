@@ -6,6 +6,7 @@
 
 #include "mcpp/server/tool_registry.h"
 
+#include <cstdint>
 #include <nlohmann/json-schema.hpp>
 #include <sstream>
 #include <string>
@@ -174,52 +175,102 @@ bool ToolRegistry::register_tool(
     return true;
 }
 
+namespace {
+
+/**
+ * @brief Convert a ToolRegistration to JSON format
+ *
+ * Helper function that builds the tool object following MCP tools/list
+ * response format. Used by both list_tools() and list_tools_paginated().
+ *
+ * @param registration The tool registration to convert
+ * @return JSON object representing the tool
+ */
+nlohmann::json tool_to_json(const ToolRegistration& registration) {
+    nlohmann::json tool{
+        {"name", registration.name},
+        {"description", registration.description},
+        {"inputSchema", registration.input_schema}
+    };
+
+    // Add annotations metadata for rich tool discovery
+    //
+    // The annotations field provides UI/UX hints:
+    // - destructive: Warn user before execution (e.g., delete_file, drop_database)
+    // - readOnly: Indicates no side effects (e.g., read_file, list_directories)
+    // - audience: Filter tools by target user type
+    //   * "user" - End-user facing tools
+    //   * "assistant" - AI assistant internal tools
+    //   * "system" - System administration tools
+    // - priority: Sort order (lower values shown first)
+    //
+    tool["annotations"] = {
+        {"destructive", registration.annotations.destructive},
+        {"readOnly", registration.annotations.read_only},
+        {"audience", registration.annotations.audience},
+        {"priority", registration.annotations.priority}
+    };
+
+    // Add output schema if declared
+    //
+    // When present, the outputSchema field tells clients what structure
+    // to expect from the tool result. This enables:
+    // - Client-side result validation
+    // - Type-safe result parsing
+    // - IDE autocomplete for tool results
+    // - Automatic documentation generation
+    //
+    if (registration.output_schema) {
+        tool["outputSchema"] = *registration.output_schema;
+    }
+
+    return tool;
+}
+
+} // anonymous namespace
+
 std::vector<nlohmann::json> ToolRegistry::list_tools() const {
     std::vector<nlohmann::json> result;
     result.reserve(tools_.size());
 
     for (const auto& [name, registration] : tools_) {
-        // Build the tool object following MCP tools/list response format
-        nlohmann::json tool{
-            {"name", registration.name},
-            {"description", registration.description},
-            {"inputSchema", registration.input_schema}
-        };
-
-        // Add annotations metadata for rich tool discovery
-        //
-        // The annotations field provides UI/UX hints:
-        // - destructive: Warn user before execution (e.g., delete_file, drop_database)
-        // - readOnly: Indicates no side effects (e.g., read_file, list_directories)
-        // - audience: Filter tools by target user type
-        //   * "user" - End-user facing tools
-        //   * "assistant" - AI assistant internal tools
-        //   * "system" - System administration tools
-        // - priority: Sort order (lower values shown first)
-        //
-        tool["annotations"] = {
-            {"destructive", registration.annotations.destructive},
-            {"readOnly", registration.annotations.read_only},
-            {"audience", registration.annotations.audience},
-            {"priority", registration.annotations.priority}
-        };
-
-        // Add output schema if declared
-        //
-        // When present, the outputSchema field tells clients what structure
-        // to expect from the tool result. This enables:
-        // - Client-side result validation
-        // - Type-safe result parsing
-        // - IDE autocomplete for tool results
-        // - Automatic documentation generation
-        //
-        if (registration.output_schema) {
-            tool["outputSchema"] = *registration.output_schema;
-        }
-
-        result.push_back(std::move(tool));
+        result.push_back(tool_to_json(registration));
     }
 
+    return result;
+}
+
+content::PaginatedResult<nlohmann::json> ToolRegistry::list_tools_paginated(
+    const std::optional<std::string>& cursor
+) const {
+    constexpr size_t PAGE_SIZE = 50;  // Server-determined page size
+
+    // Decode cursor (offset-based encoding)
+    size_t start_index = 0;
+    if (cursor.has_value()) {
+        try {
+            start_index = std::stoull(*cursor);
+        } catch (...) {
+            // Invalid cursor - start from beginning
+            start_index = 0;
+        }
+    }
+
+    content::PaginatedResult<nlohmann::json> result;
+    size_t count = 0;
+
+    // Iterate through tools (unordered_map iteration order is stable within single run)
+    for (const auto& [name, registration] : tools_) {
+        if (count++ < start_index) continue;
+        if (result.items.size() >= PAGE_SIZE) {
+            // More results exist
+            result.nextCursor = std::to_string(start_index + PAGE_SIZE);
+            break;
+        }
+        result.items.push_back(tool_to_json(registration));
+    }
+
+    result.total = tools_.size();
     return result;
 }
 
