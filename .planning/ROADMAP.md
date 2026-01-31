@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Core Server** - Tools, resources, prompts with stdio transport and progress support
 - [x] **Phase 3: Client Capabilities** - Roots, sampling, elicitation with cancellation and futures
 - [x] **Phase 4: Advanced Features & HTTP Transport** - SSE transport, streaming, subscriptions, completions
-- [ ] **Phase 5: Content & Tasks** - Rich content types, annotations, pagination, experimental tasks
+- [x] **Phase 5: Content & Tasks** - Rich content types, annotations, pagination, experimental tasks
 - [ ] **Phase 6: High-Level API** - Type-safe wrappers, thread safety, logging, utilities
 - [ ] **Phase 7: Build & Validation** - CMake build, libraries, testing, Inspector integration
 
@@ -169,11 +169,13 @@ Plans:
 4. Library consumer can reset timeout clocks on progress updates via progress reset notification
 5. Library consumer can negotiate custom experimental capabilities via the experimental capabilities field
 
-**Plans**: TBD
+**Plans**: 4 plans in 3 waves
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md — Role-based types, Service trait abstraction, Peer connection handling
+- [ ] 06-02-PLAN.md — RunningService RAII wrapper with message passing and event loop
+- [ ] 06-03-PLAN.md — Structured logging with spdlog and request-scoped contexts
+- [ ] 06-04-PLAN.md — Utility features: pagination helpers, error hierarchy, retry strategies
 
 ### Phase 7: Build & Validation
 
@@ -213,5 +215,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Client Capabilities | 8/8 | Complete | 2026-01-31 |
 | 4. Advanced Features & HTTP Transport | 6/6 | Complete | 2026-01-31 |
 | 5. Content & Tasks | 4/4 | Complete | 2026-01-31 |
-| 6. High-Level API | 0/0 | Not started | - |
+| 6. High-Level API | 0/4 | Ready | - |
+| 7. Build & Validation | 0/0 | Not started | - |
 | 7. Build & Validation | 0/0 | Not started | - |
