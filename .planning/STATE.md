@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 3 of 7 (Client Capabilities)
-Plan: 5 of 6 in current phase
-Status: In progress
-Last activity: 2026-01-31 — Completed 03-05: Elicitation support with form mode (CLNT-04) and URL mode (CLNT-05)
+Plan: 6 of 6 in current phase
+Status: Phase complete
+Last activity: 2026-01-31 — Completed 03-06: std::future wrappers with FutureBuilder template and McpClientBlocking synchronous API
 
-Progress: [██████████░] 83%
+Progress: [███████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
+- Total plans completed: 21
 - Average duration: 4 min
-- Total execution time: 1.4 hours
+- Total execution time: 1.5 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [██████████░] 83%
 |-------|-------|----------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
 | 02-core-server | 6 | 6 | 2 min |
-| 03-client-capabilities | 6 | 5 | 3 min |
+| 03-client-capabilities | 6 | 6 | 3 min |
 
 **Recent Trend:**
-- Last 6 plans: 03-03, 03-01, 03-04, 03-05
-- Trend: Phase 3 nearly complete, elicitation support added (03-05)
+- Last 6 plans: 03-03, 03-01, 03-04, 03-05, 03-06
+- Trend: Phase 3 complete, all client capabilities delivered
 
 *Updated after each plan completion*
 
@@ -161,6 +161,15 @@ Recent decisions affecting current work:
 - elicitation/create request handler registered in McpClient constructor
 - notifications/elicitation/complete notification handler registered in McpClient constructor
 
+**From 03-06 (std::future Wrappers):**
+- shared_ptr<promise> pattern ensures promise lifetime until lambda callback invoked
+- FutureBuilder template with wrap() converts callback-style async to std::future
+- with_timeout() prevents infinite blocking (30-second default)
+- McpClientBlocking holds reference (not ownership) to McpClient for lifecycle control
+- Exception conversion: JsonRpcError.message stored as runtime_error in promise
+- McpClientBlockingError provides typed exceptions with JSON-RPC error codes
+- Added ListRootsResult::from_json() for parsing JSON responses in blocking context
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -176,5 +185,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 03-05 - Elicitation support with form mode (in-app prompts with JSON Schema validation) and URL mode (out-of-band interactions like OAuth with completion notification). PrimitiveSchema for form field types, ElicitationClient for both modes, ElicitationCapability in protocol types, McpClient integration with handlers.
+Stopped at: Completed 03-06 - std::future wrappers with FutureBuilder template and McpClientBlocking synchronous API. Phase 3 (Client Capabilities) complete. All 6 plans delivered: cancellation, roots, sampling, tool use, elicitation, futures.
 Resume file: None
