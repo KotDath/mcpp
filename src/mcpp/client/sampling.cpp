@@ -678,7 +678,34 @@ std::optional<ContentBlock> content_from_json(const nlohmann::json& j) {
         content.type = "audio";
         content.data = j["data"].get<std::string>();
         content.mime_type = j["mimeType"].get<std::string>();
-        // Parse annotations similarly to image...
+        if (j.contains("annotations") && j["annotations"].is_object()) {
+            const auto& a = j["annotations"];
+            content::Annotations annotations;
+            if (a.contains("audience") && a["audience"].is_array()) {
+                std::vector<std::string> audience;
+                for (const auto& item : a["audience"]) {
+                    if (item.is_string()) {
+                        audience.push_back(item.get<std::string>());
+                    }
+                }
+                if (!audience.empty()) {
+                    content.annotations = std::move(annotations);
+                    content.annotations->audience = std::move(audience);
+                }
+            }
+            if (a.contains("priority") && a["priority"].is_number()) {
+                if (!content.annotations.has_value()) {
+                    content.annotations = content::Annotations{};
+                }
+                content.annotations->priority = a["priority"].get<double>();
+            }
+            if (a.contains("lastModified") && a["lastModified"].is_string()) {
+                if (!content.annotations.has_value()) {
+                    content.annotations = content::Annotations{};
+                }
+                content.annotations->last_modified = a["lastModified"].get<std::string>();
+            }
+        }
         return content;
 
     } else if (type == "resource") {
@@ -688,6 +715,34 @@ std::optional<ContentBlock> content_from_json(const nlohmann::json& j) {
         content::ResourceLink content;
         content.type = "resource";
         content.uri = j["uri"].get<std::string>();
+        if (j.contains("annotations") && j["annotations"].is_object()) {
+            const auto& a = j["annotations"];
+            content::Annotations annotations;
+            if (a.contains("audience") && a["audience"].is_array()) {
+                std::vector<std::string> audience;
+                for (const auto& item : a["audience"]) {
+                    if (item.is_string()) {
+                        audience.push_back(item.get<std::string>());
+                    }
+                }
+                if (!audience.empty()) {
+                    content.annotations = std::move(annotations);
+                    content.annotations->audience = std::move(audience);
+                }
+            }
+            if (a.contains("priority") && a["priority"].is_number()) {
+                if (!content.annotations.has_value()) {
+                    content.annotations = content::Annotations{};
+                }
+                content.annotations->priority = a["priority"].get<double>();
+            }
+            if (a.contains("lastModified") && a["lastModified"].is_string()) {
+                if (!content.annotations.has_value()) {
+                    content.annotations = content::Annotations{};
+                }
+                content.annotations->last_modified = a["lastModified"].get<std::string>();
+            }
+        }
         return content;
 
     } else if (type == "embedded") {
@@ -708,6 +763,34 @@ std::optional<ContentBlock> content_from_json(const nlohmann::json& j) {
             content.resource.blob = j["blob"].get<std::string>();
         } else {
             return std::nullopt;
+        }
+        if (j.contains("annotations") && j["annotations"].is_object()) {
+            const auto& a = j["annotations"];
+            content::Annotations annotations;
+            if (a.contains("audience") && a["audience"].is_array()) {
+                std::vector<std::string> audience;
+                for (const auto& item : a["audience"]) {
+                    if (item.is_string()) {
+                        audience.push_back(item.get<std::string>());
+                    }
+                }
+                if (!audience.empty()) {
+                    content.annotations = std::move(annotations);
+                    content.annotations->audience = std::move(audience);
+                }
+            }
+            if (a.contains("priority") && a["priority"].is_number()) {
+                if (!content.annotations.has_value()) {
+                    content.annotations = content::Annotations{};
+                }
+                content.annotations->priority = a["priority"].get<double>();
+            }
+            if (a.contains("lastModified") && a["lastModified"].is_string()) {
+                if (!content.annotations.has_value()) {
+                    content.annotations = content::Annotations{};
+                }
+                content.annotations->last_modified = a["lastModified"].get<std::string>();
+            }
         }
         return content;
 
