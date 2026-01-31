@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 7 of 7 (Build & Validation)
-Plan: 3 of 5 in current phase
+Plan: 4 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-01 — Completed 07-03 JSON-RPC compliance tests
+Last activity: 2026-02-01 — Completed 07-02b unit tests
 
-Progress: [█████░░░░] 60%
+Progress: [█████░░░░] 80%
 
 **Phase 7 Progress:**
 - 07-01: Build system (dual library targets, CMake packaging) - Complete
@@ -356,6 +356,14 @@ Recent decisions affecting current work:
 - Placeholder json_validator type when library unavailable (MCPP_HAS_JSON_SCHEMA macro)
 - Fixed Completion struct include order in resource_registry.h
 
+**From 07-02b (Unit Tests):**
+- Direct field assignment for JSON-RPC types (API uses default construction + field setting, not parameterized constructors)
+- Request ID as std::variant<int64_t, std::string> requires proper lambda capture patterns in tests
+- Optional field handling in nlohmann::json requires checking presence before access with std::optional
+- Template resources identified by nested 'template' object in JSON output (not a string field)
+- Mock transport classes needed for RequestContext testing in registry tests
+- 121 unit tests created covering JSON-RPC, request tracker, timeout manager, registries, and pagination
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -375,9 +383,9 @@ None currently. JSON-RPC compliance validated. Ready for MCP Inspector integrati
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 07-03 JSON-RPC compliance tests
+Stopped at: Completed 07-02b unit tests, created SUMMARY.md
 Resume file: None
-- 07-03: 46 JSON-RPC compliance tests covering request/response formats, error codes, notifications, batch requests, edge cases
-- Test fixture data (jsonrpc_examples.json) with valid/invalid examples
-- Fixed null ID parsing bug per JSON-RPC 2.0 spec
-- All compliance tests passing (46/46)
+- 07-02b: 121 unit tests covering JSON-RPC protocol types, request tracking, timeout management, server registries, and pagination
+- Unit test files: test_json_rpc.cpp (403 lines), test_request_tracker.cpp (481 lines), test_tool_registry.cpp (326 lines), test_resource_registry.cpp (392 lines), test_prompt_registry.cpp (399 lines), test_pagination.cpp (379 lines)
+- All unit tests passing (121/121) via ctest -L unit
+- Tests cover: JsonRpcRequest/Response/Error/Notification, RequestTracker, TimeoutManager, ToolRegistry, ResourceRegistry, PromptRegistry, PaginatedResult, list_all helper, PaginatedRequest
