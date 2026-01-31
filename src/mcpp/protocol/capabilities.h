@@ -20,6 +20,7 @@ struct ResourceCapability;
 struct PromptCapability;
 struct RootsCapability;
 struct SamplingCapability;
+struct ElicitationCapability;
 struct LoggingCapability;
 
 /**
@@ -39,6 +40,7 @@ struct ClientCapabilities {
     std::optional<CapabilitySet> experimental;
     std::optional<RootsCapability> roots;
     std::optional<SamplingCapability> sampling;
+    std::optional<ElicitationCapability> elicitation;
 };
 
 /**
@@ -108,6 +110,16 @@ struct RootsCapability {
  */
 struct SamplingCapability {
     std::optional<bool> tools;  // Client supports tool use in sampling (CLNT-03)
+};
+
+/**
+ * Elicitation capability - indicates client supports elicitation.
+ *
+ * Corresponds to "ElicitationCapability" in MCP 2025-11-25 schema.
+ */
+struct ElicitationCapability {
+    std::optional<bool> form;  // Client supports form mode (CLNT-04)
+    std::optional<bool> url;   // Client supports URL mode (CLNT-05)
 };
 
 /**
