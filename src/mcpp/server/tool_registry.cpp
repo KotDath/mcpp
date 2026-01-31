@@ -170,6 +170,7 @@ bool ToolRegistry::register_tool(
     };
 
     tools_[name] = std::move(registration);
+    notify_changed();
     return true;
 }
 
@@ -280,6 +281,16 @@ std::optional<nlohmann::json> ToolRegistry::call_tool(
 
 bool ToolRegistry::has_tool(const std::string& name) const {
     return tools_.find(name) != tools_.end();
+}
+
+void ToolRegistry::set_notify_callback(NotifyCallback cb) {
+    notify_cb_ = std::move(cb);
+}
+
+void ToolRegistry::notify_changed() {
+    if (notify_cb_) {
+        notify_cb_();
+    }
 }
 
 } // namespace server

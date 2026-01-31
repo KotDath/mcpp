@@ -81,6 +81,13 @@ using ToolHandler = std::function<nlohmann::json(
 )>;
 
 /**
+ * @brief Callback type for list_changed notifications
+ *
+ * Invoked when the registry contents change (tools added/removed).
+ */
+using NotifyCallback = std::function<void()>;
+
+/**
  * @brief Tool annotations for rich tool discovery
  *
  * Annotations provide metadata about tool behavior for UI/UX purposes:
@@ -282,9 +289,30 @@ public:
      */
     void clear() noexcept { tools_.clear(); }
 
+    /**
+     * @brief Set the callback for sending list_changed notifications
+     *
+     * The callback will be invoked when notify_changed() is called.
+     * Typically used to send notifications/tools/list_changed to clients.
+     *
+     * @param cb Callback function (empty function to clear)
+     */
+    void set_notify_callback(NotifyCallback cb);
+
+    /**
+     * @brief Send tools/list_changed notification
+     *
+     * If a notify callback is registered, invokes it to send the notification.
+     * Call this after registering/unregistering tools to notify clients.
+     */
+    void notify_changed();
+
 private:
     /// Map of tool name to registration data (O(1) lookup)
     std::unordered_map<std::string, ToolRegistration> tools_;
+
+    /// Callback for sending list_changed notifications
+    NotifyCallback notify_cb_;
 };
 
 } // namespace server
