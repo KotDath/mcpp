@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 1 of 7 (Protocol Foundation)
-Plan: 2 of 6 in current phase
+Plan: 3 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed plan 01-02: Transport abstraction interface
+Last activity: 2026-01-31 — Completed plan 01-03: MCP protocol types
 
-Progress: [██░░░░░░░░░] 33%
+Progress: [███░░░░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 3
 - Average duration: - min
 - Total execution time: 0.0 hours
 
@@ -27,10 +27,10 @@ Progress: [██░░░░░░░░░] 33%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-protocol-foundation | 2 | 6 | - |
+| 01-protocol-foundation | 3 | 6 | - |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 01-02
+- Last 5 plans: 01-01, 01-02, 01-03
 - Trend: -
 
 *Updated after each plan completion*
@@ -54,6 +54,12 @@ Recent decisions affecting current work:
 - std::string_view parameters for zero-copy message passing
 - Explicit lifecycle (not RAII) for transport connections
 
+**From 01-03 (MCP protocol types):**
+- std::optional for all optional capability fields to enable extensibility
+- CapabilitySet as nlohmann::json alias for experimental capabilities
+- Exact match protocol version validation (simplest approach for MVP)
+- Empty structs for notifications with no parameters provide type safety
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -69,5 +75,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed plan 01-02 - Transport abstraction interface defined
+Stopped at: Completed plan 01-03 - MCP protocol types defined
 Resume file: None
