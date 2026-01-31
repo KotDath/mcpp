@@ -77,6 +77,7 @@ bool ResourceRegistry::register_resource(
     };
 
     resources_[uri] = std::move(reg);
+    notify_changed();
     return true;
 }
 
@@ -184,6 +185,7 @@ bool ResourceRegistry::register_template(
     // Note: util::UriTemplate::expand is available for building URIs from templates
     // e.g., std::string uri = util::UriTemplate::expand("file://{path}", {{"path", "/etc/config"}});
 
+    notify_changed();
     return true;
 }
 
@@ -408,6 +410,16 @@ nlohmann::json ResourceRegistry::build_resource_result(
     result["contents"] = std::move(contents_array);
 
     return result;
+}
+
+void ResourceRegistry::set_notify_callback(NotifyCallback cb) {
+    notify_cb_ = std::move(cb);
+}
+
+void ResourceRegistry::notify_changed() {
+    if (notify_cb_) {
+        notify_cb_();
+    }
 }
 
 } // namespace server

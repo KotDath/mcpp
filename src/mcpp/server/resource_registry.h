@@ -149,6 +149,13 @@ using TemplateResourceHandler = std::function<ResourceContent(
 )>;
 
 /**
+ * @brief Callback type for list_changed notifications
+ *
+ * Invoked when the registry contents change (resources added/removed).
+ */
+using NotifyCallback = std::function<void()>;
+
+/**
  * @brief Resource registration record
  *
  * Stores metadata and handler for a registered resource.
@@ -423,6 +430,24 @@ public:
         const std::optional<nlohmann::json>& reference
     ) const;
 
+    /**
+     * @brief Set the callback for sending list_changed notifications
+     *
+     * The callback will be invoked when notify_changed() is called.
+     * Typically used to send notifications/resources/list_changed to clients.
+     *
+     * @param cb Callback function (empty function to clear)
+     */
+    void set_notify_callback(NotifyCallback cb);
+
+    /**
+     * @brief Send resources/list_changed notification
+     *
+     * If a notify callback is registered, invokes it to send the notification.
+     * Call this after registering/unregistering resources to notify clients.
+     */
+    void notify_changed();
+
 private:
     /**
      * @brief Subscription record
@@ -449,6 +474,9 @@ private:
 
     /// Completion handlers keyed by resource name (URI or template)
     std::unordered_map<std::string, CompletionHandler> completion_handlers_;
+
+    /// Callback for sending list_changed notifications
+    NotifyCallback notify_cb_;
 
     /**
      * @brief Match a URI against a template and extract parameters
