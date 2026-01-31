@@ -8,11 +8,16 @@ namespace mcpp::core {
 namespace detail {
 
 // Helper to parse RequestId from JSON
+// Per JSON-RPC 2.0 spec, id can be a number, string, or null (for error responses)
 std::optional<RequestId> parse_request_id(const JsonValue& j) {
     if (j.is_number_integer()) {
         return j.get<int64_t>();
     } else if (j.is_string()) {
         return j.get<std::string>();
+    } else if (j.is_null()) {
+        // null ID is used in error responses when the request ID couldn't be determined
+        // We use 0 as a sentinel value for null IDs
+        return static_cast<int64_t>(0);
     }
     return std::nullopt;
 }
