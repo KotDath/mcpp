@@ -12,28 +12,28 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 Phase: 3 of 7 (Client Capabilities)
 Plan: 3 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-31 — Completed 03-03: Basic sampling support with CreateMessageRequest/Result and SamplingClient integration
+Last activity: 2026-01-31 — Completed 03-01: C++20 upgrade with std::stop_token-based cooperative cancellation
 
-Progress: [██████████░] 32%
+Progress: [██████████░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 16
 - Average duration: 4 min
-- Total execution time: 1.1 hours
+- Total execution time: 1.2 hours
 
 **By Phase:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
+| Phase | Plans | Complete | Avg/Plan |
+|-------|-------|----------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
-| 02-core-server | 6 | 2 min | 2 min |
-| 03-client-capabilities | 3 | 2 min | 1 min |
+| 02-core-server | 6 | 6 | 2 min |
+| 03-client-capabilities | 6 | 3 | 3 min |
 
 **Recent Trend:**
-- Last 6 plans: 02-06, 03-01, 03-02, 03-03
-- Trend: Phase 3 in progress, sampling support added
+- Last 6 plans: 02-06, 03-02, 03-03, 03-01
+- Trend: Phase 3 in progress, cancellation support added (03-01 executed after 03-02/03-03)
 
 *Updated after each plan completion*
 
@@ -134,6 +134,16 @@ Recent decisions affecting current work:
 - SamplingClient with handler registration and JSON-RPC error returns
 - sampling/createMessage handler registered in McpClient constructor
 
+**From 03-01 (Cancellation Support):**
+- std::stop_token over atomic<bool> for better composability with std::jthread
+- Separate CancellationManager from RequestTracker for cleaner separation of concerns
+- Idempotent unregister operations handle race conditions (cancel after completion)
+- CancellationToken for polling cancellation state in long-running operations
+- CancellationSource for requesting cancellation via cancel() method
+- CancellationManager tracks pending requests by RequestId with mutex protection
+- notifications/cancelled handler registered in McpClient constructor
+- cancel_request() public method for user-initiated cancellation
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -149,5 +159,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 03-03 - Basic sampling support with CreateMessageRequest/Result types, SamplingHandler callback, SamplingClient class, and McpClient integration with sampling/createMessage request handler.
+Stopped at: Completed 03-01 - C++20 upgrade with std::stop_token-based cooperative cancellation, CancellationToken/CancellationSource types, CancellationManager for request tracking, and McpClient integration with notifications/cancelled handler.
 Resume file: None
