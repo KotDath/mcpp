@@ -189,22 +189,24 @@ Plans:
 **Requirements**: BUILD-01, BUILD-02, BUILD-03, BUILD-04, TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 **Success Criteria** (what must be TRUE):
-1. Library consumer can build the project using CMake with C++17 standard on gcc-11/g++-11 or compatible
+1. Library consumer can build the project using CMake with C++20 standard on gcc-11/g++-11 or compatible
 2. Library consumer can link against a static library target for static linking
 3. Library consumer can link against a shared library target with proper versioning (SONAME)
 4. All source files include MIT license headers for permissive distribution
 5. Library consumer can run Google Test unit tests covering core functionality
 6. Library consumer can validate the library against real MCP clients via MCP Inspector integration
 7. Library consumer can run JSON-RPC compliance tests verifying protocol correctness
-8. Library consumer can run thread safety tests verifying concurrent access patterns
-9. Library consumer can run async lifetime tests verifying no dangling references
+8. Library consumer can run thread safety tests via ThreadSanitizer (documented in README)
+9. Library consumer can run async lifetime tests via AddressSanitizer+LeakSanitizer (documented in README)
 
-**Plans**: TBD
+**Plans**: 5 plans in 3 waves
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
-- [ ] 07-03: TBD
+- [x] 07-01-PLAN.md — CMake build system with static/shared libraries and package config
+- [x] 07-02-PLAN.md — GoogleTest integration and unit tests
+- [x] 07-03-PLAN.md — JSON-RPC compliance tests
+- [x] 07-04-PLAN.md — MCP Inspector integration and integration tests
+- [x] 07-05-PLAN.md — MIT license headers and README documentation
 
 ## Progress
 
