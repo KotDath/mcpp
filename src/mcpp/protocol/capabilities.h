@@ -14,61 +14,14 @@ namespace mcpp::protocol {
  */
 using CapabilitySet = nlohmann::json;
 
-// Forward declarations
-struct ToolCapability;
-struct ResourceCapability;
-struct PromptCapability;
-struct RootsCapability;
-struct SamplingCapability;
-struct ElicitationCapability;
-struct LoggingCapability;
-struct TasksCapability;
-
 /**
- * Client capabilities advertised during initialization.
+ * Tasks capability - experimental task lifecycle management
  *
- * Corresponds to the "ClientCapabilities" type in MCP 2025-11-25 schema.
- * Indicates which optional MCP features the client supports.
- *
- * Example JSON:
- * {
- *   "experimental": {"customFeature": true},
- *   "roots": {"listChanged": true},
- *   "sampling": {}
- * }
+ * Corresponds to "TasksCapability" in MCP 2025-11-25 schema (experimental).
+ * Indicates server supports the tasks API for long-running operations.
  */
-struct ClientCapabilities {
-    std::optional<CapabilitySet> experimental;
-    std::optional<RootsCapability> roots;
-    std::optional<SamplingCapability> sampling;
-    std::optional<ElicitationCapability> elicitation;
-
-    // Builder typedef for fluent API
-    class Builder;
-};
-
-/**
- * Server capabilities advertised during initialization.
- *
- * Corresponds to the "ServerCapabilities" type in MCP 2025-11-25 schema.
- * Indicates which optional MCP features the server supports.
- *
- * Example JSON:
- * {
- *   "experimental": {"customFeature": true},
- *   "logging": {},
- *   "prompts": {"listChanged": true},
- *   "resources": {"subscribe": true, "listChanged": true},
- *   "tools": {"listChanged": true}
- * }
- */
-struct ServerCapabilities {
-    std::optional<CapabilitySet> experimental;
-    std::optional<LoggingCapability> logging;
-    std::optional<PromptCapability> prompts;
-    std::optional<ResourceCapability> resources;
-    std::optional<ToolCapability> tools;
-    std::optional<TasksCapability> tasks;
+struct TasksCapability {
+    // No fields defined in current spec - presence indicates support
 };
 
 /**
@@ -145,13 +98,50 @@ struct LoggingCapability {
 };
 
 /**
- * Tasks capability - experimental task lifecycle management
+ * Client capabilities advertised during initialization.
  *
- * Corresponds to "TasksCapability" in MCP 2025-11-25 schema (experimental).
- * Indicates server supports the tasks API for long-running operations.
+ * Corresponds to the "ClientCapabilities" type in MCP 2025-11-25 schema.
+ * Indicates which optional MCP features the client supports.
+ *
+ * Example JSON:
+ * {
+ *   "experimental": {"customFeature": true},
+ *   "roots": {"listChanged": true},
+ *   "sampling": {}
+ * }
  */
-struct TasksCapability {
-    // No fields defined in current spec - presence indicates support
+struct ClientCapabilities {
+    std::optional<CapabilitySet> experimental;
+    std::optional<RootsCapability> roots;
+    std::optional<SamplingCapability> sampling;
+    std::optional<ElicitationCapability> elicitation;
+
+    // Builder typedef for fluent API
+    class Builder;
+};
+
+/**
+ * Server capabilities advertised during initialization.
+ *
+ * Corresponds to the "ServerCapabilities" type in MCP 2025-11-25 schema.
+ * Indicates which optional MCP features the server supports.
+ *
+ * Example JSON:
+ * {
+ *   "experimental": {"customFeature": true},
+ *   "logging": {},
+ *   "prompts": {"listChanged": true},
+ *   "resources": {"subscribe": true, "listChanged": true},
+ *   "tools": {"listChanged": true}
+ * }
+ */
+struct ServerCapabilities {
+    std::optional<CapabilitySet> experimental;
+    std::optional<LoggingCapability> logging;
+    std::optional<PromptCapability> prompts;
+    std::optional<ResourceCapability> resources;
+    std::optional<ToolCapability> tools;
+    std::optional<TasksCapability> tasks;
 };
 
 /**

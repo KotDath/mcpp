@@ -36,7 +36,12 @@
 // JSON Schema validator - using nlohmann/json-schema-validator
 // Note: The include path assumes the library is available.
 // Users must link against nlohmann_json_schema_validator.
-#include <nlohmann/json-schema.hpp>
+#if __has_include(<nlohmann/json-schema.hpp>)
+    #include <nlohmann/json-schema.hpp>
+    #define MCPP_HAS_JSON_SCHEMA 1
+#else
+    #define MCPP_HAS_JSON_SCHEMA 0
+#endif
 
 #include "mcpp/content/pagination.h"
 #include "mcpp/server/request_context.h"

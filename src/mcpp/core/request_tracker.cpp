@@ -5,7 +5,7 @@ namespace mcpp::core {
 RequestId RequestTracker::next_id() {
     // Atomic increment with sequential consistency
     // Returns the value before increment (0, 1, 2, ...)
-    return counter_.fetch_add(1, std::memory_order_seq_cst);
+    return static_cast<int64_t>(counter_.fetch_add(1, std::memory_order_seq_cst));
 }
 
 void RequestTracker::register_pending(

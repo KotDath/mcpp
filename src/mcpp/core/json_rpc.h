@@ -9,6 +9,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "mcpp/core/error.h"
+
 namespace mcpp::core {
 
 // Type alias for JSON values - using nlohmann::json
@@ -16,9 +18,6 @@ using JsonValue = nlohmann::json;
 
 // Request ID can be either a number or a string per JSON-RPC 2.0 spec
 using RequestId = std::variant<int64_t, std::string>;
-
-// Forward declaration for JsonRpcError (defined in error.h)
-struct JsonRpcError;
 
 /**
  * JSON-RPC 2.0 Request
