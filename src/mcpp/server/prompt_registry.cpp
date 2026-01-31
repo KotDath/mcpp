@@ -1,3 +1,9 @@
+// mcpp - MCP C++ library
+// https://github.com/mcpp-project/mcpp
+//
+// Copyright (c) 2025 mcpp contributors
+// Distributed under MIT License
+
 #include "mcpp/server/prompt_registry.h"
 
 namespace mcpp::server {
@@ -94,6 +100,29 @@ std::optional<nlohmann::json> PromptRegistry::get_prompt(
 
 bool PromptRegistry::has_prompt(const std::string& name) const {
     return prompts_.find(name) != prompts_.end();
+}
+
+void PromptRegistry::set_completion_handler(
+    const std::string& prompt_name,
+    CompletionHandler handler
+) {
+    completion_handlers_[prompt_name] = std::move(handler);
+}
+
+std::optional<std::vector<Completion>> PromptRegistry::get_completion(
+    const std::string& prompt_name,
+    const std::string& argument_name,
+    const nlohmann::json& current_value,
+    const std::optional<nlohmann::json>& reference
+) const {
+    auto it = completion_handlers_.find(prompt_name);
+    if (it == completion_handlers_.end()) {
+        return std::nullopt;
+    }
+
+    // Call the handler to get completion suggestions
+    const CompletionHandler& handler = it->second;
+    return handler(argument_name, current_value, reference);
 }
 
 } // namespace mcpp::server

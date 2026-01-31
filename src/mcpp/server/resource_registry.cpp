@@ -350,6 +350,31 @@ void ResourceRegistry::set_transport(transport::Transport& transport) {
     transport_ = &transport;
 }
 
+// === Completion Support ===
+
+void ResourceRegistry::set_completion_handler(
+    const std::string& resource_name,
+    CompletionHandler handler
+) {
+    completion_handlers_[resource_name] = std::move(handler);
+}
+
+std::optional<std::vector<Completion>> ResourceRegistry::get_completion(
+    const std::string& resource_name,
+    const std::string& argument_name,
+    const nlohmann::json& current_value,
+    const std::optional<nlohmann::json>& reference
+) const {
+    auto it = completion_handlers_.find(resource_name);
+    if (it == completion_handlers_.end()) {
+        return std::nullopt;
+    }
+
+    // Call the handler to get completion suggestions
+    const CompletionHandler& handler = it->second;
+    return handler(argument_name, current_value, reference);
+}
+
 // === Private Helpers ===
 
 nlohmann::json ResourceRegistry::build_resource_result(

@@ -38,6 +38,51 @@
 
 namespace mcpp {
 
+namespace server {
+
+/**
+ * @brief Completion suggestion for argument autocompletion
+ *
+ * Represents a single completion value with an optional description.
+ * Matches the MCP CompleteResult format which returns an array of
+ * completion values with optional descriptions.
+ *
+ * Note: This struct is shared between PromptRegistry and ResourceRegistry
+ * for consistency in completion handling across both registries.
+ */
+struct Completion {
+    /// The completion value to insert
+    std::string value;
+
+    /// Optional human-readable description of this completion
+    std::optional<std::string> description;
+};
+
+/**
+ * @brief Completion handler function type
+ *
+ * User-provided function that generates completion suggestions for
+ * resource URIs or values. Called when a client requests completion
+ * via resources/complete.
+ *
+ * The handler receives:
+ * - argument_name: The name of the argument being completed
+ * - current_value: The current partial value in the argument field
+ * - reference: Optional reference context (e.g., cursor position)
+ *
+ * Returns a vector of Completion suggestions. Empty vector means no completions.
+ *
+ * Thread safety: Handlers may be called from multiple threads.
+ * Implementations must be thread-safe or use external synchronization.
+ */
+using CompletionHandler = std::function<std::vector<Completion>(
+    const std::string& argument_name,
+    const nlohmann::json& current_value,
+    const std::optional<nlohmann::json>& reference
+)>;
+
+} // namespace server
+
 namespace transport {
 class Transport;
 }
@@ -342,6 +387,42 @@ public:
      */
     void set_transport(transport::Transport& transport);
 
+    // === Completion Support ===
+
+    /**
+     * @brief Set a completion handler for a resource
+     *
+     * Registers a completion handler for the specified resource.
+     * The handler will be called when clients request completion
+     * via resources/complete for this resource.
+     *
+     * @param resource_name Name of the resource (URI or template name)
+     * @param handler Function to generate completion suggestions
+     */
+    void set_completion_handler(
+        const std::string& resource_name,
+        CompletionHandler handler
+    );
+
+    /**
+     * @brief Get completion suggestions for a resource
+     *
+     * Calls the completion handler registered for the resource
+     * and returns suggestions for the given argument and value.
+     *
+     * @param resource_name Name of the resource
+     * @param argument_name Name of the argument being completed
+     * @param current_value Current partial value in the argument field
+     * @param reference Optional reference context (e.g., cursor position)
+     * @return Vector of completion suggestions, or nullopt if no handler registered
+     */
+    std::optional<std::vector<Completion>> get_completion(
+        const std::string& resource_name,
+        const std::string& argument_name,
+        const nlohmann::json& current_value,
+        const std::optional<nlohmann::json>& reference
+    ) const;
+
 private:
     /**
      * @brief Subscription record
@@ -365,6 +446,9 @@ private:
 
     /// Transport for sending subscription notifications (non-owning)
     transport::Transport* transport_ = nullptr;
+
+    /// Completion handlers keyed by resource name (URI or template)
+    std::unordered_map<std::string, CompletionHandler> completion_handlers_;
 
     /**
      * @brief Match a URI against a template and extract parameters
