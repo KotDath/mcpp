@@ -277,6 +277,35 @@ public:
     void set_sampling_handler(client::SamplingHandler handler);
 
     /**
+     * @brief Enable tool use support for sampling
+     *
+     * When enabled, the SamplingClient can execute agentic tool loops by calling
+     * tools on the MCP server via the tools/call method.
+     *
+     * This sets up a synchronous tool_caller that blocks on responses using
+     * promise/future for tool calls during the tool loop.
+     *
+     * @param enable True to enable tool use, false to disable
+     */
+    void enable_tool_use_for_sampling(bool enable = true);
+
+    /**
+     * @brief Get the tool loop configuration
+     *
+     * Provides access to configure max_iterations and timeout for tool loops.
+     *
+     * @return Reference to the tool loop configuration
+     */
+    client::ToolLoopConfig& get_tool_loop_config() { return sampling_client_.get_tool_loop_config(); }
+
+    /**
+     * @brief Get the tool loop configuration (const overload)
+     *
+     * @return Const reference to the tool loop configuration
+     */
+    const client::ToolLoopConfig& get_tool_loop_config() const { return sampling_client_.get_tool_loop_config(); }
+
+    /**
      * @brief Set the elicitation handler for user input requests
      *
      * The handler will be invoked when the server sends an elicitation/create request.

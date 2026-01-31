@@ -25,6 +25,7 @@
 #include "mcpp/client.h"
 
 #include <cstdio>
+#include <future>
 #include <utility>
 
 namespace mcpp {
@@ -251,6 +252,62 @@ void McpClient::set_notification_handler(std::string_view method, NotificationHa
 
 void McpClient::set_sampling_handler(client::SamplingHandler handler) {
     sampling_client_.set_sampling_handler(std::move(handler));
+}
+
+void McpClient::enable_tool_use_for_sampling(bool enable) {
+    if (enable) {
+        // Set up a synchronous tool caller that blocks on response
+        sampling_client_.set_tool_caller([this](std::string_view method, const nlohmann::json& params) -> nlohmann::json {
+            // Generate request ID
+            core::RequestId id = request_tracker_.next_id();
+
+            // Create promise/future for blocking wait
+            auto promise = std::make_shared<std::promise<nlohmann::json>>();
+            auto future = promise->get_future();
+
+            // Register pending request
+            request_tracker_.register_pending(
+                id,
+                [promise](const nlohmann::json& result) {
+                    promise->set_value(result);
+                },
+                [promise](const core::JsonRpcError& error) {
+                    promise->set_value(nlohmann::json{
+                        {"error", true},
+                        {"code", error.code},
+                        {"message", error.message}
+                    });
+                }
+            );
+
+            // Build and send request
+            core::JsonRpcRequest req;
+            req.id = id;
+            req.method = std::string(method);
+            req.params = params;
+
+            std::string message = req.to_string();
+            transport_->send(message);
+
+            // Wait for response with a timeout
+            // Note: This blocks the event loop - in production would need async approach
+            // For MVP, this is acceptable limitation
+            std::future_status status = future.wait_for(std::chrono::seconds(30));
+            if (status != std::future_status::ready) {
+                // Timeout - set error value
+                promise->set_value(nlohmann::json{
+                    {"error", true},
+                    {"code", -32603},
+                    {"message", "Tool call timeout"}
+                });
+            }
+
+            return future.get();
+        });
+    } else {
+        // Clear the tool caller (disables tool loop)
+        sampling_client_.clear_tool_caller();
+    }
 }
 
 void McpClient::set_elicitation_handler(client::ElicitationHandler handler) {
