@@ -73,6 +73,13 @@ using CompletionHandler = std::function<std::vector<Completion>(
 )>;
 
 /**
+ * @brief Callback type for list_changed notifications
+ *
+ * Invoked when the registry contents change (prompts added/removed).
+ */
+using NotifyCallback = std::function<void()>;
+
+/**
  * PromptMessage represents a single message in a prompt template.
  *
  * Messages have a role (user or assistant) and content that can be
@@ -229,11 +236,32 @@ public:
         const std::optional<nlohmann::json>& reference
     ) const;
 
+    /**
+     * @brief Set the callback for sending list_changed notifications
+     *
+     * The callback will be invoked when notify_changed() is called.
+     * Typically used to send notifications/prompts/list_changed to clients.
+     *
+     * @param cb Callback function (empty function to clear)
+     */
+    void set_notify_callback(NotifyCallback cb);
+
+    /**
+     * @brief Send prompts/list_changed notification
+     *
+     * If a notify callback is registered, invokes it to send the notification.
+     * Call this after registering/unregistering prompts to notify clients.
+     */
+    void notify_changed();
+
 private:
     std::unordered_map<std::string, PromptRegistration> prompts_;
 
     /// Completion handlers keyed by prompt name
     std::unordered_map<std::string, CompletionHandler> completion_handlers_;
+
+    /// Callback for sending list_changed notifications
+    NotifyCallback notify_cb_;
 };
 
 } // namespace mcpp::server

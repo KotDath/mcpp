@@ -28,6 +28,7 @@ bool PromptRegistry::register_prompt(
     };
 
     prompts_[name] = std::move(registration);
+    notify_changed();
     return true;
 }
 
@@ -123,6 +124,16 @@ std::optional<std::vector<Completion>> PromptRegistry::get_completion(
     // Call the handler to get completion suggestions
     const CompletionHandler& handler = it->second;
     return handler(argument_name, current_value, reference);
+}
+
+void PromptRegistry::set_notify_callback(NotifyCallback cb) {
+    notify_cb_ = std::move(cb);
+}
+
+void PromptRegistry::notify_changed() {
+    if (notify_cb_) {
+        notify_cb_();
+    }
 }
 
 } // namespace mcpp::server
