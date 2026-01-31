@@ -10,28 +10,29 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 2 of 7 (Core Server)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-01-31 — Phase 1 complete: Protocol Foundation with 6/6 plans executed, 4/5 success criteria verified (tool execution error flag deferred to Phase 2)
+Plan: 2 of TBD in current phase
+Status: In progress
+Last activity: 2026-01-31 — Completed plan 02-02: Resource Registry with text/blob content support, URI-based lookup, and MCP-compliant responses
 
-Progress: [██░░░░░░░░░] 14%
+Progress: [███░░░░░░░░] 19%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 6 min
-- Total execution time: 0.6 hours
+- Total execution time: 0.7 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
+| 02-core-server | 1 | TBD | 1 min |
 
 **Recent Trend:**
-- Last 6 plans: 01-01, 01-02, 01-03, 01-04, 01-05, 01-06
-- Trend: Steady progress, Phase 1 complete
+- Last 3 plans: 01-06, 02-01, 02-02
+- Trend: Phase 2 in progress
 
 *Updated after each plan completion*
 
@@ -78,6 +79,19 @@ Recent decisions affecting current work:
 - All async operations use std::function callbacks stored by value
 - Initialize method automatically sends initialized notification on success
 
+**From 02-01 (Tool Registry):**
+- Tool registry with handler-based pattern for dynamic execution
+- std::function<ToolResult(const JsonValue&)> for tool callbacks
+- URI-agnostic storage, user decides naming scheme
+- Non-copyable, non-movable registry classes
+
+**From 02-02 (Resource Registry):**
+- Resource content with is_text flag for text vs blob field selection
+- Base64 encoding is caller's responsibility for binary content
+- URI scheme agnostic - user decides which schemes to support
+- MIME type at registration with optional per-read override
+- MCP ReadResourceResult format with contents array
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -94,5 +108,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed plan 01-06 - McpClient with full request/response correlation, timeout handling, and MCP initialization handshake
+Stopped at: Completed plan 02-02 - Resource Registry with text/blob content support, URI-based lookup, and MCP-compliant responses
 Resume file: None
