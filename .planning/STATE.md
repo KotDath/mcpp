@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2025-01-31)
 ## Current Position
 
 Phase: 3 of 7 (Client Capabilities)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-01-31 — Phase 2 complete: Core Server with 6/6 plans executed, 7/7 success criteria verified (1 auto-fixed bug: transport nullptr dereference)
+Plan: 2 of 6 in current phase
+Status: In progress
+Last activity: 2026-01-31 — Completed 03-02: Roots management with file:// URI validation and RootsManager class
 
-Progress: [████████░░] 28%
+Progress: [██████████░] 30%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 5 min
-- Total execution time: 1.0 hours
+- Total plans completed: 14
+- Average duration: 4 min
+- Total execution time: 1.1 hours
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [████████░░] 28%
 |-------|-------|-------|----------|
 | 01-protocol-foundation | 6 | 6 | 6 min |
 | 02-core-server | 6 | 2 min | 2 min |
+| 03-client-capabilities | 2 | 1 min | 1 min |
 
 **Recent Trend:**
 - Last 6 plans: 02-01, 02-02, 02-03, 02-04, 02-05, 02-06
-- Trend: Phase 2 complete, ready for Phase 3
+- Trend: Phase 2 complete, Phase 3 in progress
 
 *Updated after each plan completion*
 
@@ -118,6 +119,12 @@ Recent decisions affecting current work:
 - Non-blocking pipe with fcntl O_NONBLOCK for better read behavior
 - Callbacks stored by value to avoid lifetime issues
 
+**From 03-02 (Roots Management):**
+- file:// URI validation using uri.rfind("file://", 0) == 0 per MCP spec
+- RootsManager with callback pattern for list_changed notifications
+- roots/list handler registered in McpClient constructor
+- RootsManager accessible via get_roots_manager() for user code
+
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
@@ -133,5 +140,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed Phase 2 - Core Server with all registries (tools, resources, prompts), RequestContext, McpServer, and StdioTransport. One orchestrator auto-fix applied (transport nullptr dereference). Verification passed 7/7 must-haves.
+Stopped at: Completed 03-02 - Roots management with Root type, RootsManager class, and McpClient integration with roots/list handler and roots/list_changed notification support.
 Resume file: None
