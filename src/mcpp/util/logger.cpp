@@ -43,14 +43,14 @@ namespace mcpp::util {
 // Logger::Span Implementation
 //=============================================================================
 
-Span::Span(std::string_view name,
+Logger::Span::Span(std::string_view name,
            std::map<std::string, std::string> context)
     : name_(name)
     , context_(std::move(context))
     , start_time_(std::chrono::steady_clock::now()) {
 }
 
-Span::~Span() {
+Logger::Span::~Span() {
     auto end_time = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
         end_time - start_time_
@@ -61,12 +61,12 @@ Span::~Span() {
     context_["_completed"] = "true";
 
     // Log span completion
-    Logger::global().log(Level::Debug,
+    Logger::global().log(Logger::Level::Debug,
         "Span completed: " + name_,
         context_);
 }
 
-void Span::add_context(std::string_view key, std::string_view value) {
+void Logger::Span::add_context(std::string_view key, std::string_view value) {
     context_[std::string(key)] = std::string(value);
 }
 
@@ -224,7 +224,7 @@ std::string_view Logger::level_to_string(Level level) noexcept {
     }
 }
 
-std::optional<Level> Logger::string_to_level(std::string_view level) noexcept {
+std::optional<Logger::Level> Logger::string_to_level(std::string_view level) noexcept {
     if (level == "TRACE" || level == "trace") return Level::Trace;
     if (level == "DEBUG" || level == "debug") return Level::Debug;
     if (level == "INFO"  || level == "info")  return Level::Info;
