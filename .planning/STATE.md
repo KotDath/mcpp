@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2025-01-31)
 
 **Core value:** Developers can build MCP clients and servers in C++ that are fast, correct, and support the complete protocol spec without wrestling with JSON-RPC details or transport plumbing
-**Current focus:** Protocol Foundation (Phase 1)
+**Current focus:** Core Server (Phase 2)
 
 ## Current Position
 
-Phase: 1 of 7 (Protocol Foundation)
-Plan: 6 of 6 in current phase
-Status: Phase complete
-Last activity: 2026-01-31 — Completed plan 01-06: McpClient implementation
+Phase: 2 of 7 (Core Server)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-01-31 — Phase 1 complete: Protocol Foundation with 6/6 plans executed, 4/5 success criteria verified (tool execution error flag deferred to Phase 2)
 
-Progress: [█████████] 100%
+Progress: [██░░░░░░░░░] 14%
 
 ## Performance Metrics
 
@@ -88,7 +88,8 @@ None yet.
 
 [Issues that affect future work]
 
-None yet.
+**Verification gap deferred to Phase 2:**
+- MCP tool execution error handling (PROTO-04 partial) — `isError` flag for tool results will be implemented in Phase 2 as part of tool execution feature. This is MCP-specific (not JSON-RPC) and logically belongs with tool call implementation.
 
 ## Session Continuity
 

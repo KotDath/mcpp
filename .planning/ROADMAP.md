@@ -12,7 +12,7 @@ A modern C++17 library for the Model Context Protocol (MCP) starts with core JSO
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Protocol Foundation** - JSON-RPC core, MCP initialization, transport abstraction, async core API
+- [x] **Phase 1: Protocol Foundation** - JSON-RPC core, MCP initialization, transport abstraction, async core API
 - [ ] **Phase 2: Core Server** - Tools, resources, prompts with stdio transport and progress support
 - [ ] **Phase 3: Client Capabilities** - Roots, sampling, elicitation with cancellation and futures
 - [ ] **Phase 4: Advanced Features & HTTP Transport** - SSE transport, streaming, subscriptions, completions
@@ -40,12 +40,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 6 plans in 3 waves
 
 Plans:
-- [ ] 01-01-PLAN.md — JSON-RPC 2.0 core types (Request, Response, Notification, Error)
-- [ ] 01-02-PLAN.md — Transport abstraction interface
-- [ ] 01-03-PLAN.md — MCP protocol types (capabilities, initialize/initialized)
-- [ ] 01-04-PLAN.md — Request tracking (atomic ID generation, pending requests)
-- [ ] 01-05-PLAN.md — Async callbacks and timeout manager
-- [ ] 01-06-PLAN.md — Low-level callback-based MCP client API
+- [x] 01-01-PLAN.md — JSON-RPC 2.0 core types (Request, Response, Notification, Error)
+- [x] 01-02-PLAN.md — Transport abstraction interface
+- [x] 01-03-PLAN.md — MCP protocol types (capabilities, initialize/initialized)
+- [x] 01-04-PLAN.md — Request tracking (atomic ID generation, pending requests)
+- [x] 01-05-PLAN.md — Async callbacks and timeout manager
+- [x] 01-06-PLAN.md — Low-level callback-based MCP client API
 
 ### Phase 2: Core Server
 
@@ -195,7 +195,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Protocol Foundation | 0/6 | Ready to execute | - |
+| 1. Protocol Foundation | 6/6 | ✓ Complete | 2026-01-31 |
 | 2. Core Server | 0/0 | Not started | - |
 | 3. Client Capabilities | 0/0 | Not started | - |
 | 4. Advanced Features & HTTP Transport | 0/0 | Not started | - |
