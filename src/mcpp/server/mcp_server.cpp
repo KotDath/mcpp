@@ -121,6 +121,10 @@ std::optional<nlohmann::json> McpServer::handle_request(
         result = handle_prompts_list();
     } else if (method == "prompts/get") {
         result = handle_prompts_get(params);
+    } else if (method == "prompts/complete") {
+        result = handle_prompts_complete(params);
+    } else if (method == "resources/complete") {
+        result = handle_resources_complete(params);
     } else {
         return make_error(JSONRPC_METHOD_NOT_FOUND, "Method not found", id);
     }
@@ -300,6 +304,116 @@ std::optional<std::string> McpServer::extract_progress_token(const nlohmann::jso
         }
     }
     return std::nullopt;
+}
+
+nlohmann::json McpServer::handle_prompts_complete(const nlohmann::json& params) {
+    // Validate required parameters
+    if (!params.contains("name")) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Missing 'name' parameter"}
+            }}
+        };
+    }
+
+    if (!params.contains("argument")) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Missing 'argument' parameter"}
+            }}
+        };
+    }
+
+    std::string name = params["name"].get<std::string>();
+    std::string argument = params["argument"].get<std::string>();
+    nlohmann::json value = params.value("value", nlohmann::json());
+
+    // Extract optional reference
+    std::optional<nlohmann::json> reference;
+    if (params.contains("reference") && !params["reference"].is_null()) {
+        reference = params["reference"];
+    }
+
+    // Get completion suggestions from the prompt registry
+    std::optional<std::vector<Completion>> completions =
+        prompts_.get_completion(name, argument, value, reference);
+
+    // Build MCP CompleteResult format
+    nlohmann::json::array_t completion_array;
+
+    if (completions.has_value()) {
+        for (const auto& completion : *completions) {
+            nlohmann::json completion_item;
+            completion_item["value"] = completion.value;
+
+            if (completion.description.has_value()) {
+                completion_item["description"] = *completion.description;
+            }
+
+            completion_array.push_back(std::move(completion_item));
+        }
+    }
+
+    return nlohmann::json{
+        {"completion", std::move(completion_array)}
+    };
+}
+
+nlohmann::json McpServer::handle_resources_complete(const nlohmann::json& params) {
+    // Validate required parameters
+    if (!params.contains("name")) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Missing 'name' parameter"}
+            }}
+        };
+    }
+
+    if (!params.contains("argument")) {
+        return nlohmann::json{
+            {"error", {
+                {"code", JSONRPC_INVALID_PARAMS},
+                {"message", "Missing 'argument' parameter"}
+            }}
+        };
+    }
+
+    std::string name = params["name"].get<std::string>();
+    std::string argument = params["argument"].get<std::string>();
+    nlohmann::json value = params.value("value", nlohmann::json());
+
+    // Extract optional reference
+    std::optional<nlohmann::json> reference;
+    if (params.contains("reference") && !params["reference"].is_null()) {
+        reference = params["reference"];
+    }
+
+    // Get completion suggestions from the resource registry
+    std::optional<std::vector<Completion>> completions =
+        resources_.get_completion(name, argument, value, reference);
+
+    // Build MCP CompleteResult format
+    nlohmann::json::array_t completion_array;
+
+    if (completions.has_value()) {
+        for (const auto& completion : *completions) {
+            nlohmann::json completion_item;
+            completion_item["value"] = completion.value;
+
+            if (completion.description.has_value()) {
+                completion_item["description"] = *completion.description;
+            }
+
+            completion_array.push_back(std::move(completion_item));
+        }
+    }
+
+    return nlohmann::json{
+        {"completion", std::move(completion_array)}
+    };
 }
 
 } // namespace server

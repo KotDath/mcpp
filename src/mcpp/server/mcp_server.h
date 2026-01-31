@@ -200,8 +200,10 @@ public:
      * - tools/call: Execute a tool
      * - resources/list: List all registered resources
      * - resources/read: Read a resource
+     * - resources/complete: Get completion suggestions for resources
      * - prompts/list: List all registered prompts
      * - prompts/get: Get a prompt with arguments
+     * - prompts/complete: Get completion suggestions for prompts
      *
      * @param request_json The JSON-RPC request object
      * @return Optional JSON-RPC response (nullopt for notifications)
@@ -265,6 +267,26 @@ private:
      * @return Prompt with messages
      */
     nlohmann::json handle_prompts_get(const nlohmann::json& params);
+
+    /**
+     * @brief Handle prompts/complete request
+     *
+     * Returns completion suggestions for prompt arguments.
+     *
+     * @param params Request parameters containing name, argument, value, and optional reference
+     * @return Completion result with suggestions
+     */
+    nlohmann::json handle_prompts_complete(const nlohmann::json& params);
+
+    /**
+     * @brief Handle resources/complete request
+     *
+     * Returns completion suggestions for resource URIs or values.
+     *
+     * @param params Request parameters containing name, argument, value, and optional reference
+     * @return Completion result with suggestions
+     */
+    nlohmann::json handle_resources_complete(const nlohmann::json& params);
 
     /**
      * @brief Extract progress token from request parameters
