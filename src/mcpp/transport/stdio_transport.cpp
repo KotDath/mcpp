@@ -87,5 +87,76 @@ bool StdioTransport::connect() {
     return true;
 }
 
+void StdioTransport::disconnect() {
+    running_ = false;
+    if (read_thread_.joinable()) {
+        read_thread_.join();
+    }
+}
+
+bool StdioTransport::is_connected() const {
+    return running_ && pipe_ != nullptr;
+}
+
+bool StdioTransport::send(std::string_view message) {
+    if (!pipe_ || !running_) {
+        return false;
+    }
+
+    // Append newline delimiter per MCP spec
+    std::string full_message(message);
+    full_message += '\n';
+
+    size_t written = fwrite(full_message.data(), 1, full_message.size(), pipe_);
+    fflush(pipe_);
+
+    return written == full_message.size();
+}
+
+void StdioTransport::set_message_callback(MessageCallback cb) {
+    message_callback_ = std::move(cb);
+}
+
+void StdioTransport::set_error_callback(ErrorCallback cb) {
+    error_callback_ = std::move(cb);
+}
+
+void StdioTransport::read_loop() {
+    char buffer[4096];
+    std::string line_buffer;
+
+    while (running_ && pipe_) {
+        if (fgets(buffer, sizeof(buffer), pipe_)) {
+            line_buffer += buffer;
+
+            // Process complete lines (newline-delimited)
+            size_t pos;
+            while ((pos = line_buffer.find('\n')) != std::string::npos) {
+                std::string line = line_buffer.substr(0, pos);
+                line_buffer.erase(0, pos + 1);
+
+                if (message_callback_) {
+                    message_callback_(line);
+                }
+            }
+        } else {
+            // EOF or error
+            if (error_callback_) {
+                error_callback_("Read error or EOF");
+            }
+            break;
+        }
+    }
+}
+
+StdioTransport::~StdioTransport() {
+    disconnect();
+
+    if (pipe_) {
+        pclose(pipe_);
+        pipe_ = nullptr;
+    }
+}
+
 } // namespace transport
 } // namespace mcpp
