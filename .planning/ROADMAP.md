@@ -13,7 +13,7 @@ A modern C++17 library for the Model Context Protocol (MCP) starts with core JSO
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Protocol Foundation** - JSON-RPC core, MCP initialization, transport abstraction, async core API
-- [ ] **Phase 2: Core Server** - Tools, resources, prompts with stdio transport and progress support
+- [x] **Phase 2: Core Server** - Tools, resources, prompts with stdio transport and progress support
 - [ ] **Phase 3: Client Capabilities** - Roots, sampling, elicitation with cancellation and futures
 - [ ] **Phase 4: Advanced Features & HTTP Transport** - SSE transport, streaming, subscriptions, completions
 - [ ] **Phase 5: Content & Tasks** - Rich content types, annotations, pagination, experimental tasks
@@ -67,12 +67,12 @@ Plans:
 **Plans**: 6 plans in 3 waves
 
 Plans:
-- [ ] 02-01-PLAN.md — Tool registration and execution with JSON Schema validation
-- [ ] 02-02-PLAN.md — Resource registration and serving (text/blob content)
-- [ ] 02-03-PLAN.md — Prompt registration and retrieval with argument substitution
-- [ ] 02-04-PLAN.md — RequestContext for progress reporting
-- [ ] 02-05-PLAN.md — McpServer main class integrating all registries
-- [ ] 02-06-PLAN.md — StdioTransport with subprocess spawning
+- [x] 02-01-PLAN.md — Tool registration and execution with JSON Schema validation
+- [x] 02-02-PLAN.md — Resource registration and serving (text/blob content)
+- [x] 02-03-PLAN.md — Prompt registration and retrieval with argument substitution
+- [x] 02-04-PLAN.md — RequestContext for progress reporting
+- [x] 02-05-PLAN.md — McpServer main class integrating all registries
+- [x] 02-06-PLAN.md — StdioTransport with subprocess spawning
 
 ### Phase 3: Client Capabilities
 
@@ -199,7 +199,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Protocol Foundation | 6/6 | Complete | 2026-01-31 |
-| 2. Core Server | 0/6 | Ready to execute | - |
+| 2. Core Server | 6/6 | Complete | 2026-01-31 |
 | 3. Client Capabilities | 0/0 | Not started | - |
 | 4. Advanced Features & HTTP Transport | 0/0 | Not started | - |
 | 5. Content & Tasks | 0/0 | Not started | - |

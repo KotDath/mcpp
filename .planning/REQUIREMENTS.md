@@ -17,23 +17,23 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Core Server Primitives
 
-- [ ] **SRVR-01**: Tools list (tool discovery)
-- [ ] **SRVR-02**: Tools call (JSON Schema input validation, structured/unstructured results)
-- [ ] **SRVR-03**: Resources list (URI-based discovery, MIME type handling)
-- [ ] **SRVR-04**: Resources read (text/blob content, embedded resources)
-- [ ] **SRVR-05**: Prompts list (prompt discovery)
-- [ ] **SRVR-06**: Prompts get (argument completion, message templates)
+- [x] **SRVR-01**: Tools list (tool discovery)
+- [x] **SRVR-02**: Tools call (JSON Schema input validation, structured/unstructured results)
+- [x] **SRVR-03**: Resources list (URI-based discovery, MIME type handling)
+- [x] **SRVR-04**: Resources read (text/blob content, embedded resources)
+- [x] **SRVR-05**: Prompts list (prompt discovery)
+- [x] **SRVR-06**: Prompts get (argument completion, message templates)
 
 ### Transports
 
-- [ ] **TRAN-01**: stdio transport (subprocess spawning, stdin/out messaging, newline-delimited JSON)
+- [x] **TRAN-01**: stdio transport (subprocess spawning, stdin/out messaging, newline-delimited JSON)
 - [ ] **TRAN-02**: Streamable HTTP transport (HTTP POST/SSE, session management, resumability)
 - [ ] **TRAN-03**: Transport abstraction interface (pluggable transport design)
 - [ ] **TRAN-04**: Non-blocking I/O for all transports (avoid event loop blocking)
 
 ### Async & Lifecycle
 
-- [ ] **ASYNC-01**: Progress tokens (opaque token attachment, progress notification emission)
+- [x] **ASYNC-01**: Progress tokens (opaque token attachment, progress notification emission)
 - [ ] **ASYNC-02**: Cancellation support (notifications/cancelled, race condition handling)
 - [ ] **ASYNC-03**: Callback-based core API for async operations
 - [ ] **ASYNC-04**: std::future wrappers for ergonomic blocking API
@@ -142,14 +142,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ASYNC-03 | Phase 1 | Pending |
 | ASYNC-05 | Phase 1 | Pending |
 | API-01 | Phase 1 | Pending |
-| SRVR-01 | Phase 2 | Pending |
-| SRVR-02 | Phase 2 | Pending |
-| SRVR-03 | Phase 2 | Pending |
-| SRVR-04 | Phase 2 | Pending |
-| SRVR-05 | Phase 2 | Pending |
-| SRVR-06 | Phase 2 | Pending |
-| TRAN-01 | Phase 2 | Pending |
-| ASYNC-01 | Phase 2 | Pending |
+| SRVR-01 | Phase 2 | Complete |
+| SRVR-02 | Phase 2 | Complete |
+| SRVR-03 | Phase 2 | Complete |
+| SRVR-04 | Phase 2 | Complete |
+| SRVR-05 | Phase 2 | Complete |
+| SRVR-06 | Phase 2 | Complete |
+| TRAN-01 | Phase 2 | Complete |
+| ASYNC-01 | Phase 2 | Complete |
 | CLNT-01 | Phase 3 | Pending |
 | CLNT-02 | Phase 3 | Pending |
 | CLNT-03 | Phase 3 | Pending |
