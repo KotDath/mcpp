@@ -86,6 +86,18 @@ struct JsonRpcRequest {
     std::string to_string() const {
         return to_json().dump();
     }
+
+    /**
+     * Serialize this request to a JSON string with trailing newline
+     *
+     * Use this for stdio transport output where newline delimiter is required.
+     * The newline ensures proper message framing per MCP transport spec.
+     *
+     * @return JSON string with trailing '\n' character
+     */
+    std::string to_string_delimited() const {
+        return to_json().dump() + "\n";
+    }
 };
 
 /**
