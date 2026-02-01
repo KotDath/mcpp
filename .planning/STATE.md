@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 11 of 11 (Documentation)
-Plan: 1 of 2 in current phase
+Plan: 2 of 2 in current phase
 Status: In progress
-Last activity: 2026-02-01 — Completed 11-01: README Inspector Testing section
+Last activity: 2026-02-01 — Completed 11-02: BATS Testing Guide
 
-Progress: [████████████████░░░] 96% (55/57 complete)
+Progress: [█████████████████░░] 98% (56/57 complete)
 
 ## Milestone Archive
 
@@ -65,9 +65,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 - Phase 8 (Bug Fix Foundation) complete — JsonRpcRequest::from_json() validation + stdio protocol helpers
 - Phase 9 complete: Inspector server integration with MCP stdio transport, notification handling, and full UI/CLI compatibility
 - Phase 10 complete: BATS testing infrastructure, 45 CLI tests passing, CMake/CTest integration
-- Phase 11 in progress: README Inspector Testing section complete
+- Phase 11 in progress: README Inspector Testing section complete, BATS Testing Guide complete
 
-*Updated: 2026-02-01 (Phase 11-01 complete)*
+*Updated: 2026-02-01 (Phase 11-02 complete)*
 
 ## Accumulated Context
 
@@ -121,6 +121,9 @@ Recent decisions affecting current work:
 - 11-01: Both UI mode (interactive) and CLI mode (scriptable) examples provided
 - 11-01: ASCII diagram showing stdio message flow for visual understanding
 - 11-01: Quick Start updated to include Inspector testing verification step
+- 11-02: TESTING.md created with code-first BATS testing guide (506 lines)
+- 11-02: 5 common patterns documented (initialize handshake, debug suppression, response extraction, JSON validation, inline JSON)
+- 11-02: 8-entry troubleshooting FAQ covering common BATS testing issues
 
 ### Blockers/Concerns
 
@@ -140,16 +143,18 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-Phase 11 (Documentation) — 11-02: Create TESTING.md guide for writing custom BATS tests.
+Phase 11 (Documentation) — None remaining. All documentation plans complete.
 
-v1.1 milestone: 4/5 phases complete (Phases 8, 9, 10 complete; Phase 11 in progress - 1/2 plans complete).
+v1.1 milestone: 5/5 phases complete (Phases 8, 9, 10, 11 complete).
 
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 11-01: README Inspector Testing section
+Stopped at: Completed 11-02: BATS Testing Guide
 Resume file: None
 
 **Phase 11 Progress:**
 - 11-01: README Inspector Testing Section (COMPLETE)
-- 11-02: BATS Testing Guide (PENDING)
+- 11-02: BATS Testing Guide (COMPLETE)
+
+**Phase 11 COMPLETE** — All 2 plans finished. TESTING.md created with comprehensive BATS testing guide.
