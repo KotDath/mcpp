@@ -352,6 +352,7 @@ int main(int argc, char* argv[]) {
     // Main event loop: read JSON-RPC from stdin, validate, process, write response to stdout
     // Uses Phase 8's JsonRpcRequest::from_json() for robust validation
     std::string line;
+    int64_t auto_id = 1;  // Auto-generated ID for Inspector requests without id
     while (std::getline(std::cin, line)) {
         if (line.empty()) {
             continue;
@@ -363,10 +364,23 @@ int main(int argc, char* argv[]) {
             // Parse raw JSON
             json raw = json::parse(line);
 
-            // Skip messages without jsonrpc field (Inspector internal messages, keep-alives, etc.)
-            if (!raw.contains("jsonrpc")) {
-                MCPP_DEBUG_LOG("Skipping non-JSON-RPC message");
+            // Check if this looks like a JSON-RPC message (has method field)
+            if (!raw.contains("method")) {
+                MCPP_DEBUG_LOG("Skipping message without method field");
                 continue;
+            }
+
+            std::string method = raw["method"].get<std::string>();
+            bool is_notification = (method.find("notifications/") == 0);
+
+            // Inspector UI mode: add jsonrpc field if missing
+            if (!raw.contains("jsonrpc")) {
+                raw["jsonrpc"] = "2.0";
+            }
+
+            // Inspector UI mode: add id for non-notification requests that lack it
+            if (!raw.contains("id") && !is_notification) {
+                raw["id"] = auto_id++;
             }
 
             // Use Phase 8 validation layer - validates full JSON-RPC 2.0 structure
@@ -379,7 +393,7 @@ int main(int argc, char* argv[]) {
                 }
                 // Notifications have no response
             } else {
-                // Validation failed - has jsonrpc field but invalid JSON-RPC structure
+                // Validation failed - extract ID for proper error response
                 mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(line);
 
                 json error_response = {
@@ -401,32 +415,26 @@ int main(int argc, char* argv[]) {
                 std::cout << error_response.dump() << "\n" << std::flush;
             }
         } catch (const json::exception& e) {
-            // Completely malformed JSON - check if it has jsonrpc before sending error
-            if (line.find("\"jsonrpc\"") != std::string::npos) {
-                // Has jsonrpc field but malformed - return parse error
-                mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(line);
+            // Completely malformed JSON - still try to extract ID for error response
+            mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(line);
 
-                json error_response = {
-                    {"jsonrpc", "2.0"},
-                    {"error", {
-                        {"code", -32700},
-                        {"message", "Parse error"}
-                    }},
-                    {"id", std::visit([](auto&& v) -> json {
-                        using T = std::decay_t<decltype(v)>;
-                        if constexpr (std::is_same_v<T, int64_t>) {
-                            return v;
-                        } else if constexpr (std::is_same_v<T, std::string>) {
-                            return v;
-                        }
-                        return nullptr;
-                    }, id)}
-                };
-                std::cout << error_response.dump() << "\n" << std::flush;
-            } else {
-                // Not a JSON-RPC message at all - skip silently
-                MCPP_DEBUG_LOG("Skipping non-JSON-RPC message (malformed)");
-            }
+            json error_response = {
+                {"jsonrpc", "2.0"},
+                {"error", {
+                    {"code", -32700},
+                    {"message", "Parse error"}
+                }},
+                {"id", std::visit([](auto&& v) -> json {
+                    using T = std::decay_t<decltype(v)>;
+                    if constexpr (std::is_same_v<T, int64_t>) {
+                        return v;
+                    } else if constexpr (std::is_same_v<T, std::string>) {
+                        return v;
+                    }
+                    return nullptr;
+                }, id)}
+            };
+            std::cout << error_response.dump() << "\n" << std::flush;
         }
     }
 

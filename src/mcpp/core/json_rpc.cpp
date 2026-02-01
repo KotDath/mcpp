@@ -126,13 +126,17 @@ RequestId JsonRpcRequest::extract_request_id(std::string_view raw_json) {
 
 std::optional<JsonRpcRequest> JsonRpcRequest::from_json(const JsonValue& j) {
     try {
-        // Check for jsonrpc field
-        if (!j.contains("jsonrpc") || !j["jsonrpc"].is_string()) {
-            return std::nullopt;
-        }
-        std::string jsonrpc_version = j["jsonrpc"].get<std::string>();
-        if (jsonrpc_version != "2.0") {
-            return std::nullopt;
+        // Check for jsonrpc field - optional for Inspector compatibility
+        // If missing, assume JSON-RPC 2.0
+        std::string jsonrpc_version = "2.0";
+        if (j.contains("jsonrpc")) {
+            if (!j["jsonrpc"].is_string()) {
+                return std::nullopt;
+            }
+            jsonrpc_version = j["jsonrpc"].get<std::string>();
+            if (jsonrpc_version != "2.0") {
+                return std::nullopt;
+            }
         }
 
         // Check for method field (required for both requests and notifications)
