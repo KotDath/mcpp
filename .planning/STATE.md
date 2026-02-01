@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 10 of 10 (Automated CLI Testing)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-02-01 — Completed 10-03 (Protocol Coverage Tests)
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-02-01 — Completed 10-04 (Server Lifecycle Tests and CMake Integration)
 
-Progress: [██████████░░░░░░░░░░] 55% (51/52 complete counting Phase 10 plans)
+Progress: [████████████████████] 100% (52/52 complete counting Phase 10 plans)
 
 ## Milestone Archive
 
@@ -56,15 +56,15 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 | 7 | 6 | Complete |
 | 8 | 2 | Complete |
 | 9 | 3 | Complete |
-| 10 | 1 of 4 | In progress |
+| 10 | 4 of 4 | Complete |
 
 **Recent Trend:**
 - v1.0 completed successfully 2026-02-01
 - Phase 8 (Bug Fix Foundation) complete — JsonRpcRequest::from_json() validation + stdio protocol helpers
 - Phase 9 complete: Inspector server integration with MCP stdio transport, notification handling, and full UI/CLI compatibility
-- Phase 10 progressing: BATS testing infrastructure complete, all MCP endpoint tests complete (40 passing)
+- Phase 10 complete: BATS testing infrastructure, 45 CLI tests passing, CMake/CTest integration
 
-*Updated: 2026-02-01 (Phase 10-03 complete)*
+*Updated: 2026-02-01 (Phase 10 complete)*
 
 ## Accumulated Context
 
@@ -105,6 +105,10 @@ Recent decisions affecting current work:
 - 10-03: stderr suppression (2>/dev/null) to prevent MCPP_DEBUG output pollution
 - 10-03: tail -1 extraction for final response when batching requests
 - 10-03: jq pretty-prints JSON with spaces, use substring patterns without exact colon:value matches
+- 10-04: BATS teardown() function for guaranteed cleanup (trap EXIT conflicts with bats internals)
+- 10-04: CMake/CTest integration with find_program(BATS_PROGRAM) and find_program(JQ_PROGRAM)
+- 10-04: RUN_SERIAL TRUE property on CLI tests to prevent parallel execution conflicts
+- 10-04: Conditional test registration - CLI tests skipped non-fatally if bats/jq unavailable
 
 ### Blockers/Concerns
 
@@ -117,7 +121,7 @@ Recent decisions affecting current work:
 - Missing newline delimiters could cause parse errors — addressed by 08-02 (to_string_delimited)
 
 **Phase 10 concerns:**
-- Flaky CLI tests due to timing issues — will be addressed by 10-04 (test stabilization)
+- ~~Flaky CLI tests due to timing issues~~ — RESOLVED in 10-04 (teardown cleanup, no process leaks)
 
 **None active** — all blockers resolved.
 
@@ -128,11 +132,13 @@ None. v1.1 milestone complete. Phase 10 in progress.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 10-03-PLAN.md (Protocol Coverage Tests)
+Stopped at: Completed 10-04-PLAN.md (Server Lifecycle Tests and CMake Integration)
 Resume file: None
 
 **Phase 10 Progress:**
 - 10-01: BATS Testing Infrastructure (COMPLETE)
 - 10-02: Inspector Server Basic Tests (COMPLETE)
 - 10-03: Protocol Coverage Tests (COMPLETE)
-- 10-04: Test Stabilization (pending)
+- 10-04: Server Lifecycle Tests and CMake Integration (COMPLETE)
+
+**Phase 10 COMPLETE** — All 4 plans finished, 45 CLI tests passing, CMake integration complete.
