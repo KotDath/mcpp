@@ -50,6 +50,80 @@ std::optional<RequestId> parse_request_id(const JsonValue& j) {
 
 // JsonRpcRequest implementation
 
+RequestId JsonRpcRequest::extract_request_id(std::string_view raw_json) {
+    // Try to find "id" field using string search (works even if JSON is malformed)
+    size_t id_pos = raw_json.find("\"id\"");
+    if (id_pos == std::string_view::npos) {
+        return RequestId(); // null ID
+    }
+
+    // Find the colon after "id"
+    size_t colon_pos = raw_json.find(':', id_pos);
+    if (colon_pos == std::string_view::npos) {
+        return RequestId(); // null ID
+    }
+
+    // Skip whitespace after colon
+    size_t value_start = colon_pos + 1;
+    while (value_start < raw_json.size() && std::isspace(static_cast<unsigned char>(raw_json[value_start]))) {
+        ++value_start;
+    }
+
+    if (value_start >= raw_json.size()) {
+        return RequestId(); // null ID
+    }
+
+    // Extract the ID value based on type
+    char first_char = raw_json[value_start];
+
+    // Null ID: "id": null
+    if (first_char == 'n') {
+        // Check for "null"
+        if (raw_json.substr(value_start, 4) == "null") {
+            return RequestId(); // null ID
+        }
+        return RequestId(); // malformed, return null
+    }
+
+    // String ID: "id": "value"
+    if (first_char == '"') {
+        size_t closing_quote = raw_json.find('"', value_start + 1);
+        if (closing_quote != std::string_view::npos) {
+            std::string id_str(raw_json.substr(value_start + 1, closing_quote - value_start - 1));
+            return RequestId(id_str);
+        }
+        return RequestId(); // malformed string, return null
+    }
+
+    // Numeric ID: "id": 42
+    if (first_char == '-' || (first_char >= '0' && first_char <= '9')) {
+        std::string num_str;
+        size_t num_end = value_start;
+
+        // Extract digits (handle negative numbers)
+        while (num_end < raw_json.size()) {
+            char c = raw_json[num_end];
+            if (c == '-' || (c >= '0' && c <= '9')) {
+                num_str += c;
+                ++num_end;
+            } else {
+                break;
+            }
+        }
+
+        if (!num_str.empty()) {
+            try {
+                int64_t id_val = std::stoll(num_str);
+                return RequestId(id_val);
+            } catch (...) {
+                return RequestId(); // parse failed, return null
+            }
+        }
+    }
+
+    return RequestId(); // unhandled format, return null
+}
+
 std::optional<JsonRpcRequest> JsonRpcRequest::from_json(const JsonValue& j) {
     try {
         // Check for jsonrpc field
