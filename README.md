@@ -34,6 +34,9 @@ cmake --build build
 # Run tests
 ctest --test-dir build --output-on-failure
 
+# Test with MCP Inspector (requires Node.js)
+npx @modelcontextprotocol/inspector connect stdio ./build/examples/inspector_server
+
 # Install (optional)
 cmake --install build --prefix /usr/local
 ```
@@ -128,14 +131,85 @@ An example MCP server for testing with MCP Inspector:
 # Build the example
 cmake --build build --target inspector_server
 
-# Run with MCP Inspector
-mcp-inspector connect stdio ./build/examples/inspector_server
+# Run with MCP Inspector (opens browser UI)
+npx @modelcontextprotocol/inspector connect stdio ./build/examples/inspector_server
 ```
 
 The inspector server demonstrates:
 - Tool registration (calculate, echo, get_time)
 - Resource serving (file reading, server info)
 - Prompt templates (greeting, code review)
+
+## Inspector Testing
+
+MCP Inspector is the official testing tool for MCP servers. It supports both interactive UI mode (opens a browser-based interface) and scriptable CLI mode for automated testing. Inspector uses stdio transport to communicate with your server, sending JSON-RPC messages over stdin/stdout.
+
+### Communication Flow
+
+```
+Inspector          Your Server
+   (Client)         (stdio mode)
+      │                  │
+      │ 1. initialize    │
+      │ ────────────────>│
+      │                  │
+      │ 2. initialize    │
+      │ <────────────────│
+      │                  │
+      │ 3. tools/list    │
+      │ ────────────────>│
+      │                  │
+      │ 4. tools/list    │
+      │ <────────────────│
+```
+
+### UI Mode (Interactive)
+
+The easiest way to test your MCP server is with Inspector's UI mode:
+
+```bash
+# Build the example server first
+cmake --build build --target inspector_server
+
+# Connect via Inspector (opens browser to http://localhost:6274)
+npx @modelcontextprotocol/inspector connect stdio ./build/examples/inspector_server
+```
+
+The Inspector UI lets you:
+- List and call available tools
+- Browse resources and prompts
+- View server capabilities
+- Inspect JSON-RPC messages in real-time
+
+### CLI Mode (Scriptable)
+
+For automated testing or scripting, use Inspector's CLI mode:
+
+```bash
+# List available tools
+npx @modelcontextprotocol/inspector --cli ./build/examples/inspector_server --method tools/list
+
+# Call a tool
+npx @modelcontextprotocol/inspector --cli ./build/examples/inspector_server \
+    --method tools/call --tool-name calculate --tool-arg operation=add --tool-arg a=5 --tool-arg b=3
+
+# List resources
+npx @modelcontextprotocol/inspector --cli ./build/examples/inspector_server --method resources/list
+
+# Read a resource
+npx @modelcontextprotocol/inspector --cli ./build/examples/inspector_server \
+    --method resources/read --uri file:///path/to/file.txt
+```
+
+### Initialize Handshake
+
+MCP requires an initialize handshake before most operations. Inspector handles this automatically. For manual testing with raw stdio, you need to send initialize first:
+
+```bash
+{ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{...}}'; echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'; } | ./build/examples/inspector_server
+```
+
+See [TESTING.md](TESTING.md) for detailed BATS testing guide and writing custom tests.
 
 ## Testing
 
