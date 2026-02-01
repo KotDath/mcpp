@@ -2,27 +2,28 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2025-01-31)
+See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Developers can build MCP clients and servers in C++ that are fast, correct, and support the complete protocol spec without wrestling with JSON-RPC details or transport plumbing
-**Current focus:** Build & Validation (Phase 7)
+**Current focus:** v1.0 complete - ready for next milestone planning
 
 ## Current Position
 
-Phase: 7 of 7 (Build & Validation)
-Plan: 5 of 5 in current phase
-Status: Phase complete
-Last activity: 2026-02-01 — Completed 07-05 Documentation and license compliance
+Phase: v1.0 COMPLETE (all 7 phases shipped)
+Plan: None - milestone complete
+Status: Ready for next milestone
+Last activity: 2026-02-01 — v1.0 milestone archived and shipped
 
 Progress: [█████████] 100%
 
-**Phase 7 Progress:**
-- 07-01: Build system (dual library targets, CMake packaging) - Complete
-- 07-02a: Test infrastructure (GoogleTest integration) - Complete
-- 07-02b: Unit tests (JSON-RPC, registries, pagination) - Complete
-- 07-03: JSON-RPC compliance tests - Complete
-- 07-04: MCP Inspector integration - Complete
-- 07-05: Documentation and examples - Complete
+**Milestone Summary:**
+- Phase 1: Protocol Foundation (6/6 plans) - Complete
+- Phase 2: Core Server (6/6 plans) - Complete
+- Phase 3: Client Capabilities (8/8 plans) - Complete
+- Phase 4: Advanced Features & HTTP Transport (6/6 plans) - Complete
+- Phase 5: Content & Tasks (4/4 plans) - Complete
+- Phase 6: High-Level API (7/7 plans) - Complete
+- Phase 7: Build & Validation (6/6 plans) - Complete
 
 ## Performance Metrics
 
@@ -41,7 +42,7 @@ Progress: [█████████] 100%
 | 04-advanced-features--http-transport | 6 | 6 | 2 min |
 | 05-content---tasks | 4 | 4 | 3 min |
 | 06-high-level-api | 7 | 7 | 2 min |
-| 07-build-validation | 5 | 5 | 5 min |
+| 07-build-validation | 6 | 6 | 5 min |
 
 **Recent Trend:**
 - Last 3 plans: 07-05, 07-04, 07-03
@@ -49,357 +50,55 @@ Progress: [█████████] 100%
 
 *Updated after each plan completion*
 
+## Milestone Archive
+
+**v1.0 Initial Release (SHIPPED 2026-02-01):**
+- 52/52 requirements satisfied (100%)
+- 184/184 tests passing (100%)
+- 15,511 lines of C++
+- 192 files created/modified
+- 105 days from start to ship
+
+See `.planning/milestones/v1.0-ROADMAP.md` for full details.
+
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-**From 07-03 (JSON-RPC Compliance Tests):**
-- Null ID values in error responses now parse correctly per JSON-RPC 2.0 spec (using 0 as sentinel)
-- Test data files placed in tests/data/ and copied to build directory via CMake
-- Data-driven testing with JSON fixtures for spec validation
-- Compliance test pattern: load fixtures from JSON, validate structure and parsing
-
-**From 07-04 (MCP Inspector Integration):**
-- Stdio-based MCP servers use direct JSON-RPC loop reading from stdin, writing to stdout
-- ToolHandler signature requires (name, args, RequestContext) for progress reporting
-- ResourceHandler returns ResourceContent struct with designated initializers
-- PromptHandler returns std::vector<PromptMessage> with role and content fields
-- **Error responses preserve request ID at JSON-RPC level** (fixed during plan - not nested in result)
-- NullTransport provides no-op transport for servers managing their own I/O
-- Integration tests use MockTransport for RequestContext support in tools/call
-
-**From 01-01 (JSON-RPC core types):**
-- Request ID as std::variant<int64_t, std::string> for full JSON-RPC spec compliance
-- Return std::optional for fallible parsing instead of throwing exceptions
-- Separate header/implementation for testability and future optimization
-- Static factory methods on JsonRpcError for consistent error creation
-
-**From 01-02 (Transport abstraction):**
-- Non-copyable, non-movable base class prevents accidental slicing
-- Library owns std::function copies - user can discard originals after registration
-- std::string_view parameters for zero-copy message passing
-- Explicit lifecycle (not RAII) for transport connections
-
-**From 01-03 (MCP protocol types):**
-- std::optional for all optional capability fields to enable extensibility
-- CapabilitySet as nlohmann::json alias for experimental capabilities
-- Exact match protocol version validation (simplest approach for MVP)
-- Empty structs for notifications with no parameters provide type safety
-
-**From 01-04 (Request tracking):**
-- Library-managed request IDs using std::atomic - user code never chooses IDs
-- Mutex-protected unordered_map for pending requests (simple before optimizing)
-- Callbacks stored by value (std::function) to avoid lifetime issues
-- Timestamp tracking for future timeout support
-
-**From 01-05 (Async callbacks and timeout manager):**
-- std::function-based callback type aliases for all async operations
-- steady_clock for timeout tracking (immune to system time changes)
-- Callbacks invoked after mutex release to prevent re-entrancy deadlock
-- TimeoutManager returns expired IDs for caller cleanup coordination
-
-**From 01-06 (McpClient):**
-- Client owns transport via unique_ptr for clear lifecycle management
-- Request IDs generated automatically - user code never chooses IDs
-- All async operations use std::function callbacks stored by value
-- Initialize method automatically sends initialized notification on success
-
-**From 02-01 (Tool Registry):**
-- Tool registry with handler-based pattern for dynamic execution
-- std::function<ToolResult(const JsonValue&)> for tool callbacks
-- URI-agnostic storage, user decides naming scheme
-- Non-copyable, non-movable registry classes
-
-**From 02-02 (Resource Registry):**
-- Resource content with is_text flag for text vs blob field selection
-- Base64 encoding is caller's responsibility for binary content
-- URI scheme agnostic - user decides which schemes to support
-- MIME type at registration with optional per-read override
-- MCP ReadResourceResult format with contents array
-
-**From 02-03 (Prompt Registry):**
-- Handler receives raw arguments JSON for flexible template substitution
-- PromptRegistry returns MCP GetPromptResult format directly from get_prompt()
-- Argument substitution is handler's responsibility (not enforced by registry)
-
-**From 02-04 (RequestContext):**
-- Progress values as 0-100 percentage (universally understood, maps cleanly to JSON)
-- Optional message parameter in progress notifications
-- No-op behavior when no progress token is set (graceful degradation)
-- Progress value clamping to 0-100 range for safety
-- Transport held by reference (not owned) - server manages lifecycle
-
-**From 02-05 (McpServer):**
-- Registries held by value for clear ownership and lifecycle management
-- Transport stored as optional non-owning pointer (set after construction)
-- RequestContext created per tool call for progress notification support
-- JSON-RPC method-based routing to typed handlers
-- Progress token extracted from request._meta.progressToken
-
-**From 02-06 (StdioTransport):**
-- popen() for subprocess spawning (simpler than fork/exec but no direct PID)
-- Newline delimiter appended to all outgoing messages per MCP spec
-- Line buffering in read_loop handles partial reads and multiple messages
-- Non-blocking pipe with fcntl O_NONBLOCK for better read behavior
-- Callbacks stored by value to avoid lifetime issues
-
-**From 03-02 (Roots Management):**
-- file:// URI validation using uri.rfind("file://", 0) == 0 per MCP spec
-- RootsManager with callback pattern for list_changed notifications
-- roots/list handler registered in McpClient constructor
-- RootsManager accessible via get_roots_manager() for user code
-
-**From 03-03 (Basic Sampling):**
-- ContentBlock as std::variant for extensibility (future ImageContent, AudioContent)
-- SamplingHandler as std::function for flexible LLM provider integration
-- Content parsing supports string shorthand for text content
-- CreateMessageRequest with from_json parsing, max_tokens validation
-- CreateMessageResult with to_json serialization
-- SamplingClient with handler registration and JSON-RPC error returns
-- sampling/createMessage handler registered in McpClient constructor
-
-**From 03-01 (Cancellation Support):**
-- std::stop_token over atomic<bool> for better composability with std::jthread
-- Separate CancellationManager from RequestTracker for cleaner separation of concerns
-- Idempotent unregister operations handle race conditions (cancel after completion)
-- CancellationToken for polling cancellation state in long-running operations
-- CancellationSource for requesting cancellation via cancel() method
-- CancellationManager tracks pending requests by RequestId with mutex protection
-- notifications/cancelled handler registered in McpClient constructor
-- cancel_request() public method for user-initiated cancellation
-
-**From 03-04 (Sampling with Tool Use):**
-- Tool types (Tool, ToolChoice) added for agentic sampling loops
-- ToolResultContent for structured tool return values with isError flag
-- CreateMessageRequest extended with optional tools and tool_choice parameters
-- CreateMessageResult extended with toolUseContent for multi-step tool loops
-- SamplingClient::handle_create_message_with_tools for tool loop execution
-- Maximum of 10 tool iterations to prevent infinite loops
-
-**From 03-05 (Elicitation Support):**
-- PrimitiveSchema restricted to top-level properties only per MCP spec (no nested objects)
-- Form mode synchronous (immediate ElicitResult) vs URL mode asynchronous (notification completes)
-- Variant-based request discrimination using std::variant<ElicitRequestForm, ElicitRequestURL>
-- ElicitationClient with pending_url_requests_ map for URL mode correlation by elicitation_id
-- ElicitationCapability added to protocol types with form and url flags
-- elicitation/create request handler registered in McpClient constructor
-- notifications/elicitation/complete notification handler registered in McpClient constructor
-
-**From 03-06 (std::future Wrappers):**
-- shared_ptr<promise> pattern ensures promise lifetime until lambda callback invoked
-- FutureBuilder template with wrap() converts callback-style async to std::future
-- with_timeout() prevents infinite blocking (30-second default)
-- McpClientBlocking holds reference (not ownership) to McpClient for lifecycle control
-- Exception conversion: JsonRpcError.message stored as runtime_error in promise
-- McpClientBlockingError provides typed exceptions with JSON-RPC error codes
-- Added ListRootsResult::from_json() for parsing JSON responses in blocking context
-
-**From 03-07 (Build Configuration Gap Closure):**
-- Header organization: client/* headers grouped together in MCPP_PUBLIC_HEADERS for logical subsystem organization
-- client_blocking.h placement: at top level (not client/) since it's the main public blocking API
-- CMakeLists.txt must be updated when new source files are added to prevent linker errors
-- Files grouped by subsystem directory structure (client/, core/, async/, etc.)
-
-**From 03-08 (ClientCapabilities Builder):**
-- Nested Builder class (ClientCapabilities::Builder) for fluent API capability configuration
-- with_* prefix for builder methods following common fluent API conventions
-- Ref-qualified build() methods (build() && for rvalue, build() const & for lvalue) for optimal move semantics
-- Convenience free function build_client_capabilities() for simple boolean-based configuration
-- Constructors added to RootsCapability, SamplingCapability for easy initialization
-
-**From 04-01 (HTTP Transport Foundation Utilities):**
-- Header-only SseFormatter class with static methods for text/event-stream formatting
-- Header-only UriTemplate class with RFC 6570 Level 1-2 template expansion
-- Inline implementation instead of external SSE/URI template library dependencies
-- Reserve-style path expansion (preserves /, :, @) for proper file:// URI handling
-- mcpp::util namespace established for utility classes
-
-**From 04-02 (Streamable HTTP Transport):**
-- HttpTransport class implementing Transport interface for POST/SSE pattern
-- Single endpoint design: POST for client->server, GET for server->client (SSE)
-- Session management via Mcp-Session-Id header with UUID v4 secure session IDs
-- User-provided HTTP server integration (HttpResponseAdapter, HttpSseWriterAdapter)
-- Non-blocking I/O: send() buffers, handle_post returns immediately
-- 30-minute session timeout with automatic cleanup
-- SseFormatter used for SSE event formatting (format_event, content_type, etc.)
-- Template-based adapter pattern supports any HTTP server (cpp-httplib, drogon, oat++)
-
-**From 04-03 (Tool Metadata and Output Validation):**
-- ToolAnnotations struct with destructive, read_only, audience, priority fields
-- Output schema validation using nlohmann/json_schema_validator
-- Backward compatible API via overloaded register_tool method
-- Extended tool discovery includes annotations and outputSchema fields
-- Output validation failures return CallToolResult with isError=true (not JSON-RPC error)
-
-**From 04-04 (Resource Templates and Subscriptions):**
-- TemplateResourceHandler type receiving expanded URI and extracted parameters
-- TemplateResourceRegistration struct with URI template pattern and parameter names
-- register_template() for parameterized resource registration
-- Regex-based template matching for URI-to-template resolution
-- Subscription tracking via unordered_map<uri, vector<Subscription>>
-- subscribe/unsubscribe methods for resource change monitoring
-- notify_updated() to send notifications/resources/updated via transport
-- Non-owning transport pointer following RequestContext pattern
-- Resource list includes templates with template field per MCP spec
-
-**From 04-05 (Argument Completion):**
-- Completion struct with value and optional description for autocompletion suggestions
-- CompletionHandler function type taking argument_name, current_value, and optional reference
-- Completion handlers stored in unordered_map keyed by prompt/resource name
-- Empty completion array returned when no handler registered (graceful degradation)
-- Parameter validation returns INVALID_PARAMS error for missing required fields
-- McpServer routes prompts/complete and resources/complete requests to registries
-- Shared Completion struct defined in both registries for module boundary clarity
-
-**From 04-06 (Tool Result Streaming):**
-- send_stream_result method for incremental tool results via RequestContext
-- is_streaming/set_streaming methods for streaming mode control
-- SSE formatting via SseFormatter for HTTP transport compatibility
-- Graceful no-op when no progress token available (degradation)
-- Progress notifications work independently of streaming mode
-- Compatible with both stdio and HTTP transports
-
-**From 05-01 (Rich Content Type Support):**
-- ContentBlock variant extended with 7 content types (TextContent, ImageContent, AudioContent, ResourceLink, EmbeddedResource, ToolUseContent, ToolResultContent)
-- Annotations struct with audience (vector<string>), priority (double 0-1), last_modified (ISO 8601 string)
-- Base64 encoding is caller's responsibility - data field stores pre-encoded base64 strings
-- Content conversion implemented in sampling.cpp to avoid nlohmann::to_json naming conflicts
-- Forward declaration for server::ResourceContent used in content.h to avoid circular dependency
-
-**From 05-02 (Cursor-Based Pagination):**
-- PaginatedResult<T> template with items, nextCursor, total, and has_more() method
-- Offset-based cursor encoding: Simple string representation of integer offset
-- PAGE_SIZE = 50: Server-determined page size for consistent pagination
-- Helper functions for JSON conversion shared between list_*() and list_*_paginated()
-- Header-only template implementation for PaginatedResult
-- list_*_paginated() methods added to ToolRegistry, ResourceRegistry, and PromptRegistry
-- Original list_*() methods remain unchanged for backward compatibility
-
-**From 05-03 (List Changed Notifications):**
-- NotifyCallback pattern following RootsManager implementation (std::function<void()>)
-- Client capabilities stored from initialize for notification gating
-- Registry callbacks check experimental capabilities for listChanged before sending
-- Transport availability checked before sending notifications
-- All three registries (tools, resources, prompts) support list_changed notifications
-- Automatic notification on successful registration via notify_changed() call
-
-**From 06-01 (High-Level API Foundation):**
-- Role marker types (RoleClient, RoleServer) with IS_CLIENT constexpr bool for compile-time role distinction
-- ServiceRole concept using std::same_as for simple role validation (C++20 concepts over SFINAE)
-- memory_order_relaxed for atomic ID generation - strict ordering not required for uniqueness
-- std::shared_mutex for peer_info access - concurrent reads with exclusive writes
-- Non-copyable/non-movable types for ID provider and Peer - prevents accidental ID collisions
-- Stub send_request/send_notification return std::future - establishes async pattern for 06-02
-- RoleTypes trait for role-specific type aliases (PeerReq, PeerResp, PeerNot, Info, PeerInfo)
-- Service trait as pure virtual interface for polymorphic handlers
-- Experimental capabilities field in ClientInfo/ServerInfo using std::map<std::string, nlohmann::json> (UTIL-03)
-
-**From 06-02 (RunningService & Message Passing):**
-- Message passing channel with std::variant<NotificationMessage, RequestMessage> for type-safe dispatch
-- shared_ptr<promise> pattern ensures promise lifetime until callback is invoked
-- std::condition_variable_any for blocking wait with std::stop_token support
-- std::jthread for automatic background thread cleanup on destruction (RAII)
-- steady_clock for timeout tracking (immune to system time changes)
-- 5-minute default timeout with progress notifications resetting the clock (UTIL-02)
-- Message queue with mutex + condition_variable for thread-safe mpsc communication
-- Future-based async API with std::future return types for request/response pattern
-- QuitReason enum for service termination cause tracking
-
-**From 06-03 (Structured Logging & Request Context):**
-- Logger class with structured logging and level filtering (Trace/Debug/Info/Warn/Error)
-- Logger::Span nested class for automatic request duration tracking with RAII
-- Thread-safe singleton with std::call_once initialization
-- spdlog backend with automatic stderr fallback when spdlog not available
-- RequestContext template with thread-safe property access via std::shared_mutex
-- NotificationContext template for notification metadata tracking
-- Runtime log level changes and payload logging toggle without restart
-
-**From 06-04 (Pagination Helpers and Unified Error Hierarchy):**
-- list_all<T> template function for automatic cursor pagination across all pages
-- PaginatedRequest struct with cursor and optional limit parameters
-- ServiceError base class inheriting std::runtime_error for catch compatibility
-- TransportError for transport-layer failures (connection lost, timeout)
-- ProtocolError for protocol violations (invalid JSON, unexpected message type)
-- RequestError for request-specific errors (invalid params, method not found)
-- Context preservation via std::map<std::string, std::string> for debugging metadata
-- Header-only template for pagination; separate .cpp for error type implementations
-
-**From 06-05 (Retry Strategies and Build Configuration):**
-- RetryPolicy template with configurable backoff strategies (fixed, exponential, linear)
-- max_attempts parameter controls retry limit (default: 3)
-- std::chrono_duration-based backoff durations for type-safe time handling
-- FixedBackoffPolicy for constant retry intervals
-- ExponentialBackoffPolicy for doubling intervals with optional jitter
-- LinearBackoffPolicy for incrementing intervals
-- CMakeLists.txt exports util/retry.h in MCPP_PUBLIC_HEADERS
-- Header-only implementation for inline optimization
-
-**From 06-06 (Export api/context.h - Gap Closure):**
-- api/context.h (354 lines) exported in CMakeLists.txt MCPP_PUBLIC_HEADERS
-- Alphabetical ordering maintained in API headers section
-- RequestContext and NotificationContext templates now accessible to library consumers
-- Header provides thread-safe property access and Logger::Span integration
-
-**From 06-07 (License Header Polish - Gap Closure):**
-- MIT license header added to util/retry.h (24 lines)
-- License format matches util/logger.h and other Phase 6 files
-- All Phase 6 source files now have consistent licensing
-
-**From 07-01 (CMake Build System):**
-- Dual library targets (mcpp_static, mcpp_shared) for flexible linking
-- CMake package config (mcppConfig.cmake.in) for find_package(mcpp) support
-- Version file generation with SameMajorVersion compatibility
-- Proper install rules for libraries, headers, and CMake config files
-- Conditional compilation for optional nlohmann/json-schema-validator dependency
-- Placeholder json_validator type when library unavailable (MCPP_HAS_JSON_SCHEMA macro)
-- Fixed Completion struct include order in resource_registry.h
-
-**From 07-02b (Unit Tests):**
-- Direct field assignment for JSON-RPC types (API uses default construction + field setting, not parameterized constructors)
-- Request ID as std::variant<int64_t, std::string> requires proper lambda capture patterns in tests
-- Optional field handling in nlohmann::json requires checking presence before access with std::optional
-- Template resources identified by nested 'template' object in JSON output (not a string field)
-- Mock transport classes needed for RequestContext testing in registry tests
-- 121 unit tests created covering JSON-RPC, request tracker, timeout manager, registries, and pagination
-
-**From 07-05 (Documentation and License Compliance):**
-- MIT license headers added to 11 source files that were missing them (core/, async/, protocol/)
-- LICENSE file updated to use "mcpp contributors" instead of individual name
-- Comprehensive README.md created with features, requirements, build options, usage examples, testing guide, and installation
-- http_server_integration example fixed: nested template class reference (HttpTransport::HttpResponseAdapter<T>), missing get_header() implementation
-- All Phase 7 requirements verified: BUILD-01 through BUILD-04, TEST-01 through TEST-05 all pass
-- mcpp library v0.1.0-alpha is ready for public release
+All v1.0 design decisions have been validated through implementation and testing.
 
 ### Pending Todos
 
-[From .planning/todos/pending/ — ideas captured during sessions]
-
-None yet.
+None — v1.0 complete. Run `/gsd:new-milestone` to define next milestone.
 
 ### Blockers/Concerns
 
-[Issues that affect future work]
+**NONE.** v1.0 milestone complete and shipped.
 
-**NONE. All phases complete.** mcpp library v0.1.0-alpha is ready for public release.
-
-**Optional json-schema dependency:** The nlohmann/json-schema-validator is now optional via conditional compilation (MCPP_HAS_JSON_SCHEMA). When unavailable, a placeholder json_validator type is used. Output schema validation will be skipped without the library.
-
-**CMake directory creation issue:** CMake 3.31 with GCC 15 has an issue where it doesn't automatically create object file directories during build. Workaround: pre-create directories with `find src -type d -printf "build/CMakeFiles/mcpp_static.dir/%p\n" | xargs mkdir -p`.
-
-**NullTransport not exported:** NullTransport was created for internal use (inspector_server) but may need to be exported in public headers if users request it for their stdio servers.
+**Optional enhancements for future milestones:**
+- WebSocket transport (if added to MCP spec)
+- Zero-copy types for performance optimization
+- Header-only build option
+- Native macOS build support
+- Native Windows build support (MSVC)
+- Additional examples and tutorials
 
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Phase 7 COMPLETE - All 46 plans finished
+Stopped at: v1.0 milestone complete - all 46 plans finished
 Resume file: None
-- 07-05: MIT license headers added to all 11 missing source files
-- 07-05: LICENSE updated to use "mcpp contributors"
-- 07-05: Comprehensive README.md created with build/usage/testing/installation docs
-- 07-05: http_server_integration example build fixed
-- 07-05: All Phase 7 requirements verified (BUILD-01 to BUILD-04, TEST-01 to TEST-05)
-- 184/184 tests passing
-- Library ready for v0.1.0-alpha release
+
+**Milestone completion actions:**
+- Created `.planning/milestones/v1.0-ROADMAP.md`
+- Created `.planning/milestones/v1.0-REQUIREMENTS.md`
+- Moved `.planning/v1.0-MILESTONE-AUDIT.md` to `.planning/milestones/`
+- Updated `.planning/MILESTONES.md`
+- Updated `.planning/PROJECT.md` with v1.0 validation
+- Updated `.planning/ROADMAP.md` with collapsed milestone
+- Updated `.planning/STATE.md` for fresh state
+
+**Next steps:**
+- Run `/gsd:new-milestone` to plan v1.1 or future work
+- Or continue with maintenance and improvements

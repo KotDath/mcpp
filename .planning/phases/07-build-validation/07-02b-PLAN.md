@@ -1,61 +1,67 @@
 ---
 phase: 07-build-validation
-plan: 02
+plan: 02b
 type: execute
-wave: 1
-depends_on: [07-01]
+wave: 2
+depends_on: [07-02a]
 files_modified:
-  - CMakeLists.txt
-  - tests/CMakeLists.txt
   - tests/unit/test_json_rpc.cpp
   - tests/unit/test_request_tracker.cpp
-  - tests/unit/test_timeout_manager.cpp
   - tests/unit/test_tool_registry.cpp
   - tests/unit/test_resource_registry.cpp
   - tests/unit/test_prompt_registry.cpp
   - tests/unit/test_pagination.cpp
-  - tests/fixtures/common.h
+  - tests/CMakeLists.txt
 autonomous: true
 user_setup: []
 
 must_haves:
   truths:
-    - "Library consumer can run unit tests using 'ctest' in the build directory"
-    - "Unit tests cover all major modules: JSON-RPC, request tracker, timeout manager, registries"
-    - "Tests are automatically discovered via gtest_discover_tests()"
-    - "Tests can be run with labels: ctest -L label (unit, integration, compliance)"
+    - "Library consumer can run unit tests using 'ctest -L unit'"
+    - "Unit tests cover all major modules: JSON-RPC, request tracker, timeout manager, registries, pagination"
+    - "Tests use common fixtures from tests/fixtures/common.h"
+    - "All unit tests pass with no failures"
   artifacts:
-    - path: "tests/CMakeLists.txt"
-      provides: "Test configuration with GoogleTest integration"
-      contains: "FetchContent_Declare", "gtest_discover_tests"
     - path: "tests/unit/test_json_rpc.cpp"
       provides: "JSON-RPC parsing and serialization tests"
+      min_lines: 200
+    - path: "tests/unit/test_request_tracker.cpp"
+      provides: "Request tracker and timeout manager tests"
+      min_lines: 150
+    - path: "tests/unit/test_tool_registry.cpp"
+      provides: "Tool registry unit tests"
       min_lines: 50
-    - path: "tests/fixtures/common.h"
-      provides: "Common test fixtures and utilities"
-      contains: "class TestFixture"
+    - path: "tests/unit/test_resource_registry.cpp"
+      provides: "Resource registry unit tests"
+      min_lines: 50
+    - path: "tests/unit/test_prompt_registry.cpp"
+      provides: "Prompt registry unit tests"
+      min_lines: 50
+    - path: "tests/unit/test_pagination.cpp"
+      provides: "Pagination helper tests"
+      min_lines: 60
   key_links:
-    - from: "tests/CMakeLists.txt"
-      to: "CMakeLists.txt"
-      via: "MCPP_BUILD_TESTS option"
-      pattern: "if\\(MCPP_BUILD_TESTS\\)"
     - from: "tests/unit/*.cpp"
-      to: "mcpp library"
-      via: "target_link_libraries(mcpp_unit_tests PRIVATE mcpp)"
-      pattern: "target_link_libraries.*mcpp"
+      to: "tests/fixtures/common.h"
+      via: "#include \"fixtures/common.h\""
+      pattern: "#include.*fixtures/common"
+    - from: "tests/unit/*.cpp"
+      to: "mcpp library headers"
+      via: "#include \"mcpp/...\""
+      pattern: "#include.*mcpp/"
 ---
 
 <objective>
-Set up GoogleTest integration with CTest and create unit tests covering core library functionality (JSON-RPC, request tracking, timeout management, registries).
+Implement comprehensive unit tests for all major library modules: JSON-RPC core, request tracker, timeout manager, tool/resource/prompt registries, and pagination helpers.
 
-Purpose: Deliver comprehensive unit test coverage for core modules, enabling automated validation and regression prevention.
+Purpose: Deliver thorough unit test coverage for core functionality, enabling automated validation and regression prevention. Uses the test infrastructure set up in plan 07-02a.
 
-Output: Working test suite with GoogleTest, CTest integration, and unit tests for major modules.
+Output: Complete unit test suite with 20+ test cases covering JSON-RPC types, request tracking, timeout management, server registries, and pagination utilities.
 </objective>
 
 <execution_context>
 @/home/kotdath/.claude/get-shit-done/workflows/execute-plan.md
-@/home/kotdath/.claude/get-shit-done/templates/summary.md
+@/home/kotdath/.claude/templates/summary.md
 </execution_context>
 
 <context>
@@ -65,208 +71,22 @@ Output: Working test suite with GoogleTest, CTest integration, and unit tests fo
 @.planning/phases/07-build-validation/07-RESEARCH.md
 @CMakeLists.txt
 @.planning/phases/07-build-validation/07-01-SUMMARY.md
+@.planning/phases/07-build-validation/07-02a-SUMMARY.md
+@src/mcpp/core/json_rpc.h
+@src/mcpp/core/request_tracker.h
+@src/mcpp/server/tool_registry.h
+@src/mcpp/server/resource_registry.h
+@src/mcpp/server/prompt_registry.h
+@src/mcpp/util/pagination.h
 </context>
 
 <tasks>
 
 <task type="auto">
-  <name>Create tests directory structure and CMakeLists.txt</name>
-  <files>tests/CMakeLists.txt</files>
-  <action>
-Create tests/ directory and tests/CMakeLists.txt with:
-
-```cmake
-# mcpp test suite
-
-# Use FetchContent for reproducible GoogleTest builds
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.14.0
-)
-# For Windows: Prevent overriding parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
-# Enable testing
-enable_testing()
-
-# Unit tests
-add_executable(mcpp_unit_tests
-    unit/test_json_rpc.cpp
-    unit/test_request_tracker.cpp
-    unit/test_timeout_manager.cpp
-    unit/test_tool_registry.cpp
-    unit/test_resource_registry.cpp
-    unit/test_prompt_registry.cpp
-    unit/test_pagination.cpp
-)
-
-target_link_libraries(mcpp_unit_tests
-    PRIVATE
-        mcpp
-        GTest::gtest
-        GTest::gtest_main
-)
-
-target_include_directories(mcpp_unit_tests PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/tests
-)
-
-gtest_discover_tests(mcpp_unit_tests
-    LABELS unit
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-# Integration tests (empty for now, will be populated in 07-04)
-add_executable(mcpp_integration_tests
-    integration/test_client_server.cpp
-)
-
-target_link_libraries(mcpp_integration_tests
-    PRIVATE
-        mcpp
-        GTest::gtest
-        GTest::gtest_main
-)
-
-target_include_directories(mcpp_integration_tests PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/tests
-)
-
-gtest_discover_tests(mcpp_integration_tests
-    LABELS integration
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-# Compliance tests (empty for now, will be populated in 07-03)
-add_executable(mcpp_compliance_tests
-    compliance/test_jsonrpc_spec.cpp
-)
-
-target_link_libraries(mcpp_compliance_tests
-    PRIVATE
-        mcpp
-        GTest::gtest
-        GTest::gtest_main
-)
-
-target_include_directories(mcpp_compliance_tests PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/tests
-)
-
-gtest_discover_tests(mcpp_compliance_tests
-    LABELS compliance
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-```
-
-Create stub directories:
-```bash
-mkdir -p tests/unit tests/integration tests/compliance tests/fixtures tests/data
-```
-  </action>
-  <verify>Directory structure exists with tests/CMakeLists.txt</verify>
-  <done>Test directory structure created with CMakeLists.txt configured for GoogleTest</done>
-</task>
-
-<task type="auto">
-  <name>Create common test fixtures</name>
-  <files>tests/fixtures/common.h</files>
-  <action>
-Create tests/fixtures/common.h with common test utilities:
-
-```cpp
-// mcpp - MCP C++ library
-// https://github.com/mcpp-project/mcpp
-//
-// Copyright (c) 2025 mcpp contributors
-// Distributed under MIT License
-
-#ifndef MCPP_TESTS_FIXTURES_COMMON_H
-#define MCPP_TESTS_FIXTURES_COMMON_H
-
-#include <gtest/gtest.h>
-#include <nlohmann/json.hpp>
-#include <string>
-#include <chrono>
-
-namespace mcpp::test {
-
-// JSON test fixture with common helper methods
-class JsonFixture : public ::testing::Test {
-protected:
-    // Parse JSON string, expect success
-    nlohmann::json parse(const std::string& str) {
-        try {
-            return nlohmann::json::parse(str);
-        } catch (const nlohmann::json::parse_error& e) {
-            ADD_FAILURE() << "JSON parse failed: " << e.what();
-            return nlohmann::json{};
-        }
-    }
-
-    // Expect valid JSON-RPC request
-    bool is_valid_request(const nlohmann::json& j) {
-        return j.contains("jsonrpc") && j["jsonrpc"] == "2.0" &&
-               (j.contains("id") || j.contains("method"));
-    }
-
-    // Expect valid JSON-RPC response
-    bool is_valid_response(const nlohmann::json& j) {
-        return j.contains("jsonrpc") && j["jsonrpc"] == "2.0" && j.contains("id");
-    }
-
-    // Expect valid JSON-RPC error
-    bool is_valid_error(const nlohmann::json& j) {
-        return j.contains("jsonrpc") && j["jsonrpc"] == "2.0" &&
-               j.contains("error") && j["error"].is_object() &&
-               j["error"].contains("code") && j["error"].contains("message");
-    }
-};
-
-// Time-based test fixture for timeout tests
-class TimeFixture : public ::testing::Test {
-protected:
-    void SetUp() override {
-        start_time = std::chrono::steady_clock::now();
-    }
-
-    // Elapsed time since test start in milliseconds
-    int64_t elapsed_ms() const {
-        auto now = std::chrono::steady_clock::now();
-        return std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time).count();
-    }
-
-    // Assert elapsed time is approximately expected (within tolerance ms)
-    void assert_elapsed_approx(int64_t expected_ms, int64_t tolerance_ms = 50) {
-        int64_t actual = elapsed_ms();
-        EXPECT_GE(actual, expected_ms - tolerance_ms);
-        EXPECT_LE(actual, expected_ms + tolerance_ms);
-    }
-
-private:
-    std::chrono::steady_clock::time_point start_time;
-};
-
-} // namespace mcpp::test
-
-#endif // MCPP_TESTS_FIXTURES_COMMON_H
-```
-  </action>
-  <verify>File tests/fixtures/common.h exists with JsonFixture and TimeFixture classes</verify>
-  <done>Common test fixtures created for JSON and time-based testing</done>
-</task>
-
-<task type="auto">
   <name>Create JSON-RPC unit tests</name>
   <files>tests/unit/test_json_rpc.cpp</files>
   <action>
-Create tests/unit/test_json_rpc.cpp with tests for JSON-RPC core:
+Replace the placeholder in tests/unit/test_json_rpc.cpp with comprehensive JSON-RPC tests:
 
 ```cpp
 // mcpp - MCP C++ library
@@ -359,7 +179,7 @@ TEST(JsonRpcResponse, SuccessResult) {
     nlohmann::json result = {{"status", "ok"}};
     JsonRpcResponse resp(result, 1);
 
-    EXPECT_TRUE(resp.is_error());
+    EXPECT_FALSE(resp.is_error());
     EXPECT_EQ(resp.result["status"], "ok");
     EXPECT_EQ(resp.id, 1);
 }
@@ -489,10 +309,10 @@ TEST(JsonRpcNotification, FromJson_Request_ReturnsNullopt) {
 </task>
 
 <task type="auto">
-  <name>Create request tracker unit tests</name>
+  <name>Create request tracker and timeout manager unit tests</name>
   <files>tests/unit/test_request_tracker.cpp</files>
   <action>
-Create tests/unit/test_request_tracker.cpp:
+Replace the placeholder in tests/unit/test_request_tracker.cpp with request tracker and timeout manager tests:
 
 ```cpp
 // mcpp - MCP C++ library
@@ -664,7 +484,7 @@ TEST_F(TimeoutManagerTest, CheckExpired_BeforeTimeout_NoExpiry) {
   <name>Create registry unit tests</name>
   <files>tests/unit/test_tool_registry.cpp, tests/unit/test_resource_registry.cpp, tests/unit/test_prompt_registry.cpp</files>
   <action>
-Create three test files for registries:
+Replace placeholders in the three registry test files:
 
 tests/unit/test_tool_registry.cpp:
 ```cpp
@@ -710,7 +530,7 @@ TEST(ToolRegistry, CallTool_UnknownTool_ReturnsError) {
     EXPECT_TRUE(result.contains("error"));
 }
 
-TEST(ToolRegistry, Uninstall_RemovesTool) {
+TEST(ToolRegistry, Unregister_RemovesTool) {
     ToolRegistry registry;
 
     registry.register_tool("to_remove", {{"description", "Will be removed"}}, [](const nlohmann::json&) {
@@ -791,7 +611,7 @@ TEST(PromptRegistry, RegisterAndList) {
     PromptRegistry registry;
 
     registry.register_prompt("greeting", {{"description", "Say hello"}}, [](const nlohmann::json&) {
-        return GetPromptResult{{"messages", {{{{"role", "user"}, {"content", "Hello"}}}}}};
+        return GetPromptResult{{"messages", {{{{{"role", "user"}, {"content", "Hello"}}}}}}};
     });
 
     auto prompts = registry.list_prompts();
@@ -834,7 +654,7 @@ TEST(PromptRegistry, Unregister_RemovesPrompt) {
   <name>Create pagination unit tests</name>
   <files>tests/unit/test_pagination.cpp</files>
   <action>
-Create tests/unit/test_pagination.cpp:
+Replace the placeholder in tests/unit/test_pagination.cpp:
 
 ```cpp
 // mcpp - MCP C++ library
@@ -916,123 +736,80 @@ TEST(ListAllTest, MultiplePages) {
 </task>
 
 <task type="auto">
-  <name>Create stub integration and compliance test files</name>
-  <files>tests/integration/test_client_server.cpp, tests/compliance/test_jsonrpc_spec.cpp</files>
+  <name>Build and run unit tests</name>
+  <files>tests/CMakeLists.txt</files>
   <action>
-Create stub test files that will be filled in later plans:
+Build and verify all unit tests:
 
-tests/integration/test_client_server.cpp:
-```cpp
-// mcpp - MCP C++ library
-// Copyright (c) 2025 mcpp contributors
-// Distributed under MIT License
-
-#include "mcpp/client.h"
-#include "mcpp/server/mcp_server.h"
-#include <gtest/gtest.h>
-
-// Placeholder for integration tests
-// Will be populated in plan 07-04 (MCP Inspector integration)
-
-TEST(ClientServerIntegration, Placeholder) {
-    // Integration tests will verify:
-    // - Full MCP handshake between client and server
-    // - Tool call round-trip
-    // - Resource read round-trip
-    // - Prompt retrieval round-trip
-    SUCCEED() << "Integration tests placeholder - to be implemented in 07-04";
-}
-```
-
-tests/compliance/test_jsonrpc_spec.cpp:
-```cpp
-// mcpp - MCP C++ library
-// Copyright (c) 2025 mcpp contributors
-// Distributed under MIT License
-
-#include <gtest/gtest.h>
-
-// Placeholder for JSON-RPC spec compliance tests
-// Will be populated in plan 07-03 (JSON-RPC compliance)
-
-TEST(JsonRpcSpecCompliance, Placeholder) {
-    // Compliance tests will verify:
-    // - JSON-RPC 2.0 spec conformance
-    // - MCP protocol compliance
-    // - Error code correctness
-    SUCCEED() << "Compliance tests placeholder - to be implemented in 07-03";
-}
-```
-  </action>
-  <verify>Both stub files exist with placeholder tests</verify>
-  <done>Stub integration and compliance test files created for future plans</done>
-</task>
-
-<task type="auto">
-  <name>Build and run tests</name>
-  <files>CMakeLists.txt</files>
-  <action>
-Test the complete test workflow:
-
-1. Clean build with tests:
-   ```bash
-   rm -rf build
-   cmake -B build -DCMAKE_BUILD_TYPE=Debug
-   cmake --build build
-   ```
-
-2. Run all tests via CTest:
+1. Build tests:
    ```bash
    cd build
-   ctest --output-on-failure
+   cmake --build . --target mcpp_unit_tests
    ```
 
-3. Run only unit tests:
+2. Run unit tests via CTest:
    ```bash
    ctest -L unit --output-on-failure
    ```
 
-4. Run specific test:
+3. Run unit tests directly:
    ```bash
-   ./tests/mcpp_unit_tests --gtest_filter="JsonRpcRequest.*"
+   ./tests/mcpp_unit_tests --gtest_filter="*"
    ```
 
-Verify tests pass. If any tests fail due to API mismatches, update the test to match actual implementation.
+4. Run specific test suites:
+   ```bash
+   ./tests/mcpp_unit_tests --gtest_filter="JsonRpc*"
+   ./tests/mcpp_unit_tests --gtest_filter="ToolRegistry*"
+   ./tests/mcpp_unit_tests --gtest_filter="ResourceRegistry*"
+   ./tests/mcpp_unit_tests --gtest_filter="PromptRegistry*"
+   ```
+
+5. Verify test count:
+   ```bash
+   ./tests/mcpp_unit_tests --gtest_list_tests
+   ```
+
+Expected: At least 20 test cases covering JSON-RPC, registries, pagination, request tracking, and timeout management.
+
+If any tests fail due to API mismatches with actual implementation, update the test code to match the actual API. The goal is to have all tests pass.
 
 Do NOT commit - this is verification.
   </action>
   <verify>
-All unit tests pass:
-- ctest returns 0 exit code
-- At least 20 test cases run (JSON-RPC, registries, pagination, etc.)
+Unit tests pass:
+- ctest -L unit returns 0
+- At least 20 test cases run
+- Tests cover: JSON-RPC types, request tracker, timeout manager, registries, pagination
 - No test failures or crashes
   </verify>
-  <done>Complete test suite builds and runs successfully via CTest</done>
+  <done>Complete unit test suite builds and runs successfully via CTest</done>
 </task>
 
 </tasks>
 
 <verification>
 After all tasks complete, verify:
-1. `cmake -B build && cmake --build build` compiles test executables
-2. `ctest` runs all tests without failures
-3. `ctest -L unit` runs only unit tests
-4. Unit tests cover: JSON-RPC core, request tracker, timeout manager, registries, pagination
-5. TEST-01 (Google Test integration) requirement satisfied
+1. tests/unit/test_json_rpc.cpp has comprehensive JSON-RPC tests (Request, Response, Error, Notification)
+2. tests/unit/test_request_tracker.cpp has request tracker and timeout manager tests
+3. Registry tests (tool, resource, prompt) exist with registration, listing, calling, unregister tests
+4. tests/unit/test_pagination.cpp has PaginatedResult and list_all tests
+5. All unit tests pass via ctest -L unit
+6. TEST-01 (Google Test integration) requirement satisfied
 </verification>
 
 <success_criteria>
-1. tests/CMakeLists.txt configured with FetchContent for GoogleTest
-2. Unit test executable builds and links against mcpp library
-3. gtest_discover_tests() automatically registers tests with CTest
-4. Unit tests exist for all major modules (json_rpc, request_tracker, registries, pagination)
-5. All tests pass with `ctest`
+1. Unit test executable (mcpp_unit_tests) builds and links against mcpp library
+2. gtest_discover_tests() automatically registers tests with CTest
+3. Unit tests exist for all major modules (json_rpc, request_tracker, registries, pagination)
+4. At least 20 test cases run and pass
+5. Tests use common fixtures from tests/fixtures/common.h
 </success_criteria>
 
 <output>
-After completion, create `.planning/phases/07-build-validation/07-02-SUMMARY.md` with:
-- Test infrastructure setup details
+After completion, create `.planning/phases/07-build-validation/07-02b-SUMMARY.md` with:
 - Unit tests created per module
-- Test coverage achieved
-- Any API mismatches found and fixed
+- Test coverage achieved (number of test cases)
+- Any API mismatches found and fixed during implementation
+- Test execution results
 </output>
