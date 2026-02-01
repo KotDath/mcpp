@@ -66,6 +66,19 @@ TEST_F(ClientServerIntegration, ServerRegistersTools) {
 }
 
 TEST_F(ClientServerIntegration, ServerCallsTool) {
+    // Need to set up transport for tools/call to work
+    class MockTransport : public transport::Transport {
+    public:
+        bool send(std::string_view) override { return true; }
+        void set_message_callback(MessageCallback) override {}
+        void set_error_callback(ErrorCallback) override {}
+        bool connect() override { return true; }
+        void disconnect() override {}
+        bool is_connected() const override { return true; }
+    };
+    MockTransport mock_transport;
+    test_server->set_transport(mock_transport);
+
     // Call the test_tool
     json request = {
         {"jsonrpc", "2.0"},
@@ -310,9 +323,12 @@ TEST_F(ClientServerIntegration, UnknownToolReturnsError) {
 
     auto response = test_server->handle_request(request);
     ASSERT_TRUE(response.has_value());
-    // Error is embedded in the result field
-    EXPECT_TRUE(response->contains("result"));
-    EXPECT_TRUE((*response)["result"].contains("error"));
+    // Error is at top level after fix
+    EXPECT_TRUE(response->contains("error"));
+    EXPECT_FALSE(response->contains("result"));
+    // Verify ID is preserved (not null)
+    EXPECT_TRUE(response->contains("id"));
+    EXPECT_EQ((*response)["id"], 9);
 }
 
 TEST_F(ClientServerIntegration, UnknownResourceReturnsError) {
@@ -326,9 +342,11 @@ TEST_F(ClientServerIntegration, UnknownResourceReturnsError) {
 
     auto response = test_server->handle_request(request);
     ASSERT_TRUE(response.has_value());
-    // Error is embedded in the result field
-    EXPECT_TRUE(response->contains("result"));
-    EXPECT_TRUE((*response)["result"].contains("error"));
+    // Error is at top level after fix
+    EXPECT_TRUE(response->contains("error"));
+    EXPECT_FALSE(response->contains("result"));
+    // Verify ID is preserved
+    EXPECT_EQ((*response)["id"], 10);
 }
 
 TEST_F(ClientServerIntegration, UnknownPromptReturnsError) {
@@ -345,9 +363,11 @@ TEST_F(ClientServerIntegration, UnknownPromptReturnsError) {
 
     auto response = test_server->handle_request(request);
     ASSERT_TRUE(response.has_value());
-    // Error is embedded in the result field
-    EXPECT_TRUE(response->contains("result"));
-    EXPECT_TRUE((*response)["result"].contains("error"));
+    // Error is at top level after fix
+    EXPECT_TRUE(response->contains("error"));
+    EXPECT_FALSE(response->contains("result"));
+    // Verify ID is preserved
+    EXPECT_EQ((*response)["id"], 11);
 }
 
 // ============================================================================
