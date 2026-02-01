@@ -349,7 +349,8 @@ int main(int argc, char* argv[]) {
     MCPP_DEBUG_LOG("Registered: 2 prompts (code_review, greeting)");
     MCPP_DEBUG_LOG("Starting server loop...");
 
-    // Main event loop: read JSON-RPC from stdin, process, write response to stdout
+    // Main event loop: read JSON-RPC from stdin, validate, process, write response to stdout
+    // Uses Phase 8's JsonRpcRequest::from_json() for robust validation
     std::string line;
     while (std::getline(std::cin, line)) {
         if (line.empty()) {
@@ -357,60 +358,61 @@ int main(int argc, char* argv[]) {
         }
 
         try {
-            json request = json::parse(line);
-            std::optional<json> response = server.handle_request(request);
+            // Parse raw JSON
+            json raw = json::parse(line);
 
-            if (response.has_value()) {
-                std::cout << response->dump() << std::endl;
-            }
-            // Notifications have no response
-        } catch (const json::exception& e) {
-            // Try to extract the ID from the partially malformed request
-            // This is a best-effort attempt to provide a valid ID for the error response
-            json id = nullptr;
-
-            // Try to find "id" field in the raw line using simple string search
-            size_t id_pos = line.find("\"id\"");
-            if (id_pos != std::string::npos) {
-                size_t colon_pos = line.find(":", id_pos);
-                if (colon_pos != std::string::npos) {
-                    size_t value_start = line.find_first_not_of(" \t\n\r", colon_pos + 1);
-                    if (value_start != std::string::npos) {
-                        char next_char = line[value_start];
-                        if (next_char == '"') {
-                            // String ID - extract until closing quote
-                            size_t value_end = line.find('"', value_start + 1);
-                            if (value_end != std::string::npos) {
-                                std::string id_str = line.substr(value_start + 1, value_end - value_start - 1);
-                                id = id_str;
-                            }
-                        } else if (next_char >= '0' && next_char <= '9' || next_char == '-') {
-                            // Numeric ID - try to extract
-                            size_t value_end = line.find_first_not_of("0123456789-", value_start);
-                            if (value_end != std::string::npos) {
-                                std::string id_str = line.substr(value_start, value_end - value_start);
-                                try {
-                                    int id_val = std::stoi(id_str);
-                                    id = id_val;
-                                } catch (...) {
-                                    // Fall through to use default
-                                }
-                            }
-                        }
-                    }
+            // Use Phase 8 validation layer - validates full JSON-RPC 2.0 structure
+            if (auto parsed = mcpp::core::JsonRpcRequest::from_json(raw)) {
+                // Valid JSON-RPC request - process with server
+                std::optional<json> response = server.handle_request(raw);
+                if (response.has_value()) {
+                    // Use newline delimiter for stdio transport (not std::endl which flushes)
+                    std::cout << response->dump() << "\n" << std::flush;
                 }
-            }
+                // Notifications have no response
+            } else {
+                // Validation failed - extract ID for proper error response
+                mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(line);
 
-            json error = {
+                json error_response = {
+                    {"jsonrpc", "2.0"},
+                    {"error", {
+                        {"code", -32700},
+                        {"message", "Parse error"}
+                    }},
+                    {"id", std::visit([](auto&& v) -> json {
+                        using T = std::decay_t<decltype(v)>;
+                        if constexpr (std::is_same_v<T, int64_t>) {
+                            return v;
+                        } else if constexpr (std::is_same_v<T, std::string>) {
+                            return v;
+                        }
+                        return nullptr;
+                    }, id)}
+                };
+                std::cout << error_response.dump() << "\n" << std::flush;
+            }
+        } catch (const json::exception& e) {
+            // Completely malformed JSON - still try to extract ID for error response
+            mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(line);
+
+            json error_response = {
                 {"jsonrpc", "2.0"},
                 {"error", {
                     {"code", -32700},
-                    {"message", "Parse error"},
-                    {"data", e.what()}
+                    {"message", "Parse error"}
                 }},
-                {"id", id}
+                {"id", std::visit([](auto&& v) -> json {
+                    using T = std::decay_t<decltype(v)>;
+                    if constexpr (std::is_same_v<T, int64_t>) {
+                        return v;
+                    } else if constexpr (std::is_same_v<T, std::string>) {
+                        return v;
+                    }
+                    return nullptr;
+                }, id)}
             };
-            std::cout << error.dump() << std::endl;
+            std::cout << error_response.dump() << "\n" << std::flush;
         }
     }
 
