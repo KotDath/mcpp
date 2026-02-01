@@ -343,12 +343,11 @@ int main(int argc, char* argv[]) {
         handle_code_review
     );
 
-    std::cerr << "Registered:" << std::endl;
-    std::cerr << "  - 3 tools (calculate, echo, get_time)" << std::endl;
-    std::cerr << "  - 2 resources (file://tmp/mcpp_test.txt, info://server)" << std::endl;
-    std::cerr << "  - 2 prompts (greeting, code_review)" << std::endl;
-    std::cerr << std::endl;
-    std::cerr << "Starting server loop..." << std::endl;
+    // Debug logging for registered capabilities (uses MCPP_DEBUG_LOG from Phase 8)
+    MCPP_DEBUG_LOG("Registered: 3 tools (calculate, echo, get_time)");
+    MCPP_DEBUG_LOG("Registered: 2 resources (file://tmp/mcpp_test.txt, info://server)");
+    MCPP_DEBUG_LOG("Registered: 2 prompts (code_review, greeting)");
+    MCPP_DEBUG_LOG("Starting server loop...");
 
     // Main event loop: read JSON-RPC from stdin, process, write response to stdout
     std::string line;
