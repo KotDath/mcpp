@@ -2,17 +2,17 @@
 
 **Domain:** C++ MCP (Model Context Protocol) Library
 **Researched:** 2025-01-31
+**Updated:** 2026-02-01 (v1.1 Inspector Integration)
 **Overall Confidence:** HIGH
 
 ## Executive Summary
 
-The recommended stack for building a C++17 MCP library prioritizes modern, header-only libraries where possible to minimize build complexity while maintaining performance. Key insights:
+The recommended stack for building a C++17 MCP library prioritizes modern, header-only libraries where possible to minimize build complexity while maintaining performance. For v1.1 Inspector integration:
 
-- **nlohmann/json** is the de facto standard for C++ JSON (v3.12.0, April 2025)
-- **Asio standalone** (v1.36.0) is preferred over libevent for modern C++17 development
-- **WebSocket++** remains the standard for WebSocket despite last release in 2020
-- **GoogleTest 1.17.0+** now requires C++17, aligning with project requirements
-- For SSE: Build custom parser using llhttp (v9.3.0) rather than relying on dated libraries
+- **No new language dependencies** required - MCP Inspector connects via existing stdio transport
+- **Bats-core** recommended for automated CLI testing - TAP-compliant bash testing framework
+- **Enhanced logging** using existing Logger for JSON-RPC parse error debugging
+- **Example server** with `mcp.json` configuration for Inspector/Cursor/Claude Code compatibility
 
 ## Recommended Stack
 
@@ -25,13 +25,20 @@ The recommended stack for building a C++17 MCP library prioritizes modern, heade
 | **llhttp** | 9.3.0 | HTTP/1.x parsing | Node.js's HTTP parser, production-hardened, security-patched, supports all HTTP methods including QUERY |
 | **OpenSSL** | 1.1+ / 3.0+ | TLS/SSL for secure transports | Industry standard, required for HTTPS+WSS transports, widest compatibility |
 
+### v1.1 Additions: Inspector Integration & Testing
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| **MCP Inspector (npx)** | latest | Integration testing | Official MCP testing tool; `--cli` mode enables automation; connects via stdio |
+| **Bats-core** | 1.11.0+ | CLI test automation | TAP-compliant bash testing; simple syntax; ideal for testing stdio servers |
+| **jq** | 1.6+ | JSON parsing in tests | Validate JSON-RPC response structure in bash scripts |
+
 ### Transport Layer
 
 | Technology | Version | Purpose | When to Use |
-| Library | Version | Purpose | When to Use |
 |------------|---------|---------|-------------|
 | **WebSocket++** | 0.8.2 | WebSocket transport | Required for WebSocket transport; header-only, integrates with Asio, mature despite 2020 last release |
-| **stdio** | (standard) | stdio transport | Use platform stdin/stdout - no library needed |
+| **stdio** | (standard) | stdio transport | Use platform stdin/stdout - no library needed; Inspector uses this |
 | **Custom SSE** | (build) | Server-Sent Events | Build custom parser using llhttp; no quality C++ SSE library exists (verified via search) |
 
 ### Build System
@@ -43,10 +50,10 @@ The recommended stack for building a C++17 MCP library prioritizes modern, heade
 ### Testing & Development
 
 | Technology | Version | Purpose | When to Use |
-| Library | Version | Purpose | When to Use |
 |------------|---------|---------|-------------|
 | **GoogleTest** | 1.17.0+ | Unit testing framework | C++17 now required (aligns with project), actively maintained, extensive matcher library |
 | **MCP Inspector** | (from spec) | Integration testing | Official MCP testing utility for protocol validation |
+| **Bats-core** | 1.11.0+ | CLI automation | NEW: For automated testing of stdio server via Inspector CLI |
 
 ## Installation
 
@@ -82,14 +89,40 @@ FetchContent_Declare(
 )
 ```
 
+### v1.1: Inspector CLI & Bats Installation
+
+```bash
+# MCP Inspector - via npx (no install needed)
+npx @modelcontextprotocol/inspector --cli ./build/examples/inspector_server
+
+# Bats-core for CLI testing
+# macOS
+brew install bats-core
+
+# Ubuntu/Debian
+sudo apt install bats
+
+# Or from source
+git clone https://github.com/bats-core/bats-core.git /tmp/bats
+cd /tmp/bats
+sudo ./install.sh /usr/local
+
+# Verify
+bats --version  # Should show 1.11.0+
+
+# jq for JSON parsing in tests
+sudo apt install jq   # Ubuntu
+brew install jq       # macOS
+```
+
 ### System Dependencies
 
 ```bash
 # Ubuntu/Debian
-sudo apt-get install libssl-dev cmake g++-11
+sudo apt-get install libssl-dev cmake g++-11 bats jq
 
 # macOS
-brew install openssl cmake
+brew install openssl cmake bats jq
 
 # OpenSSL 3.0+ preferred for new projects
 ```
@@ -108,6 +141,163 @@ FetchContent_Declare(
 # sudo apt-get install libasio-dev  # Version may vary
 ```
 
+## MCP Inspector CLI Integration
+
+### Basic Usage
+
+```bash
+# Direct stdio connection
+npx @modelcontextprotocol/inspector --cli ./build/examples/inspector_server
+
+# With configuration file
+npx @modelcontextprotocol/inspector --cli --config mcp.json --server mcpp-inspector
+
+# Test specific method
+npx @modelcontextprotocol/inspector --cli ./build/examples/inspector_server \
+    --method tools/list
+
+# Call a tool
+npx @modelcontextprotocol/inspector --cli ./build/examples/inspector_server \
+    --method tools/call --tool-name calculate --tool-arg operation=add --tool-arg a=5 --tool-arg b=3
+```
+
+### Example mcp.json Configuration
+
+```json
+{
+  "mcpServers": {
+    "mcpp-inspector": {
+      "command": "/path/to/build/examples/inspector_server",
+      "args": [],
+      "env": {
+        "MCPP_LOG_LEVEL": "debug",
+        "MCPP_LOG_PAYLOAD": "true"
+      }
+    }
+  }
+}
+```
+
+## Automated CLI Testing with Bats
+
+### Test Structure
+
+```
+tests/cli/
+  bats/                      # Bats test files
+    test_inpector_startup.bats
+    test_tools_call.bats
+    test_resources_list.bats
+    test_prompts_list.bats
+    test_jsonrpc_errors.bats
+  helpers/                    # Test fixtures and helpers
+    setup_mcpp_server.bash
+    inspect_output.bash
+```
+
+### Example Bats Test
+
+```bash
+#!/usr/bin/env bats
+
+setup() {
+    export MCPP_SERVER="./build/examples/inspector_server"
+    [ -f "$MCPP_SERVER" ] || skip "Server not built"
+}
+
+@test "tools/list returns valid JSON-RPC" {
+    run npx @modelcontextprotocol/inspector --cli "$MCPP_SERVER" --method tools/list
+
+    [ "$status" -eq 0 ]
+    # Verify output is valid JSON array
+    echo "$output" | jq -e '.result.tools | type == "array"'
+}
+
+@test "calculate tool adds numbers" {
+    run npx @modelcontextprotocol/inspector --cli "$MCPP_SERVER" \
+        --method tools/call --tool-name calculate \
+        --tool-arg operation=add --tool-arg a=5 --tool-arg b=3
+
+    [ "$status" -eq 0 ]
+    # Verify result contains "8"
+    echo "$output" | jq -e '.result.content[0].text | test("8")'
+}
+
+@test "malformed JSON returns -32700 error" {
+    # This tests the parse error handling
+    echo '{"jsonrpc": "2.0", "method": "invalid"' | \
+        "$MCPP_SERVER" 2>/dev/null | \
+        jq -e '.error.code == -32700'
+}
+```
+
+### CMake Integration for CLI Tests
+
+```cmake
+# Add to tests/CMakeLists.txt
+find_program(BATS_EXECUTABLE bats)
+if(BATS_EXECUTABLE)
+    add_custom_target(cli-tests
+        COMMAND ${BATS_EXECUTABLE} tests/cli/bats
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running CLI tests with Bats"
+    )
+    add_dependencies(test cli-tests)
+else()
+    message(WARNING "bats not found - CLI tests will be skipped")
+endif()
+```
+
+## JSON-RPC Parse Error Debugging
+
+### Enhanced Logging Strategy
+
+The existing `Logger` class already supports:
+- `set_level(Level)` - Configure log verbosity
+- `enable_payload_logging(bool, size_t)` - Log JSON payloads with size limits
+- Thread-safe stderr output (not stdout - critical for stdio MCP)
+
+### Example Server Debug Mode
+
+```cpp
+// Add to inspector_server.cpp main()
+bool debug_mode = false;
+for (int i = 1; i < argc; ++i) {
+    if (std::string(argv[i]) == "--debug" || std::string(argv[i]) == "-d") {
+        debug_mode = true;
+    }
+}
+
+if (debug_mode) {
+    mcpp::util::logger().set_level(mcpp::util::Logger::Level::Trace);
+    mcpp::util::logger().enable_payload_logging(true, 2048);
+    std::cerr << "=== DEBUG MODE ENABLED ===" << std::endl;
+}
+```
+
+### Common Parse Error -32700 Causes
+
+| Cause | Detection | Prevention |
+|-------|-----------|-------------|
+| **Non-JSON output to stdout** | Inspector shows "Parse error" immediately | Use `std::cerr` for all logging, never `std::cout` |
+| **Incomplete JSON lines** | Error shows truncated JSON | Always terminate with `std::endl` or `\n` |
+| **Invalid JSON syntax** | nlohmann::json::exception | Use `json::accept()` for validation |
+| **Encoding issues** | Garbled characters in output | Ensure UTF-8 encoding only |
+
+### Debug Workflow
+
+```bash
+# 1. Enable debug logging
+MCPP_LOG_LEVEL=trace MCPP_LOG_PAYLOAD=true \
+    ./build/examples/inspector_server 2>debug.log
+
+# 2. In another terminal, run Inspector
+npx @modelcontextprotocol/inspector --cli ./build/examples/inspector_server
+
+# 3. Review debug.log for exact bytes sent/received
+# 4. Check for any stdout pollution (grep for non-JSON lines)
+```
+
 ## Alternatives Considered
 
 | Category | Recommended | Alternative | Why Not |
@@ -115,6 +305,9 @@ FetchContent_Declare(
 | JSON | nlohmann/json | json-rpc-cxx | Not a full JSON library; JSON-RPC specific, limited JSON manipulation |
 | JSON | nlohmann/json | Boost.JSON | More verbose API, less intuitive; nlohmann is community preference |
 | JSON | nlohmann/json | Glaze | Faster but less mature; smaller community, fewer examples |
+| CLI Testing | Bats-core | Python pytest + subprocess | Adds Python dependency; bash sufficient for CLI testing |
+| CLI Testing | Bats-core | ShellSpec | Newer, less mature than Bats-core |
+| CLI Testing | Bats-core | GoogleTest CLI wrapper | Overkill; adds C++ compilation for test changes |
 | Networking | Asio | libevent | Older C-style API; less type-safe; ~40% slower benchmarks in 2024 tests |
 | Networking | Asio | libuv | C API; broader scope includes file I/O (not needed); async model less ergonomic in C++ |
 | Networking | Asio | Boost.Asio | Full Boost dependency unnecessary; standalone version provides same functionality |
@@ -139,11 +332,17 @@ FetchContent_Declare(
 | **POCO** | Heavy framework; slower compile; more dependencies than needed | Modular: nlohmann + Asio + OpenSSL |
 | **cpp-httplib** | Includes HTTP server; library shouldn't provide HTTP server per constraints | Build HTTP parsing with llhttp, users bring HTTP server |
 | **cpr** | HTTP client library; not needed for transport-agnostic design | Use llhttp for parsing, user provides HTTP server |
+| **New JSON library** | nlohmann/json is standard, well-maintained, and already integrated | Use existing nlohmann/json |
+| **RPC framework (gRPC, Thrift)** | MCP uses JSON-RPC 2.0 over stdio; no binary RPC needed | Custom JSON-RPC on nlohmann/json |
+| **HTTP server library (cpp-httplib)** | Only needed if hosting Inspector UI locally; npx handles this | Use npx Inspector |
+| **Python testing framework** | Adds dependency; Bats-core is sufficient for CLI testing | Bats-core for bash tests |
+| **spdlog as required dependency** | Currently optional; keep optional but recommend for debug builds | Use existing Logger (stderr fallback) |
+| **WebSocket library** | MCP uses stdio/SSE/HTTP for Inspector; WebSocket not needed for v1.1 | Existing stdio transport |
 
 ## Stack Patterns by Variant
 
 ### If building ONLY stdio transport:
-- Use **nlohmann/json** + **GoogleTest**
+- Use **nlohmann/json** + **GoogleTest** + **Bats-core**
 - No networking libraries needed
 - Minimal dependencies: fastest compile, simplest integration
 
@@ -168,6 +367,8 @@ FetchContent_Declare(
 | llhttp 9.3.0 | C99, C++17 via C wrapper | C library; wrap in C++ interface |
 | GoogleTest 1.17.0+ | C++17 required | Breaking change: C++17 now minimum |
 | OpenSSL 1.1+ / 3.0+ | All above | Both versions supported; 3.0+ preferred for new projects |
+| Bats-core 1.11.0+ | Bash 3.2+ | TAP-compliant; integrates with CI/CD |
+| MCP Inspector | Node.js 22.7.5+ | Via npx; no install required |
 
 ## Async/Non-Blocking Strategy for C++17
 
@@ -223,12 +424,20 @@ Reference implementation can draw from:
 - [Asio C++ Library](https://think-async.com/) - Official site
 - [Asio SourceForge](https://sourceforge.net/projects/asio/) - v1.36.0 downloads
 - [GoogleTest Repository](https://github.com/google/googletest) - v1.17.0+ requires C++17
+- [MCP Inspector GitHub](https://github.com/modelcontextprotocol/inspector) - Official Inspector CLI documentation
+- [MCP Inspector Docs](https://modelcontextprotocol.io/docs/tools/inspector) - Official usage guide
+- [Bats-core GitHub](https://github.com/bats-core/bats-core) - Bash Automated Testing System
+- [Bats-core Documentation](https://bats-core.readthedocs.io/) - Official docs
 
 ### MEDIUM Confidence (WebSearch + Official Verification)
 - [json-rpc-cxx GitHub](https://github.com/jsonrpcx/json-rpc-cxx) - Evaluated as JSON-RPC alternative
 - [Reddit: Asio in 2024/2025](https://www.reddit.com/r/cpp_questions/comments/1fi7yfn/asio_is_great_its_2024_why_should_i_use_the_rest_of_boost/) - Community sentiment on Asio vs Boost
 - [Asio vs libevent performance comparison (2024)](https://juejin.cn/post/7314485430385295400) - Benchmark: Asio ~800K QPS vs libevent ~500K QPS
 - [C++ networking library comparison (2025)](https://blog.csdn.net/tyhenry/article/details/146341229) - Comprehensive benchmark including muduo, Asio, libevent
+- [MCP CLI Updates (January 2026)](https://www.philschmid.de/mcp-cli) - v0.3.0 features
+- [Understanding MCP Through Raw STDIO](https://foojay.io/today/understanding-mcp-through-raw-stdio-communication/) - stdio debugging patterns
+- [MCP Debugging Best Practices](https://www.mcpevals.io/blog/debugging-mcp-servers-tips-and-best-practices) - Parse error causes
+- [StackOverflow: MCP parse errors](https://stackoverflow.com/questions/79550897/mcp-server-always-get-initialization-error) - Common stdio issues
 
 ### LOW CONFIDENCE (WebSearch Only - Requires Verification)
 - SSE library searches yielded no C++-specific solutions - build custom parser recommended
@@ -241,3 +450,4 @@ Reference implementation can draw from:
 ---
 *Stack research for: C++ MCP Library (mcpp)*
 *Researched: 2025-01-31*
+*Updated: 2026-02-01 (v1.1 Inspector Integration)*

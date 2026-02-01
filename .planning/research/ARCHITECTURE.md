@@ -1,539 +1,331 @@
-# Architecture Research
+# Architecture Research: MCP Inspector Integration and Bug Fixes
 
-**Domain:** C++ Networking / Protocol Library (MCP - Model Context Protocol)
-**Researched:** 2025-01-31
+**Project:** mcpp - C++ MCP Library v1.1
+**Research Date:** 2026-02-01
 **Confidence:** HIGH
 
-## Standard Architecture
+## Summary
 
-### System Overview
+The MCP Inspector CLI integration and JSON-RPC bug fixes are **layered on top of existing architecture** without requiring structural changes. The inspector_server.cpp example already demonstrates the integration pattern, using the existing `McpServer` facade with stdio transport. The JSON-RPC parse error bug (-32700) is isolated to the request/response message handling layer in `inspector_server.cpp` and potentially `McpServer::handle_request()`.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        High-Level API Layer                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │ McpClient    │  │ McpServer    │  │ Tool/Resource │  │ Builder API  │   │
-│  │ (user API)   │  │ (user API)   │  │ Wrappers     │  │ (convenience)│   │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘   │
-│         │                 │                 │                 │             │
-├─────────┼─────────────────┼─────────────────┼─────────────────┼─────────────┤
-│         │         ┌───────▼────────┐       │                 │             │
-│         │         │ JSON-RPC Layer │       │                 │             │
-│         │         │ - Request/Resp  │       │                 │             │
-│         │         │ - Notification │       │                 │             │
-│         │         │ - Validation   │       │                 │             │
-│         │         └───────┬────────┘       │                 │             │
-│         │                 │                 │                 │             │
-├─────────┼─────────────────┼─────────────────┼─────────────────┼─────────────┤
-│         │         ┌───────▼──────────────────────────────────▼─────────┐   │
-│         │         │              Filter Chain                          │   │
-│         │         │  ┌────────────┐ ┌────────────┐ ┌────────────┐     │   │
-│         │         │  │ JSON-RPC   │ │ HTTP/SSE   │ │ Framing    │     │   │
-│         │         │  │ Filter     │ │ Codec      │ │ Filter     │     │   │
-│         │         │  └────────────┘ └────────────┘ └────────────┘     │   │
-│         │         └──────────────────────┬──────────────────────────────┘   │
-├─────────┼────────────────────────────────┼─────────────────────────────────┤
-│         │         ┌───────────────────────▼──────────────────────────────┐ │
-│         │         │            Transport Abstraction Layer               │ │
-│         │         │  ┌────────────┐ ┌────────────┐ ┌────────────┐      │ │
-│         │         │  │ Stdio      │ │ SSE (HTTP) │ │ WebSocket  │      │ │
-│         │         │  │ Transport  │ │ Transport  │ │ Transport  │      │ │
-│         │         │  └────────────┘ └────────────┘ └────────────┘      │ │
-│         │         └───────────────────────┬──────────────────────────────┘ │
-├─────────┼────────────────────────────────┼─────────────────────────────────┤
-│         │         ┌───────────────────────▼──────────────────────────────┐ │
-│         │         │           Event Loop / Dispatcher                    │ │
-│         │         │  - File events (read/write)                         │ │
-│         │         │  - Timers                                          │ │
-│         │         │  - Deferred deletion                               │ │
-│         │         │  - Thread-safe posting                             │ │
-│         │         └───────────────────────┬──────────────────────────────┘ │
-├─────────┼────────────────────────────────┼─────────────────────────────────┤
-│         │         ┌───────────────────────▼──────────────────────────────┐ │
-│         │         │           Platform I/O Layer                         │ │
-│         │         │  Linux: epoll │ macOS: kqueue │ Windows: IOCP       │ │
-│         │         └──────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+The architecture follows a **layered design** with clear separation:
+- **Transport Layer** (stdio/HTTP) - message framing
+- **JSON-RPC Layer** - request/response parsing, validation
+- **MCP Server/Client Facades** - MCP protocol specifics, registries
+- **Example Server** - application-level code
 
-### Component Responsibilities
-
-| Component | Responsibility | Typical Implementation | Communicates With |
-|-----------|----------------|------------------------|-------------------|
-| **McpClient/McpServer** | User-facing API, connection lifecycle, capability negotiation | Facade pattern, holds references to all subsystems | JSON-RPC layer, Transport, User callbacks |
-| **JSON-RPC Layer** | Request/response validation, ID generation, message serialization | State machine for protocol lifecycle, nlohmann/json | Filter chain, Client/Server API |
-| **Filter Chain** | Protocol processing pipeline - decode/encode/transform | ReadFilter/WriteFilter interfaces with FilterManager | Transport layer, JSON-RPC layer |
-| **Transport Abstraction** | Byte-level I/O, transport-specific framing (SSE/stdio/WS) | TransportSocket interface with polymorphic implementations | Event loop, Filter chain |
-| **Event Loop/Dispatcher** | Async I/O multiplexing, timer scheduling, callback execution | libevent/epoll/kqueue wrapper with FileEvent/Timer abstractions | All layers (via callbacks) |
-| **Platform I/O** | OS-specific system calls for network/file I/O | Syscall wrappers (epoll_wait/kevent/WSAPoll) | Event loop only |
-
-## Recommended Project Structure
-
-```
-mcpp/
-├── include/mcpp/
-│   ├── mcpp.h                 # Main public header
-│   ├── client/
-│   │   ├── client.h           # McpClient facade
-│   │   └── types.h            # Client-specific types
-│   ├── server/
-│   │   ├── server.h           # McpServer facade
-│   │   └── types.h            # Server-specific types
-│   ├── core/
-│   │   ├── types.h            # Common JSON-RPC types
-│   │   ├── result.h           # Result/Error types
-│   │   └── async.h            # Future/callback utilities
-│   ├── protocol/
-│   │   ├── json_rpc.h         # JSON-RPC message types
-│   │   ├── protocol_handler.h # Protocol state machine
-│   │   └── validation.h       # Message validation
-│   ├── transport/
-│   │   ├── transport.h        # Transport interface
-│   │   ├── stdio_transport.h  # stdio implementation
-│   │   ├── sse_transport.h    # SSE implementation
-│   │   └── ws_transport.h     # WebSocket implementation
-│   ├── filter/
-│   │   ├── filter.h           # Filter interfaces
-│   │   ├── filter_chain.h     # Filter chain manager
-│   │   ├── json_rpc_filter.h  # JSON-RPC codec filter
-│   │   └── framing_filter.h   # Message framing filter
-│   └── event/
-│       ├── dispatcher.h       # Event loop interface
-│       ├── timer.h            # Timer abstraction
-│       ├── file_event.h       # File descriptor events
-│       └── platform_factory.h # Platform-specific factory
-├── src/
-│   ├── client/
-│   ├── server/
-│   ├── core/
-│   ├── protocol/
-│   ├── transport/
-│   ├── filter/
-│   └── event/
-└── tests/
-    ├── unit/
-    └── integration/
-```
-
-### Structure Rationale
-
-- **client/**: Client-specific functionality (connection initiation, request tracking)
-- **server/**: Server-specific functionality (listener management, session handling)
-- **core/**: Shared types, error handling, async utilities used by both client and server
-- **protocol/**: MCP protocol logic independent of transport (JSON-RPC layer)
-- **transport/**: Transport implementations are swappable and isolated
-- **filter/**: Filter chain provides extensibility for protocol processing
-- **event/**: Event loop is the foundation - isolated for potential alternative implementations
-
-## Architectural Patterns
-
-### Pattern 1: Filter Chain (Pipes and Filters)
-
-**What:** A chain of filters process data in sequence, each responsible for a specific transformation. Inspired by Envoy's network filter architecture.
-
-**When to use:** Processing layered protocols where multiple transformations occur (framing → decoding → routing).
-
-**Trade-offs:**
-- **Pros:** Extensible, testable, clear separation of concerns, easy to add new protocol features
-- **Cons:** Indirection can hurt performance, state management across filters is complex
-
-**Example:**
-```cpp
-// Filter interface - each filter processes data in both directions
-class ReadFilter {
-public:
-    virtual FilterStatus onData(Buffer& data, bool end_stream) = 0;
-    virtual void initializeReadFilterCallbacks(ReadFilterCallbacks& callbacks) = 0;
-};
-
-class WriteFilter {
-public:
-    virtual FilterStatus onWrite(Buffer& data, bool end_stream) = 0;
-    virtual void initializeWriteFilterCallbacks(WriteFilterCallbacks& callbacks) = 0;
-};
-
-// Filter chain processes data through multiple stages
-// Read path: Raw bytes → HTTP decode → SSE decode → JSON-RPC parse → Application
-// Write path: Application → JSON-RPC serialize → SSE encode → HTTP encode → Raw bytes
-```
-
-### Pattern 2: Single-Threaded Event Loop with Thread-Safe Posting
-
-**What:** Each worker thread runs its own event loop. Cross-thread communication happens via thread-safe message posting. Avoids locks on hot paths.
-
-**When to use:** High-performance networking where lock contention would be a bottleneck.
-
-**Trade-offs:**
-- **Pros:** Lock-free data path, excellent scalability, predictable latency
-- **Cons:** Cannot directly share state between threads, all access must be posted
-
-**Example:**
-```cpp
-class Dispatcher {
-public:
-    // Thread-safe: can be called from any thread
-    void post(std::function<void()> callback) {
-        {
-            std::lock_guard<std::mutex> lock(post_mutex_);
-            post_queue_.push(std::move(callback));
-        }
-        // Wake up the event loop
-        wakeup();
-    }
-
-    // Only call from dispatcher thread
-    void run() {
-        while (running_) {
-            process_events();
-            process_posted_callbacks();
-        }
-    }
-
-private:
-    std::mutex post_mutex_;
-    std::queue<std::function<void()>> post_queue_;
-};
-```
-
-### Pattern 3: Layered API Design
-
-**What:** Provide both low-level (callback-based) and high-level (future-based) APIs. Low-level for streaming/complex cases; high-level for simple RPC calls.
-
-**When to use:** Library needs to support both simple use cases and complex scenarios like streaming responses.
-
-**Trade-offs:**
-- **Pros:** Ergonomic for common cases, flexible for advanced users
-- **Cons:** More API surface to maintain, potential confusion about which to use
-
-**Example:**
-```cpp
-// High-level: Future-based API for simple RPC
-std::future<CallToolResult> callTool(const std::string& name, const json& args);
-
-// Low-level: Callback-based API for streaming
-void callToolStreaming(
-    const std::string& name,
-    const json& args,
-    std::function<void(const json&)> on_chunk,
-    std::function<void(const Error&)> on_error
-);
-```
-
-### Pattern 4: Facade with Internal Component Coordination
-
-**What:** McpClient/McpServer act as facades coordinating internal components (connection manager, protocol handler, request tracker). Simplifies user API while keeping internal flexibility.
-
-**When to use:** Complex subsystems that need to present a simple interface.
-
-**Trade-offs:**
-- **Pros:** Clean user API, internal implementation can evolve independently
-- **Cons:** Facade class becomes large, risk of God object
-
-**Example:**
-```cpp
-class McpClient {
-public:
-    // Simple user API
-    std::future<ListToolsResult> listTools();
-
-private:
-    // Internal components
-    std::unique_ptr<ConnectionManager> connection_manager_;
-    std::unique_ptr<ProtocolHandler> protocol_handler_;
-    std::unique_ptr<RequestTracker> request_tracker_;
-    std::unique_ptr<CircuitBreaker> circuit_breaker_;
-};
-```
-
-## Data Flow
-
-### Request Flow (Client)
-
-```
-[User Code]
-    │ callTool("calculator", {"expression": "2+2"})
-    ▼
-[McpClient]
-    │ Generate request ID
-    │ Create RequestContext with promise
-    │ Route to protocol layer
-    ▼
-[JSON-RPC Layer]
-    │ Validate request
-    │ Serialize to JSON
-    │ Add to pending requests map
-    ▼
-[Filter Chain: Write]
-    │ JsonRpcFilter: Add JSON-RPC envelope
-    │ FramingFilter: Add length prefix
-    │ SSE/HTTP Filter: Add HTTP/SSE framing
-    ▼
-[Transport]
-    │ Write to socket/stdio
-    ▼
-[Network] ──────────────────────────────────────────────→ [Server]
-                                                                          │
-[Client] ←─────────────────────────────────────────────────┤
-    ▼                                                                   │
-[Transport]                                                          [Server]
-    │ Read from socket/stdio                                          │
-    ▼                                                                   │
-[Filter Chain: Read]                                            [Server]
-    │ SSE/HTTP Filter: Remove HTTP/SSE framing                      │
-    │ FramingFilter: Extract message by length                      │
-    │ JsonRpcFilter: Parse JSON, validate JSON-RPC                  │
-    ▼                                                                   │
-[JSON-RPC Layer]                                                 [Server]
-    │ Match response ID to pending request                        │
-    │ Set promise value                                             │
-    ▼                                                                   │
-[McpClient]                                                      [Server]
-    │ Future resolves                                                │
-    ▼                                                                   │
-[User Code] ─── return result ────────────────────────────────────┘
-```
-
-### Notification Flow (Server to Client)
-
-```
-[User Code]
-    │ sendNotification("progress", {"token": "abc", "value": 50})
-    ▼
-[McpServer]
-    │ Serialize notification
-    ▼
-[JSON-RPC Layer]
-    │ Create JSON-RPC notification (no ID)
-    ▼
-[Filter Chain: Write]
-    │ Same as request path
-    ▼
-[Transport]
-    │ Write to socket
-    ▼
-[Network] ──────────────────────────────────────────────→ [Client]
-    │
-[Client] receives notification
-    │ No request matching (it's a notification)
-    ▼
-[Protocol Callbacks]
-    │ onNotification() called
-    ▼
-[User Callback]
-    │ User-provided notification handler
-```
-
-### Thread-Safe Data Flow
-
-```
-[Thread A: User]          [Thread B: Event Loop]         [Thread C: Application]
-│ callTool()              │                               │
-│   creates promise       │                               │
-│   posts to dispatcher ───┼──> post_queue_               │
-│   returns future        │                               │
-│                         │ process_posted_callbacks()    │
-│                         │   → generateRequest()         │
-│                         │   → serialize                 │
-│                         │   → write to transport        │
-│                         │                               │
-│                         │ ← on_read_ready()             │
-│                         │   → filter chain             │
-│                         │   → parse response            │
-│                         │   → find pending request      │
-│                         │   → set promise value         │
-│                         │                               │
-│ future.get() ◄───────────────────────────────────────────┘
-│   (blocks until promise set)
-```
-
-## Scaling Considerations
-
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| 0-1 connections | Single dispatcher thread is sufficient. No connection pooling needed. |
-| 1-100 connections | Single dispatcher still fine. Consider connection pool for HTTP transports. |
-| 100-10,000 connections | Multiple worker threads with connection distribution. Enable flow control/backpressure. |
-| 10,000+ connections | Multi-dispatcher with lock-free data structures between threads. Consider SO_REUSEPORT for socket sharding. |
-
-### Scaling Priorities
-
-1. **First bottleneck:** Event loop CPU saturation at high connection count. **Fix:** Add worker threads with epoll-per-thread or SO_REUSEPORT.
-
-2. **Second bottleneck:** Memory allocation from frequent buffer creation. **Fix:** Buffer pooling, arena allocators for per-connection data.
-
-3. **Third bottleneck:** JSON parsing overhead. **Fix:** Consider SIMD JSON parsers (simdjson) for hot paths.
-
-## Anti-Patterns
-
-### Anti-Pattern 1: Locking on Data Path
-
-**What people do:** Protect every shared data structure with mutexes, including the request map and connection state.
-
-**Why it's wrong:** Locks on the hot path cause contention. At high QPS, threads spend more time contending than doing useful work.
-
-**Do this instead:** Use thread-local dispatcher pattern. Each thread owns its connections. Cross-thread communication via lock-free queues (post()). The only shared data is immutable config.
-
-### Anti-Pattern 2: Mixing Sync and Async APIs
-
-**What people do:** Provide both blocking callTool() and async callToolAsync() where the blocking version just waits on the async.
-
-**Why it's wrong:** Users reach for the blocking API "for simplicity," then accidentally block their event loop thread. Deadlocks and poor performance follow.
-
-**Do this instead:** Provide only async API. If users want blocking, they can wrap the future:
-```cpp
-auto result = client.callTool(...).get(); // User's choice, not library's
-```
-
-### Anti-Pattern 3: Callback Hell Without RAII
-
-**What people do:** Raw callback pointers and manual lifetime management. Callbacks outlive their objects, use-after-free.
-
-**Why it's wrong:** C++ without RAII is C. Manual lifetime management in async context is extremely error-prone.
-
-**Do this instead:** Use std::shared_ptr for callback targets, or capture by value in lambdas. Deferred deletion pattern for objects that must outlive callbacks.
-
-### Anti-Pattern 4: Tight Coupling to Transport
-
-**What people do:** JSON-RPC layer knows about HTTP headers. SSE filter assumes TCP socket.
-
-**Why it's wrong:** Cannot add new transports (WebSocket, Unix socket) without modifying core logic.
-
-**Do this instead:** Transport is a byte stream abstraction. Filter chain handles all protocol-specific framing. JSON-RPC layer only sees complete messages.
+Inspector integration and bug fixes primarily touch the **application layer** and **JSON-RPC validation**, not the core library architecture.
 
 ## Integration Points
 
-### External Services
+### With JSON-RPC Layer
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| libevent | Optional backend for Dispatcher | Can use epoll/kqueue directly if preferred |
-| nlohmann/json | JSON encoding/decoding | Header-only, widely used, reliable |
-| OpenSSL | TLS support for WebSocket | Optional, only needed for wss:// |
-| spdlog | Logging | Optional, can use custom logger |
+**Existing components:**
+- `core/json_rpc.h/cpp` - `JsonRpcRequest`, `JsonRpcResponse`, `JsonRpcNotification` types
+- `core/json_rpc.cpp` - `JsonRpcResponse::from_json()` for parsing responses
+- `core/request_tracker.h/cpp` - Request ID generation and pending request tracking
 
-### Internal Boundaries
+**Inspector integration:**
+- Inspector sends JSON-RPC 2.0 requests via stdio
+- `inspector_server.cpp` uses `json::parse()` directly in main loop (line 359)
+- Parse error handling is **ad-hoc in example code** (lines 366-413) with manual string parsing for ID extraction
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| User API ↔ Core | Direct calls (same thread) | User API posts to dispatcher if needed |
-| Core ↔ Filter Chain | Direct method calls | Always on dispatcher thread |
-| Filter Chain ↔ Transport | Direct method calls | Always on dispatcher thread |
-| Transport ↔ Event Loop | Callback registration | File events registered with dispatcher |
-| Cross-thread | Dispatcher::post() | Thread-safe, any thread can post |
+**Bug fix location:**
+- The parse error (-32700) handling in `inspector_server.cpp` is a **workaround**, not architectural
+- Proper fix: Move JSON-RPC parsing into reusable component
+- Consider adding `JsonRpcRequest::from_json()` to mirror existing `JsonRpcResponse::from_json()`
 
-## Thread Safety Strategy
+### With Transport Layer
 
-### Core Principles
+**Existing components:**
+- `transport/Transport` - abstract base class
+- `transport/StdioTransport` - stdio implementation (subprocess communication)
+- `transport/HttpTransport` - HTTP/SSE implementation
 
-1. **Dispatcher thread affinity:** Each connection belongs to one dispatcher thread. All I/O for that connection happens on that thread.
+**Inspector integration:**
+- Inspector uses **stdio transport** via subprocess spawning
+- `inspector_server.cpp` uses manual stdio (`std::getline(std::cin, line)`) instead of `StdioTransport`
+- This is intentional for the example (keeps it simple and self-contained)
 
-2. **Thread-safe posting:** The `post()` method is the only cross-thread communication mechanism. It's lock-free or uses a single mutex.
+**No transport changes needed** - Inspector spawns the server as a subprocess and communicates via stdin/stdout.
 
-3. **Immutable shared config:** Configuration is read-only after initialization. No locks needed to read config.
+### With Build System
 
-4. **Atomic flags only:** Use `std::atomic<bool>` for shutdown flags and similar simple state.
+**Existing structure:**
+- `CMakeLists.txt` - root build, defines `mcpp_static` and `mcpp_shared` targets
+- `examples/CMakeLists.txt` - builds `inspector_server` executable
+- `tests/CMakeLists.txt` - unit and integration tests
 
-### Thread Safety by Layer
+**Inspector integration:**
+- Inspector is **external dependency** in `thirdparty/inspector/` (Node.js-based)
+- Example server links against `mcpp_shared` or `mcpp_static` (conditional on `BUILD_SHARED_LIBS`)
+- No build system changes required for bug fixes
 
-| Layer | Thread Safety | Notes |
-|-------|---------------|-------|
-| User API | Thread-safe | Posts to dispatcher, returns future |
-| JSON-RPC Layer | Dispatcher-thread only | Never called directly from user threads |
-| Filter Chain | Dispatcher-thread only | Filters execute on dispatcher thread |
-| Transport | Dispatcher-thread only | I/O initiated from dispatcher thread |
-| Event Loop | Thread-safe internally | post() from any thread, events dispatched on own thread |
+**Testing infrastructure additions:**
+- New test scripts will likely be shell/Node.js scripts that spawn `inspector_server`
+- These live in `tests/` or new `tests/integration/inspector/` directory
 
-### Request Tracking Thread Safety
+## New Components
+
+### Example Server Enhancements
+
+| Component | Purpose | Notes |
+|-----------|---------|-------|
+| **Improved parse error handling** | Extract ID without ad-hoc string parsing | Move to `JsonRpcRequest::from_json()` |
+| **Request validation wrapper** | Centralized JSON-RPC validation | Add to `core/json_rpc.h` |
+| **Inspector test helper** | Spawn server + connect Inspector | New test utility script |
+
+### Testing Infrastructure
+
+| Component | Purpose | Notes |
+|-----------|---------|-------|
+| **Automated CLI test script** | Run Inspector commands against example server | Shell or Node.js script |
+| **Test fixture server** | Minimal MCP server for testing | May extend existing `inspector_server.cpp` |
+| **Integration test suite** | Validate all MCP methods work via Inspector | Tests in `tests/integration/` |
+
+## Modified Components
+
+| Component | Current State | Required Changes |
+|-----------|--------------|------------------|
+| `inspector_server.cpp` | Manual JSON parsing, ad-hoc error handling | Extract ID from parsed request before catch block; simplify error handling |
+| `core/json_rpc.h` | Has `JsonRpcResponse::from_json()` | Add `JsonRpcRequest::from_json()` for proper parsing |
+| `core/json_rpc.cpp` | Response parsing only | Implement request parsing with validation |
+| `McpServer::handle_request()` | Assumes valid JSON passed in | Add try-catch around method dispatch for proper error responses |
+
+**Key insight:** The bug (-32700 parse error on all tool calls) is likely in how `inspector_server.cpp` handles malformed JSON. The current code catches `json::exception` after parsing fails, then attempts to extract the ID via string parsing. This is fragile.
+
+## Bug Investigation Approach
+
+**JSON-RPC Parse Error (-32700) on all tool calls:**
+
+### Root Cause Hypothesis
+
+The parse error occurs because:
+1. Inspector sends a request that fails `json::parse()`
+2. The catch block extracts ID via ad-hoc string parsing (lines 371-401)
+3. If extraction fails, `id` remains `nullptr`
+4. Error response with `null` ID is confusing/misleading
+
+### Investigation Steps
+
+1. **Add request logging** - Log raw incoming requests before parsing
+2. **Verify Inspector output** - Capture exact JSON Inspector sends
+3. **Test with `JsonRpcRequest::from_json()`** - Implement proper parsing with validation
+4. **Check newline handling** - Ensure stdio messages are properly delimited
+5. **Validate jsonrpc version field** - Inspector may send requests without `"jsonrpc": "2.0"`
+
+### Specific Areas to Check
 
 ```cpp
-// Called from user thread (thread-safe)
-std::future<Response> McpClient::sendRequest(const Request& request) {
-    auto promise = std::make_shared<std::promise<Response>>();
-    auto future = promise->get_future();
+// Current (inspector_server.cpp:359)
+json request = json::parse(line);  // May throw for valid JSON!
+```
 
-    // Post to dispatcher thread
-    dispatcher_->post([this, request, promise]() {
-        // Now on dispatcher thread - safe to access pending_requests_
-        auto id = generateRequestId();
-        pending_requests_[id] = RequestContext{request, promise};
-        sendToTransport(request, id);
-    });
+**Potential issues:**
+- Inspector sends requests with embedded newlines in string values
+- Inspector sends JSON without `"jsonrpc": "2.0"` field
+- Inspector sends requests with `null` id that gets mis-parsed
+- Character encoding issues (UTF-8 BOM, etc.)
 
-    return future;
+### Fix Strategy
+
+1. **Implement `JsonRpcRequest::from_json()`:**
+```cpp
+static std::optional<JsonRpcRequest> from_json(const JsonValue& j);
+```
+   - Returns nullopt for invalid requests
+   - Extracts ID safely before validation
+   - Provides clear error messages
+
+2. **Update `inspector_server.cpp` main loop:**
+```cpp
+auto request = JsonRpcRequest::from_json(request_json);
+if (!request) {
+    // Send proper error with ID extracted safely
+    continue;
 }
-
-// Called from dispatcher thread (not thread-safe, must be on dispatcher)
-void McpClient::handleResponse(const Response& response) {
-    assert(dispatcher_->isThreadSafe());
-    auto it = pending_requests_.find(response.id);
-    if (it != pending_requests_.end()) {
-        it->second.promise.set_value(response);
-        pending_requests_.erase(it);
-    }
-}
+// Use request->method, request->id, etc.
 ```
 
-## Build Order (Dependencies)
+3. **Add request validation in `McpServer::handle_request()`:**
+   - Check for required fields before dispatch
+   - Return proper `-32600` (Invalid Request) for malformed requests
+
+## Build Order
+
+### Phase 1: Bug Fix Foundation (Independent of Inspector)
+
+**Rationale:** Fix the JSON-RPC parsing layer first, as this affects all request handling regardless of transport.
+
+1. **Add `JsonRpcRequest::from_json()`** - `core/json_rpc.h/cpp`
+   - Mirrors existing `JsonRpcResponse::from_json()`
+   - Validates jsonrpc version, method, id fields
+   - Returns std::optional for error handling
+
+2. **Update `McpServer::handle_request()`** - `server/mcp_server.cpp`
+   - Wrap existing logic in try-catch for JSON exceptions
+   - Return proper JSON-RPC error responses
+   - Don't assume valid JSON input
+
+3. **Add unit tests** - `tests/unit/test_json_rpc.cpp`
+   - Test `JsonRpcRequest::from_json()` with valid/invalid input
+   - Test error code generation
+
+**Dependencies:** None (pure library changes)
+
+### Phase 2: Example Server Update
+
+**Rationale:** Update the example server to use the improved parsing layer.
+
+1. **Refactor `inspector_server.cpp`** - `examples/inspector_server.cpp`
+   - Replace manual `json::parse()` with `JsonRpcRequest::from_json()`
+   - Simplify error handling (remove ad-hoc ID extraction)
+   - Use proper error response builder
+
+2. **Manual testing with Inspector**
+   - Run Inspector against updated server
+   - Verify tool calls work without parse errors
+   - Verify error responses have correct IDs
+
+**Dependencies:** Phase 1 (needs `JsonRpcRequest::from_json()`)
+
+### Phase 3: Automated Testing
+
+**Rationale:** Add automated tests to prevent regression.
+
+1. **Create Inspector test script** - `tests/integration/inspector/`
+   - Shell or Node.js script that spawns `inspector_server`
+   - Sends test requests via stdin
+   - Validates responses
+
+2. **Add to CMake test suite** - `tests/CMakeLists.txt`
+   - Use `add_test()` to register integration tests
+   - Requires Inspector to be in PATH
+
+**Dependencies:** Phase 2 (needs working example server)
+
+### Phase 4: Documentation
+
+**Rationale:** Document how to use Inspector for testing.
+
+1. **Update README** - Document Inspector integration
+2. **Add testing guide** - How to run automated tests
+
+**Dependencies:** Phase 3 (tests need to exist first)
+
+## Data Flow
+
+### Inspector Connection Flow
 
 ```
-Phase 1: Foundation (no dependencies between these)
-├── event/          # Event loop - must exist first
-├── core/           # Types, Result, Async utilities
-└── transport/      # Transport interface (no implementations yet)
-
-Phase 2: Protocol Layer (depends on Phase 1)
-├── protocol/       # JSON-RPC types, validation
-└── filter/         # Filter interfaces and chain
-
-Phase 3: Transport Implementations (depends on Phase 1+2)
-├── transport/stdio_transport.cpp
-├── transport/sse_transport.cpp
-└── transport/ws_transport.cpp
-
-Phase 4: Filter Implementations (depends on Phase 2+3)
-├── filter/json_rpc_filter.cpp
-├── filter/framing_filter.cpp
-└── filter/sse_filter.cpp
-
-Phase 5: High-Level API (depends on Phase 1-4)
-├── client/client.cpp
-└── server/server.cpp
+[Inspector CLI (Node.js)]
+       |
+       | 1. Spawn subprocess
+       v
+[inspector_server executable]
+       |
+       | 2. Initialize McpServer
+       v
+[McpServer::handle_request()]
+       |
+       | 3. Route to registry (tools/resources/prompts)
+       v
+[ToolRegistry::call_tool(), etc.]
+       |
+       | 4. Return result
+       v
+[JSON-RPC response via stdout]
+       |
+       v
+[Inspector displays result]
 ```
 
-### Why This Order?
+### Current Bug Scenario
 
-1. **Event loop first:** Everything else needs async scheduling.
-2. **Core types early:** Shared types used everywhere.
-3. **Transport interface before implementation:** Define contract before implementing.
-4. **Filter chain before filters:** Define the pattern before concrete filters.
-5. **Client/Server last:** They coordinate all other components.
+```
+Inspector sends: {"jsonrpc":"2.0","id":1,"method":"tools/call",...}
+                          |
+                          v
+          json::parse(line) succeeds
+                          |
+                          v
+          server.handle_request(request)
+                          |
+                          v
+          [Processing...]
+                          |
+                          v
+          std::cout << response->dump() << std::endl;
+                          |
+                          v
+          Response sent WITHOUT trailing newline?
+          OR response contains embedded newlines?
+                          |
+                          v
+          Inspector sees partial/broken response
+                          |
+                          v
+          Inspector sends error response (-32700)
+```
+
+**Hypothesis:** The bug may be:
+1. Missing newline delimiter (line 363: `response->dump()` without `std::endl`)
+2. Embedded newlines in tool results confuse line-based reading
+3. Response format mismatch (e.g., extra nesting)
+
+## Example Server Relationship to Architecture
+
+The `inspector_server.cpp` is an **application-level example**, not part of the core library:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Application Layer                         │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  inspector_server.cpp                                │   │
+│  │  - Spawns as subprocess                              │   │
+│  │  - Uses stdio directly (not StdioTransport)         │   │
+│  │  - Creates McpServer instance                        │   │
+│  │  - Registers tools/resources/prompts                 │   │
+│  │  - Main loop: read JSON, dispatch, write response    │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                            │ uses
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      Core Library Layer                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │ McpServer    │  │ ToolRegistry │  │ JSON-RPC     │     │
+│  │ (facade)     │  │              │  │ Types        │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key points:**
+- The example server is **user code** demonstrating how to use the library
+- Bug fixes in the example don't affect library API
+- The example can be rewritten without touching core components
+- For production use, users would write their own server using similar patterns
 
 ## Sources
 
-- **Envoy Proxy Architecture:**
-  - [Envoy Threading Model (Official Blog)](https://blog.envoyproxy.io/envoy-threading-model-a8d44b922310)
-  - [Life of a Request (Official Documentation)](https://www.envoyproxy.io/docs/envoy/latest/intro/life_of_a_request)
-  - [Envoy Event and Network Filter Framework Analysis](https://blog.mygraphql.com/zh/posts/cloud/envoy/event-driven-network-filter/)
+- **Code analysis:**
+  - `examples/inspector_server.cpp` (lines 352-414) - main request/response loop
+  - `src/mcpp/server/mcp_server.cpp` (lines 95-180) - `handle_request()` implementation
+  - `src/mcpp/core/json_rpc.h` - JSON-RPC type definitions
+  - `src/mcpp/core/json_rpc.cpp` - Response parsing implementation
 
-- **gopher-mcp Reference Implementation (HIGH confidence):**
-  - `/thirdparty/gopher-mcp/include/mcp/` - Complete C++ MCP implementation
-  - Filter chain architecture directly inspired by Envoy
-  - Event loop abstraction for epoll/kqueue/IOCP
+- **JSON-RPC 2.0 Specification:** https://www.jsonrpc.org/specification
+  - Error code -32700: Parse error (Invalid JSON was received)
+  - Error code -32600: Invalid Request (JSON is valid but not valid JSON-RPC)
 
-- **rmcp Rust SDK (HIGH confidence):**
-  - `/thirdparty/rust-sdk/crates/rmcp/` - Modern MCP implementation
-  - Service trait abstraction and transport interface design
-  - Async patterns with cancellation support
+- **MCP Inspector repository:** `thirdparty/inspector/`
+  - Node.js-based testing tool
+  - Communicates via stdio (subprocess) or HTTP/SSE
 
-- **Async C++ Patterns (MEDIUM confidence):**
-  - [Thread safe asynchronous code - Fuchsia](https://fuchsia.dev/fuchsia-src/development/languages/c-cpp/thread-safe-async) (March 2025)
-  - [Asynchronous Callback API Tutorial | C++](https://grpc.io/docs/languages/cpp/callback/) (June 2024)
-  - [Pipes-and-Filters Architecture Pattern](https://www.modernescpp.com/index.php/pipes-and-filters/) (April 2023)
-
-- **JSON-RPC C++ Implementation (MEDIUM confidence):**
-  - [Building a Modern C++23 JSON-RPC 2.0 Library](https://medium.com/@pooriayousefi/building-a-modern-c-23-json-rpc-2-0-library-b62c4826769d)
-  - [RPC framework with Muduo](https://cloud.tencent.com/developer/article/2517637)
+- **Existing test patterns:** `tests/unit/test_json_rpc.cpp`
+  - Shows how JSON-RPC types are tested
+  - Error code testing patterns
 
 ---
-*Architecture research for: C++ MCP Library (mcpp)*
-*Researched: 2025-01-31*
+*Architecture research for: mcpp v1.1 (Inspector CLI integration + bug fixes)*
+*Researched: 2026-02-01*
