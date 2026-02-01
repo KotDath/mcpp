@@ -126,6 +126,71 @@ json handle_get_time(const std::string& name, const json& args, RequestContext& 
     };
 }
 
+/**
+ * @brief Get server information as JSON
+ * Demonstrates returning structured JSON data from tools
+ */
+json handle_get_server_info(const std::string& name, const json& args, RequestContext& ctx) {
+    // Build the tools list
+    json::array_t tools_list = {"calculate", "echo", "get_time", "server_info"};
+    json tools_info = {
+        {"count", 4},
+        {"list", tools_list}
+    };
+
+    // Build the resources list
+    json::array_t resources_list = {"file://tmp/mcpp_test.txt", "info://server"};
+    json resources_info = {
+        {"count", 2},
+        {"list", resources_list}
+    };
+
+    // Build the prompts list
+    json::array_t prompts_list = {"code_review", "greeting"};
+    json prompts_info = {
+        {"count", 2},
+        {"list", prompts_list}
+    };
+
+    // Build capabilities object
+    json capabilities = {
+        {"tools", tools_info},
+        {"resources", resources_info},
+        {"prompts", prompts_info}
+    };
+
+    // Build platform info
+    json platform_info = {
+        {"os", "Linux"},
+        {"compiler", __VERSION__},
+        {"cpp_standard", "C++20"}
+    };
+
+    // Build complete server info
+    json server_info = {
+        {"name", "mcpp Inspector Server"},
+        {"version", "0.1.0"},
+        {"protocol", "2025-11-25"},
+        {"capabilities", capabilities},
+        {"uptime_seconds", 0},
+        {"platform", platform_info}
+    };
+
+    // Return as resource content type with embedded JSON
+    json::array_t content_array = {
+        {
+            {"type", "resource"},
+            {"uri", "info://server"},
+            {"mime_type", "application/json"},
+            {"data", server_info}
+        }
+    };
+
+    return json{
+        {"content", content_array}
+    };
+}
+
 // ============================================================================
 // Resource Handlers
 // ============================================================================
@@ -300,6 +365,14 @@ int main(int argc, char* argv[]) {
         handle_get_time
     );
 
+    // Register server_info tool - demonstrates returning structured JSON
+    server.register_tool(
+        "server_info",
+        "Get server information and capabilities as JSON",
+        json::parse(R"({"type": "object"})"),
+        handle_get_server_info
+    );
+
     // Register resources
     server.register_resource(
         "file://tmp/mcpp_test.txt",
@@ -344,158 +417,111 @@ int main(int argc, char* argv[]) {
     );
 
     // Debug logging for registered capabilities (uses MCPP_DEBUG_LOG from Phase 8)
-    MCPP_DEBUG_LOG("Registered: 3 tools (calculate, echo, get_time)");
+    MCPP_DEBUG_LOG("Registered: 4 tools (calculate, echo, get_time, server_info)");
     MCPP_DEBUG_LOG("Registered: 2 resources (file://tmp/mcpp_test.txt, info://server)");
     MCPP_DEBUG_LOG("Registered: 2 prompts (code_review, greeting)");
     MCPP_DEBUG_LOG("Starting server loop...");
 
-    // Main event loop: read JSON-RPC from stdin using MCP stdio transport protocol
-    // MCP stdio format: "Content-Length: <bytes>\r\n\r\n<json>"
+    // Main event loop: read JSON-RPC from stdin
+    // Handles both MCP stdio protocol (Content-Length headers) and line-delimited JSON
     // See: https://modelcontextprotocol.io/specification/2024-11-05/basic/transport/
     int64_t auto_id = 1;  // Auto-generated ID for requests without id
     while (true) {
-        // Read Content-Length header
+        // Read first line (either Content-Length header or line-delimited JSON)
         std::string header_line;
         if (!std::getline(std::cin, header_line)) {
             break;  // EOF
         }
+
+        MCPP_DEBUG_LOG("First line: '%s' (len=%zu)", header_line.c_str(), header_line.size());
 
         // Skip empty lines (keep-alive)
         if (header_line.empty()) {
             continue;
         }
 
+        json raw;
+        bool uses_content_length = false;
+
         // Check if this is a Content-Length header
-        if (header_line.find("Content-Length:") != 0) {
-            // Not using stdio transport protocol - fall back to line-delimited JSON
-            // This handles direct testing with echo pipes
-            MCPP_DEBUG_LOG("Non-stdio protocol, treating as line-delimited JSON");
+        if (header_line.find("Content-Length:") == 0) {
+            // MCP stdio protocol: parse Content-Length header
+            uses_content_length = true;
 
-            try {
-                json raw = json::parse(header_line);
-
-                if (!raw.contains("method")) {
-                    continue;
-                }
-
-                std::string method = raw["method"].get<std::string>();
-                bool is_notification = (method.find("notifications/") == 0);
-
-                if (!raw.contains("jsonrpc")) {
-                    raw["jsonrpc"] = "2.0";
-                }
-                if (!raw.contains("id") && !is_notification) {
-                    raw["id"] = auto_id++;
-                }
-
-                if (auto parsed = mcpp::core::JsonRpcRequest::from_json(raw)) {
-                    std::optional<json> response = server.handle_request(raw);
-                    if (response.has_value()) {
-                        std::cout << response->dump() << "\n" << std::flush;
-                    }
-                }
-            } catch (...) {
-                // Skip invalid JSON in fallback mode
+            size_t colon_pos = header_line.find(':');
+            std::string length_str = header_line.substr(colon_pos + 1);
+            size_t start = length_str.find_first_not_of(" \t");
+            size_t end = length_str.find_last_not_of(" \t\r\n");
+            if (start == std::string::npos) {
+                continue;
             }
-            continue;
-        }
+            length_str = length_str.substr(start, end - start + 1);
 
-        // Parse Content-Length value
-        size_t colon_pos = header_line.find(':');
-        if (colon_pos == std::string::npos) {
-            continue;
-        }
-
-        std::string length_str = header_line.substr(colon_pos + 1);
-        // Trim whitespace
-        size_t start = length_str.find_first_not_of(" \t\r\n");
-        size_t end = length_str.find_last_not_of(" \t\r\n");
-        if (start == std::string::npos) {
-            continue;
-        }
-        length_str = length_str.substr(start, end - start + 1);
-
-        int content_length;
-        try {
-            content_length = std::stoi(length_str);
-        } catch (...) {
-            continue;
-        }
-
-        // Read the blank line after headers
-        std::string blank;
-        std::getline(std::cin, blank);
-
-        // Read exactly content_length bytes for the JSON payload
-        std::string json_payload;
-        json_payload.resize(content_length);
-        std::cin.read(&json_payload[0], content_length);
-
-        // Also consume the trailing newline
-        std::cin.get();
-
-        MCPP_DEBUG_LOG("Received (%zu bytes): %s", json_payload.size(), json_payload.c_str());
-
-        try {
-            // Parse raw JSON
-            json raw = json::parse(json_payload);
-
-            // Check if this looks like a JSON-RPC message (has method field)
-            if (!raw.contains("method")) {
-                MCPP_DEBUG_LOG("Skipping message without method field");
+            int content_length;
+            try {
+                content_length = std::stoi(length_str);
+            } catch (...) {
                 continue;
             }
 
-            std::string method = raw["method"].get<std::string>();
-            bool is_notification = (method.find("notifications/") == 0);
+            // Read the blank line after headers
+            std::string blank;
+            std::getline(std::cin, blank);
 
-            // Add jsonrpc field if missing (shouldn't happen with proper MCP clients)
-            if (!raw.contains("jsonrpc")) {
-                raw["jsonrpc"] = "2.0";
-            }
+            // Read exactly content_length bytes for the JSON payload
+            std::string json_payload;
+            json_payload.resize(content_length);
+            std::cin.read(&json_payload[0], content_length);
+            std::cin.get();  // Consume trailing newline
 
-            // Add id for non-notification requests that lack one (Inspector compatibility)
-            if (!raw.contains("id") && !is_notification) {
-                raw["id"] = auto_id++;
-            }
+            MCPP_DEBUG_LOG("Content-Length mode: received %zu bytes", json_payload.size());
+            raw = json::parse(json_payload);
+        } else {
+            // Line-delimited JSON mode (Inspector CLI, manual testing)
+            MCPP_DEBUG_LOG("Line-delimited mode: parsing as JSON");
+            raw = json::parse(header_line);
+        }
 
-            // Use Phase 8 validation layer - validates full JSON-RPC 2.0 structure
-            if (auto parsed = mcpp::core::JsonRpcRequest::from_json(raw)) {
-                // Valid JSON-RPC request - process with server
-                std::optional<json> response = server.handle_request(raw);
-                if (response.has_value()) {
-                    // Send response using MCP stdio format with Content-Length header
-                    std::string response_str = response->dump();
+        MCPP_DEBUG_LOG("Parsed method: %s", raw["method"].get<std::string>().c_str());
+
+        // Check if this looks like a JSON-RPC message (has method field)
+        if (!raw.contains("method")) {
+            MCPP_DEBUG_LOG("Skipping message without method field");
+            continue;
+        }
+
+        std::string method = raw["method"].get<std::string>();
+        bool is_notification = (method.find("notifications/") == 0);
+
+        // Add jsonrpc field if missing (shouldn't happen with proper clients)
+        if (!raw.contains("jsonrpc")) {
+            raw["jsonrpc"] = "2.0";
+        }
+
+        // Add id for non-notification requests that lack one
+        if (!raw.contains("id") && !is_notification) {
+            raw["id"] = auto_id++;
+        }
+
+        // Use Phase 8 validation layer - validates full JSON-RPC 2.0 structure
+        if (auto parsed = mcpp::core::JsonRpcRequest::from_json(raw)) {
+            // Valid JSON-RPC request - process with server
+            std::optional<json> response = server.handle_request(raw);
+            if (response.has_value()) {
+                // Send response in the same format as the request
+                std::string response_str = response->dump();
+                if (uses_content_length) {
                     std::cout << "Content-Length: " << response_str.size() << "\r\n\r\n" << response_str << std::flush;
+                } else {
+                    std::cout << response_str << "\n" << std::flush;
                 }
-                // Notifications have no response
-            } else {
-                // Validation failed - extract ID for proper error response
-                mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(json_payload);
-
-                json error_response = {
-                    {"jsonrpc", "2.0"},
-                    {"error", {
-                        {"code", -32700},
-                        {"message", "Parse error"}
-                    }},
-                    {"id", std::visit([](auto&& v) -> json {
-                        using T = std::decay_t<decltype(v)>;
-                        if constexpr (std::is_same_v<T, int64_t>) {
-                            return v;
-                        } else if constexpr (std::is_same_v<T, std::string>) {
-                            return v;
-                        }
-                        return nullptr;
-                    }, id)}
-                };
-                std::string error_str = error_response.dump();
-                std::cout << "Content-Length: " << error_str.size() << "\r\n\r\n" << error_str << std::flush;
+                MCPP_DEBUG_LOG("Sent response (%zu bytes)", response_str.size());
             }
-        } catch (const json::exception& e) {
-            MCPP_DEBUG_LOG("JSON parse error: {}", e.what());
-            // Completely malformed JSON - still try to extract ID for error response
-            mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(json_payload);
+            // Notifications have no response
+        } else {
+            // Validation failed - extract ID for proper error response
+            mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(
+                uses_content_length ? "" : header_line);
 
             json error_response = {
                 {"jsonrpc", "2.0"},
@@ -514,7 +540,12 @@ int main(int argc, char* argv[]) {
                 }, id)}
             };
             std::string error_str = error_response.dump();
-            std::cout << "Content-Length: " << error_str.size() << "\r\n\r\n" << error_str << std::flush;
+            if (uses_content_length) {
+                std::cout << "Content-Length: " << error_str.size() << "\r\n\r\n" << error_str << std::flush;
+            } else {
+                std::cout << error_str << "\n" << std::flush;
+            }
+            MCPP_DEBUG_LOG("Sent error response");
         }
     }
 

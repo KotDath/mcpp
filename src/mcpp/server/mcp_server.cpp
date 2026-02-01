@@ -362,7 +362,14 @@ std::optional<std::string> McpServer::extract_progress_token(const nlohmann::jso
     if (params.contains("_meta") && params["_meta"].is_object()) {
         const auto& meta = params["_meta"];
         if (meta.contains("progressToken")) {
-            return meta["progressToken"].get<std::string>();
+            const auto& token = meta["progressToken"];
+            // Handle both string and number types for progressToken
+            // Inspector sends number, other clients may send string
+            if (token.is_string()) {
+                return token.get<std::string>();
+            } else if (token.is_number()) {
+                return std::to_string(token.get<int64_t>());
+            }
         }
     }
     return std::nullopt;
