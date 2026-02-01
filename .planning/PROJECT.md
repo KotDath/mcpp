@@ -4,7 +4,17 @@
 
 A modern C++17 library for building Model Context Protocol (MCP) clients and servers. Provides full MCP 2025-11-25 spec coverage with all transports (stdio, SSE), fast JSON-RPC handling, and minimal blocking operations. Distributed under MIT license for both static and shared library use.
 
-**Current State:** v1.0 shipped 2026-02-01 with 52/52 requirements satisfied, 184/184 tests passing, production-ready build system
+**Current State:** v1.1 in development — fixing critical JSON-RPC parse error bug, adding MCP Inspector integration, improving test coverage
+
+## Current Milestone: v1.1 Stability & Inspector Integration
+
+**Goal:** Fix critical JSON-RPC parse error bug and enable proper testing via MCP Inspector CLI mode.
+
+**Target features:**
+- Fix JSON-RPC parse error (-32700) affecting all tool calls
+- Build example server compatible with `npx @modelcontextprotocol/inspector`
+- Create automated CLI testing scripts for CI/CD
+- Add comprehensive edge case and integration tests
 
 ## Core Value
 
@@ -28,7 +38,10 @@ Developers can build MCP clients and servers in C++ that are fast, correct, and 
 
 ### Active
 
-(None - all v1 requirements shipped. Next milestone will define new requirements.)
+- [ ] Fix JSON-RPC parse error (-32700) on tool calls — v1.1
+- [ ] MCP Inspector example server for CLI/UI testing — v1.1
+- [ ] Automated CLI testing scripts for CI/CD — v1.1
+- [ ] Improved test coverage (edge cases, integration tests) — v1.1
 
 ### Out of Scope
 
@@ -90,6 +103,7 @@ Developers can build MCP clients and servers in C++ that are fast, correct, and 
 - Sanitizer testing: AddressSanitizer/LeakSanitizer and ThreadSanitizer documented in README
 
 **Known issues:**
+- **CRITICAL**: JSON-RPC parse error (-32700) on all tool calls — needs investigation and fix
 - CMake 3.31 with GCC 15 has object file directory creation issue (workaround documented)
 - Optional nlohmann/json-schema-validator dependency (conditionally compiled via MCPP_HAS_JSON_SCHEMA)
 - NullTransport not exported in public headers (internal use only)
@@ -116,11 +130,9 @@ Developers can build MCP clients and servers in C++ that are fast, correct, and 
 | User-provided HTTP server integration | Library provides MCP protocol, not HTTP infrastructure | ✓ Template adapter pattern working |
 | Optional json-schema dependency | Not all users need output validation | ✓ Conditional compilation working |
 
-## Next Milestone Goals
+## Future Milestones
 
-(Potential directions for v1.1 — to be defined with user input)
-
-Possible areas:
+Potential areas for v1.2+:
 - WebSocket transport (if added to MCP spec)
 - Zero-copy types for performance optimization
 - Header-only build option for easier distribution
@@ -129,4 +141,4 @@ Possible areas:
 - Additional examples and tutorials
 
 ---
-*Last updated: 2026-02-01 after v1.0 milestone*
+*Last updated: 2026-02-01 after starting v1.1 milestone*
