@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 10 of 10 (Automated CLI Testing)
-Plan: 4 of 4 in current phase
+Plan: 6 of 6 in current phase
 Status: Phase complete
-Last activity: 2026-02-01 — Completed 10-04 (Server Lifecycle Tests and CMake Integration)
+Last activity: 2026-02-01 — Completed 10-06 (Common Setup Refactoring)
 
-Progress: [████████████████████] 100% (52/52 complete counting Phase 10 plans)
+Progress: [████████████████████] 100% (54/54 complete including gap closure plans)
 
 ## Milestone Archive
 
@@ -39,9 +39,10 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 52 (48 v1.0 + 3 v1.1 + 1 phase 10)
+- Total plans completed: 56 (48 v1.0 + 3 v1.1 + 5 phase 10)
 - v1.0 duration: 105 days (~2.3 days/plan average, includes research and delays)
 - v1.1 duration: 1 day (rapid bug fixes and Inspector integration)
+- Phase 10 duration: 1 day (BATS testing infrastructure + gap closure)
 
 **By Phase:**
 
@@ -56,7 +57,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 | 7 | 6 | Complete |
 | 8 | 2 | Complete |
 | 9 | 3 | Complete |
-| 10 | 4 of 4 | Complete |
+| 10 | 6 | Complete |
 
 **Recent Trend:**
 - v1.0 completed successfully 2026-02-01
@@ -109,6 +110,8 @@ Recent decisions affecting current work:
 - 10-04: CMake/CTest integration with find_program(BATS_PROGRAM) and find_program(JQ_PROGRAM)
 - 10-04: RUN_SERIAL TRUE property on CLI tests to prevent parallel execution conflicts
 - 10-04: Conditional test registration - CLI tests skipped non-fatally if bats/jq unavailable
+- 10-06: All CLI test files use common-setup.bash helper consistently
+- 10-06: Setup logic centralized in one file - ~36 lines of duplicated code eliminated
 
 ### Blockers/Concerns
 
@@ -132,7 +135,7 @@ None. v1.1 milestone complete. Phase 10 in progress.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 10-04-PLAN.md (Server Lifecycle Tests and CMake Integration)
+Stopped at: Completed 10-06-PLAN.md (Common Setup Refactoring)
 Resume file: None
 
 **Phase 10 Progress:**
@@ -140,5 +143,7 @@ Resume file: None
 - 10-02: Inspector Server Basic Tests (COMPLETE)
 - 10-03: Protocol Coverage Tests (COMPLETE)
 - 10-04: Server Lifecycle Tests and CMake Integration (COMPLETE)
+- 10-05: N/A (merged into other plans)
+- 10-06: Common Setup Refactoring (COMPLETE)
 
-**Phase 10 COMPLETE** — All 4 plans finished, 45 CLI tests passing, CMake integration complete.
+**Phase 10 COMPLETE** — All 6 plans finished (including gap closure), 45 CLI tests passing, CMake integration complete, Gap 2 closed.
