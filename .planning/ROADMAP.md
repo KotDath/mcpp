@@ -57,7 +57,12 @@ Plans:
   2. Parse error responses include properly extracted request ID
   3. mcp.json configuration enables standard Inspector compatibility
   4. Manual testing with MCP Inspector CLI succeeds (tools/call works)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Add JsonRpcRequest::extract_request_id() helper for parse error responses
+- [ ] 09-02-PLAN.md — Update inspector_server.cpp to use from_json() validation layer
+- [ ] 09-03-PLAN.md — Create mcp.json configuration and TESTING.md documentation
 
 #### Phase 10: Automated CLI Testing
 **Goal**: Bats-core test suite validates all MCP methods via Inspector
@@ -95,7 +100,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11
 | 6. High-Level API | v1.0 | 7/7 | Complete | 2026-02-01 |
 | 7. Build & Validation | v1.0 | 6/6 | Complete | 2026-02-01 |
 | 8. Bug Fix Foundation | v1.1 | 2/2 | Complete | 2026-02-01 |
-| 9. Inspector Server Integration | v1.1 | 0/TBD | Not started | - |
+| 9. Inspector Server Integration | v1.1 | 0/3 | Not started | - |
 | 10. Automated CLI Testing | v1.1 | 0/TBD | Not started | - |
 | 11. Documentation | v1.1 | 0/TBD | Not started | - |
 
