@@ -1,26 +1,26 @@
-# mcpp
+# mcpp - MCP C++ Library
 
-C++ SDK for [MCP (Model Context Protocol)](https://modelcontextprotocol.io). Build MCP clients and servers in C++ with full protocol support.
+A modern C++ library for building Model Context Protocol (MCP) clients and servers. Provides full MCP 2025-11-25 spec coverage with all transports, fast JSON-RPC handling, and minimal blocking operations.
 
 ## Features
 
-- **Full MCP Protocol Support**: Implements MCP protocol version 2025-11-25
-- **Tools**: Register and call tools with JSON Schema validation
-- **Resources**: Expose data resources with URI-based discovery
-- **Prompts**: Create reusable prompt templates
-- **Transports**: Stdio transport for subprocess communication
-- **Type-Safe C++ API**: Modern C++20 with clean, idiomatic interface
-- **Header-Only Components**: Many utilities are header-only for easy integration
+- **Full MCP 2025-11-25 spec support**: Tools, resources, prompts, logging, sampling, roots, progress, cancellations, streaming
+- **Multiple transports**: stdio and Streamable HTTP (SSE)
+- **Fast and correct**: JSON-RPC 2.0 compliant with minimal blocking operations
+- **Thread-safe**: All public methods safe to call from any thread
+- **Layered API**: Low-level callback core + high-level RAII wrappers
+- **Permissive license**: MIT for both static and shared library distribution
+
+## Requirements
+
+- C++20 compiler (gcc-11+, clang-12+, MSVC 2019+)
+- CMake 3.16+
+- nlohmann/json 3.11+ (included in third_party/)
+- spdlog 1.8+ (optional, for logging)
 
 ## Building
 
-### Prerequisites
-
-- C++20 compiler (GCC 10+, Clang 12+, MSVC 2019+)
-- CMake 3.16+
-- [nlohmann/json](https://github.com/nlohmann/json) (included as header-only)
-
-### Build Steps
+### Quick Start
 
 ```bash
 # Clone the repository
@@ -33,108 +33,86 @@ cmake --build build
 
 # Run tests
 ctest --test-dir build --output-on-failure
+
+# Install (optional)
+cmake --install build --prefix /usr/local
 ```
 
 ### Build Options
 
-- `BUILD_SHARED_LIBS=ON`: Build shared libraries (default: ON)
-- `MCPP_BUILD_TESTS=ON`: Build tests (default: ON)
-- `MCPP_BUILD_EXAMPLES=ON`: Build examples (default: ON)
+```bash
+# Build static library only
+cmake -B build -DBUILD_SHARED_LIBS=OFF
 
-## Quick Start
+# Disable tests
+cmake -B build -DMCPP_BUILD_TESTS=OFF
 
-### Creating an MCP Server
+# Disable examples
+cmake -B build -DMCPP_BUILD_EXAMPLES=OFF
+
+# Debug build with sanitizers
+cmake -B build -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=leak -g"
+```
+
+## Usage
+
+### Basic Server
 
 ```cpp
 #include "mcpp/server/mcp_server.h"
-#include <nlohmann/json.hpp>
-
-using namespace mcpp;
-using namespace mcpp::server;
+#include "mcpp/transport/stdio_transport.h"
 
 int main() {
-    // Create MCP server
-    McpServer server("my-server", "1.0.0");
+    auto transport = std::make_unique<mcpp::StdioTransport>();
+    mcpp::server::McpServer server(std::move(transport));
 
     // Register a tool
-    server.register_tool(
+    server.get_tool_registry().register_tool(
         "calculate",
-        "Perform arithmetic operations",
-        nlohmann::json::parse(R"({
-            "type": "object",
-            "properties": {
-                "x": {"type": "number"},
-                "y": {"type": "number"}
-            }
-        })"),
-        [](const std::string& name, const nlohmann::json& args, RequestContext& ctx) {
-            double x = args["x"];
-            double y = args["y"];
-            return nlohmann::json{
-                {"content", nlohmann::json::array({
-                    {{"type", "text"}, {"text", std::to_string(x + y)}}
-                })}
+        {{"description", "Perform calculations"}},
+        [](const nlohmann::json& params) {
+            double a = params["a"];
+            double b = params["b"];
+            return mcpp::server::ToolResult{
+                {"content", nlohmann::json::array({{
+                    {"type", "text"},
+                    {"text", std::to_string(a + b)}
+                }})}
             };
         }
     );
 
-    // Main event loop
-    std::string line;
-    while (std::getline(std::cin, line)) {
-        auto request = nlohmann::json::parse(line);
-        auto response = server.handle_request(request);
-        if (response) {
-            std::cout << response->dump() << std::endl;
-        }
-    }
-
+    // Run server
+    server.run();
     return 0;
 }
 ```
 
-### Creating an MCP Client
+### Basic Client
 
 ```cpp
 #include "mcpp/client.h"
-
-using namespace mcpp;
+#include "mcpp/transport/stdio_transport.h"
 
 int main() {
-    // Create client with stdio transport
-    auto transport = std::make_unique<StdioTransport>();
-    McpClient client(std::move(transport));
+    auto transport = std::make_unique<mcpp::StdioTransport>();
+    mcpp::McpClient client(std::move(transport));
 
     // Set message handler
-    client.set_message_handler([](std::string_view method, const nlohmann::json& params) {
-        // Handle server requests
-        return nlohmann::json{};
+    client.set_notification_handler([](const nlohmann::json& notification) {
+        std::cout << "Received: " << notification.dump(2) << std::endl;
     });
 
-    // Connect and initialize
-    client.connect();
+    // Initialize
+    auto init_result = client.initialize({
+        {"protocolVersion", "2025-11-25"},
+        {"capabilities", nlohmann::json::object()},
+        {"clientInfo", {{"name", "my_client"}, {"version", "1.0"}}}
+    });
 
-    client.initialize(
-        InitializeRequestParams{
-            {"protocolVersion", "2025-11-25"},
-            {"capabilities", nlohmann::json::object()},
-            {"clientInfo", {{"name", "my-client"}, {"version", "1.0"}}}
-        },
-        [](const InitializeResult& result) {
-            std::cout << "Connected to " << result.serverInfo.name << std::endl;
-        },
-        [](const JsonRpcError& error) {
-            std::cerr << "Init failed: " << error.message << std::endl;
-        }
-    );
-
-    // List available tools
-    client.list_tools(
-        [](const nlohmann::json& tools) {
-            for (const auto& tool : tools["tools"]) {
-                std::cout << "Tool: " << tool["name"] << std::endl;
-            }
-        }
-    );
+    // Call a tool
+    auto result = client.call_tool("calculate", {{"a", 5}, {"b", 3}});
 
     return 0;
 }
@@ -144,7 +122,7 @@ int main() {
 
 ### Inspector Server
 
-An example MCP server compatible with [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is provided:
+An example MCP server for testing with MCP Inspector:
 
 ```bash
 # Build the example
@@ -155,69 +133,107 @@ mcp-inspector connect stdio ./build/examples/inspector_server
 ```
 
 The inspector server demonstrates:
-- **Tools**: `calculate`, `echo`, `get_time`
-- **Resources**: `file://tmp/mcpp_test.txt`, `info://server`
-- **Prompts**: `greeting`, `code_review`
+- Tool registration (calculate, echo, get_time)
+- Resource serving (file reading, server info)
+- Prompt templates (greeting, code review)
 
-### Testing with MCP Inspector
-
-[MCP Inspector](https://github.com/modelcontextprotocol/inspector) is an interactive tool for testing MCP servers:
-
-1. Install Inspector:
-   ```bash
-   npm install -g @modelcontextprotocol/inspector
-   ```
-
-2. Connect to your server:
-   ```bash
-   mcp-inspector connect stdio ./build/examples/inspector_server
-   ```
-
-3. In the Inspector UI:
-   - View available tools, resources, and prompts
-   - Call tools with parameters
-   - Read resources
-   - Generate prompts with arguments
-
-## Running Tests
+## Testing
 
 ```bash
-# Build all tests
-cmake --build build
+# Run all tests
+ctest --test-dir build
 
-# Run unit tests
-ctest --test-dir build -L unit --output-on-failure
+# Run specific test suites
+ctest --test-dir build -L unit      # Unit tests only
+ctest --test-dir build -L integration  # Integration tests only
+ctest --test-dir build -L compliance   # JSON-RPC compliance tests
 
-# Run integration tests
-ctest --test-dir build -L integration --output-on-failure
+# Run with verbose output
+ctest --test-dir build --verbose
 
 # Run specific test
-./build/tests/mcpp_unit_tests --gtest_filter="JsonRpc*"
+./build/tests/mcpp_unit_tests --gtest_filter="JsonRpcRequest.*"
 ```
 
-## Protocol Support
+### Sanitizer Testing
 
-mcpp implements the following MCP capabilities:
+```bash
+# AddressSanitizer + LeakSanitizer
+cmake -B build/sanitizer -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=leak -fno-omit-frame-pointer -g" \
+      -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address -fsanitize=leak"
+cmake --build build/sanitizer
+ctest --test-dir build/sanitizer
 
-| Capability | Status |
-|------------|--------|
-| Tools | Full support |
-| Resources | Full support |
-| Prompts | Full support |
-| Roots | Client support |
-| Sampling | Client support |
-| Tasks | Experimental support |
+# ThreadSanitizer (separate build)
+cmake -B build/tsan -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_CXX_FLAGS="-fsanitize=thread -g" \
+      -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread"
+cmake --build build/tsan
+ctest --test-dir build/tsan
+```
+
+## Installation
+
+```bash
+# Install to system (requires sudo)
+sudo cmake --install build --prefix /usr/local
+
+# Install to custom location
+cmake --install build --prefix $HOME/.local
+
+# Use in CMake project
+find_package(mcpp REQUIRED)
+target_link_libraries(my_app PRIVATE mcpp::mcpp)
+```
+
+## Project Structure
+
+```
+mcpp/
+├── CMakeLists.txt          # Root build configuration
+├── LICENSE                 # MIT license
+├── README.md               # This file
+├── src/
+│   └── mcpp/              # Public headers
+│       ├── api/           # High-level API
+│       ├── async/         # Callback types and timeout
+│       ├── client/        # Client implementation
+│       ├── core/          # JSON-RPC and request tracking
+│       ├── content/       # Content types and pagination
+│       ├── protocol/      # MCP protocol types
+│       ├── server/        # Server implementation
+│       ├── transport/     # Transport layer
+│       └── util/          # Utilities (logging, retry, etc.)
+├── tests/
+│   ├── unit/             # Unit tests
+│   ├── integration/      # Integration tests
+│   ├── compliance/       # JSON-RPC spec tests
+│   └── fixtures/         # Test utilities
+├── examples/             # Example programs
+└── third_party/          # Vendored dependencies
+```
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please:
 
-## Links
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Ensure all tests pass
+5. Submit a pull request
 
-- [MCP Specification](https://spec.modelcontextprotocol.io/)
+## Resources
+
+- [MCP Specification](https://modelcontextprotocol.io)
 - [MCP Inspector](https://github.com/modelcontextprotocol/inspector)
-- [Example Servers](https://github.com/modelcontextprotocol/servers)
+- [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
+
+## Status
+
+This project is in active development. Version 0.1.0-alpha targets full MCP 2025-11-25 spec support.
