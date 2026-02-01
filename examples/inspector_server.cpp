@@ -23,6 +23,8 @@
 
 #include "mcpp/server/mcp_server.h"
 #include "mcpp/transport/null_transport.h"
+#include "mcpp/util/logger.h"
+#include "mcpp/core/json_rpc.h"
 
 #include <iostream>
 #include <fstream>
