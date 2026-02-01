@@ -62,7 +62,15 @@ struct HttpRequest {
     std::string method;
     std::string path;
     std::string body;
-    std::string get_header(const std::string& name) const;
+    std::unordered_map<std::string, std::string> headers;
+
+    std::string get_header(const std::string& name) const {
+        auto it = headers.find(name);
+        if (it != headers.end()) {
+            return it->second;
+        }
+        return "";
+    }
 };
 
 /**
@@ -190,7 +198,8 @@ int main() {
         std::string session_id = req.get_header("Mcp-Session-Id");
 
         // Create adapter wrapping user's HTTP response
-        HttpResponseAdapter<HttpResponse> adapter(res);
+        // HttpResponseAdapter is a nested class template in HttpTransport
+        HttpTransport::HttpResponseAdapter<HttpResponse> adapter(res);
 
         // Handle POST via HttpTransport
         http_transport.handle_post_request(req.body, session_id, adapter);
@@ -207,7 +216,8 @@ int main() {
         std::string last_event_id = req.get_header("Last-Event-ID");
 
         // Create SSE writer adapter wrapping user's HTTP response
-        HttpSseWriterAdapter<HttpSseWriter> writer(static_cast<HttpSseWriter&>(res));
+        // HttpSseWriterAdapter is a nested class template in HttpTransport
+        HttpTransport::HttpSseWriterAdapter<HttpSseWriter> writer(static_cast<HttpSseWriter&>(res));
 
         // Handle GET via HttpTransport (sends buffered messages via SSE)
         http_transport.handle_get_request(session_id, last_event_id, writer);
