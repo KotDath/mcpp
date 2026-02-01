@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 10 of 10 (Automated CLI Testing)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-01 — Completed 10-01 (BATS Testing Infrastructure)
+Last activity: 2026-02-01 — Completed 10-02 (Inspector Server Basic Tests)
 
-Progress: [████████░░░░░░░░░░░░] 52% (49/52 complete counting Phase 10 plans)
+Progress: [█████████░░░░░░░░░░░] 53% (50/52 complete counting Phase 10 plans)
 
 ## Milestone Archive
 
@@ -62,9 +62,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 - v1.0 completed successfully 2026-02-01
 - Phase 8 (Bug Fix Foundation) complete — JsonRpcRequest::from_json() validation + stdio protocol helpers
 - Phase 9 complete: Inspector server integration with MCP stdio transport, notification handling, and full UI/CLI compatibility
-- Phase 10 started: BATS testing infrastructure setup
+- Phase 10 progressing: BATS testing infrastructure complete, basic MCP protocol tests complete
 
-*Updated: 2026-02-01 (Phase 10-01 complete)*
+*Updated: 2026-02-01 (Phase 10-02 complete)*
 
 ## Accumulated Context
 
@@ -97,6 +97,10 @@ Recent decisions affecting current work:
 - 10-01: MCPP_DEBUG=1 exported by default for all test executions
 - 10-01: PATH-based binary discovery for inspector_server in tests
 - 10-01: Common _common_setup() function pattern for all CLI test files
+- 10-02: common-setup.bash (not .sh) for bats-core load builtin compatibility
+- 10-02: Project root calculated as BATS_TEST_DIRNAME/../.. from tests/cli/
+- 10-02: Inline JSON requests in tests to avoid subshell export issues
+- 10-02: JSON-RPC validation pattern using jq -e for structure checking
 
 ### Blockers/Concerns
 
@@ -120,11 +124,11 @@ None. v1.1 milestone complete. Phase 10 in progress.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 10-01-PLAN.md (BATS Testing Infrastructure)
+Stopped at: Completed 10-02-PLAN.md (Inspector Server Basic Tests)
 Resume file: None
 
 **Phase 10 Progress:**
 - 10-01: BATS Testing Infrastructure (COMPLETE)
-- 10-02: Inspector Server Basic Tests (pending)
+- 10-02: Inspector Server Basic Tests (COMPLETE)
 - 10-03: Protocol Coverage Tests (pending)
 - 10-04: Test Stabilization (pending)
