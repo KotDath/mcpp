@@ -98,3 +98,102 @@ gtest_discover_tests(mcpp_compliance_tests
     LABELS compliance
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+# ============================================================================
+# CLI Tests (BATS)
+# ============================================================================
+
+# Note: bats-core is installed as a Git submodule in tests/cli/bats
+# Run: git submodule update --init --recursive
+# If bats is not found, CLI tests will be skipped (not fatal)
+
+# Find bats and jq for CLI tests
+find_program(BATS_PROGRAM bats)
+find_program(JQ_PROGRAM jq)
+
+# Add CLI tests only if bats and jq are available
+if(BATS_PROGRAM AND JQ_PROGRAM)
+    # Add a test that runs the entire bats suite
+    add_test(
+        NAME cli-tests
+        COMMAND ${BATS_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/cli
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    # Set test properties for CTest
+    # RUN_SERIAL: Prevents parallel execution to avoid port conflicts
+    # ENVIRONMENT PATH: Ensures inspector_server is found in build/examples
+    set_tests_properties(cli-tests PROPERTIES
+        LABELS "cli;bats"
+        RUN_SERIAL TRUE
+        ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/examples:$ENV{PATH}"
+    )
+
+    # Optional: Add individual test files as separate tests for granularity
+    # This allows running specific test suites via ctest -R cli-<name>
+    add_test(
+        NAME cli-initialize
+        COMMAND ${BATS_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/cli/05-initialize.bats
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(cli-initialize PROPERTIES
+        LABELS "cli;bats;initialize"
+        RUN_SERIAL TRUE
+        ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/examples:$ENV{PATH}"
+    )
+
+    add_test(
+        NAME cli-tools-list
+        COMMAND ${BATS_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/cli/01-tools-list.bats
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(cli-tools-list PROPERTIES
+        LABELS "cli;bats;tools"
+        RUN_SERIAL TRUE
+        ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/examples:$ENV{PATH}"
+    )
+
+    add_test(
+        NAME cli-tools-call
+        COMMAND ${BATS_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/cli/02-tools-call.bats
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(cli-tools-call PROPERTIES
+        LABELS "cli;bats;tools"
+        RUN_SERIAL TRUE
+        ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/examples:$ENV{PATH}"
+    )
+
+    add_test(
+        NAME cli-resources
+        COMMAND ${BATS_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/cli/03-resources.bats
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(cli-resources PROPERTIES
+        LABELS "cli;bats;resources"
+        RUN_SERIAL TRUE
+        ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/examples:$ENV{PATH}"
+    )
+
+    add_test(
+        NAME cli-prompts
+        COMMAND ${BATS_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/cli/04-prompts.bats
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(cli-prompts PROPERTIES
+        LABELS "cli;bats;prompts"
+        RUN_SERIAL TRUE
+        ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/examples:$ENV{PATH}"
+    )
+
+    add_test(
+        NAME cli-lifecycle
+        COMMAND ${BATS_PROGRAM} ${CMAKE_CURRENT_SOURCE_DIR}/cli/06-lifecycle.bats
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(cli-lifecycle PROPERTIES
+        LABELS "cli;bats;lifecycle"
+        RUN_SERIAL TRUE
+        ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/examples:$ENV{PATH}"
+    )
+endif()
