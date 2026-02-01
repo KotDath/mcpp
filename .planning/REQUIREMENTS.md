@@ -78,18 +78,18 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Build & Distribution
 
-- [ ] **BUILD-01**: CMake build system (C++17 standard, gcc-11/g++-11 compatible)
-- [ ] **BUILD-02**: Static library build target
-- [ ] **BUILD-03**: Shared library build target with proper versioning (SONAME)
-- [ ] **BUILD-04**: MIT license headers in all source files
+- [x] **BUILD-01**: CMake build system (C++17 standard, gcc-11/g++-11 compatible)
+- [x] **BUILD-02**: Static library build target
+- [x] **BUILD-03**: Shared library build target with proper versioning (SONAME)
+- [x] **BUILD-04**: MIT license headers in all source files
 
 ### Testing & Validation
 
-- [ ] **TEST-01**: Google Test integration (unit tests for core functionality)
-- [ ] **TEST-02**: MCP Inspector integration (integration validation against real MCP clients)
-- [ ] **TEST-03**: JSON-RPC compliance tests (verify protocol correctness)
-- [ ] **TEST-04**: Thread safety tests (verify concurrent access patterns)
-- [ ] **TEST-05**: Async lifetime tests (verify no dangling references)
+- [x] **TEST-01**: Google Test integration (unit tests for core functionality)
+- [x] **TEST-02**: MCP Inspector integration (integration validation against real MCP clients)
+- [x] **TEST-03**: JSON-RPC compliance tests (verify protocol correctness)
+- [x] **TEST-04**: Thread safety tests (verify concurrent access patterns)
+- [x] **TEST-05**: Async lifetime tests (verify no dangling references)
 
 ## v2 Requirements
 

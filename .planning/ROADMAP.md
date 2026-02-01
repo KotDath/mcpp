@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Advanced Features & HTTP Transport** - SSE transport, streaming, subscriptions, completions
 - [x] **Phase 5: Content & Tasks** - Rich content types, annotations, pagination, experimental tasks
 - [x] **Phase 6: High-Level API** - Type-safe wrappers, thread safety, logging, utilities
-- [ ] **Phase 7: Build & Validation** - CMake build, libraries, testing, Inspector integration
+- [x] **Phase 7: Build & Validation** - CMake build, libraries, testing, Inspector integration
 
 ## Phase Details
 
@@ -199,11 +199,12 @@ Plans:
 8. Library consumer can run thread safety tests via ThreadSanitizer (documented in README)
 9. Library consumer can run async lifetime tests via AddressSanitizer+LeakSanitizer (documented in README)
 
-**Plans**: 5 plans in 3 waves
+**Plans**: 6 plans in 3 waves
 
 Plans:
 - [x] 07-01-PLAN.md — CMake build system with static/shared libraries and package config
-- [x] 07-02-PLAN.md — GoogleTest integration and unit tests
+- [x] 07-02a-PLAN.md — Test infrastructure setup (GoogleTest, fixtures, stubs)
+- [x] 07-02b-PLAN.md — Unit test implementation (JSON-RPC, registries, pagination)
 - [x] 07-03-PLAN.md — JSON-RPC compliance tests
 - [x] 07-04-PLAN.md — MCP Inspector integration and integration tests
 - [x] 07-05-PLAN.md — MIT license headers and README documentation
@@ -221,4 +222,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Advanced Features & HTTP Transport | 6/6 | Complete | 2026-01-31 |
 | 5. Content & Tasks | 4/4 | Complete | 2026-01-31 |
 | 6. High-Level API | 7/7 | Complete | 2026-02-01 |
-| 7. Build & Validation | 0/0 | Not started | - |
+| 7. Build & Validation | 6/6 | Complete | 2026-02-01 |
