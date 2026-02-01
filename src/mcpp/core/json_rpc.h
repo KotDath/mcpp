@@ -155,6 +155,28 @@ struct JsonRpcRequest {
      * @return Parsed request, or nullopt if parsing fails
      */
     static std::optional<JsonRpcRequest> from_json(const JsonValue& j);
+
+    /**
+     * Extract request ID from raw JSON (best-effort for malformed requests)
+     *
+     * This helper attempts to extract the 'id' field even when the JSON
+     * is malformed. Used for constructing parse error responses with
+     * the correct request ID per JSON-RPC 2.0 spec.
+     *
+     * Handles three ID formats per JSON-RPC 2.0:
+     * - String IDs: "id": "request-123"
+     * - Numeric IDs: "id": 42
+     * - Null IDs: "id": null
+     *
+     * Returns null RequestId (int64_t with value 0) when:
+     * - The 'id' field is missing
+     * - The 'id' value is malformed
+     * - JSON parsing fails completely
+     *
+     * @param raw_json String containing the raw JSON request
+     * @return Extracted ID as RequestId variant (int64_t, string, or null)
+     */
+    static RequestId extract_request_id(std::string_view raw_json);
 };
 
 /**
