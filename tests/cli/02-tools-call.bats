@@ -5,20 +5,12 @@
 # Test file for tools/call endpoint
 # Tests tool execution with arguments, error handling, and all 4 tools
 
-# Load bats helper libraries
-load "${BATS_TEST_DIRNAME}/test_helper/bats-support/load.bash"
-load "${BATS_TEST_DIRNAME}/test_helper/bats-assert/load.bash"
-load "${BATS_TEST_DIRNAME}/test_helper/bats-file/load.bash"
+# Load common setup for test environment
+load 'test_helper/common-setup'
 
-# Determine project root from test file location
-PROJECT_ROOT="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
-
-# Export MCPP_DEBUG for server debug output during tests
-export MCPP_DEBUG=1
-
+# Setup function - runs before each test
 setup() {
-    # Add build/examples to PATH so tests can find inspector_server
-    export PATH="${PROJECT_ROOT}/build/examples:${PATH}"
+    _common_setup
 }
 
 # ============================================================================
