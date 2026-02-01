@@ -139,6 +139,18 @@ struct JsonRpcResponse {
     }
 
     /**
+     * Serialize this response to a JSON string with trailing newline
+     *
+     * Use this for stdio transport output where newline delimiter is required.
+     * The newline ensures proper message framing per MCP transport spec.
+     *
+     * @return JSON string with trailing '\n' character
+     */
+    std::string to_string_delimited() const {
+        return to_json().dump() + "\n";
+    }
+
+    /**
      * Check if this is an error response
      */
     bool is_error() const {
@@ -185,6 +197,18 @@ struct JsonRpcNotification {
      */
     std::string to_string() const {
         return to_json().dump();
+    }
+
+    /**
+     * Serialize this notification to a JSON string with trailing newline
+     *
+     * Use this for stdio transport output where newline delimiter is required.
+     * The newline ensures proper message framing per MCP transport spec.
+     *
+     * @return JSON string with trailing '\n' character
+     */
+    std::string to_string_delimited() const {
+        return to_json().dump() + "\n";
     }
 };
 
