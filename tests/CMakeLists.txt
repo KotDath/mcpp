@@ -108,7 +108,20 @@ gtest_discover_tests(mcpp_compliance_tests
 # If bats is not found, CLI tests will be skipped (not fatal)
 
 # Find bats and jq for CLI tests
-find_program(BATS_PROGRAM bats)
+# bats is in Git submodule at tests/cli/bats/bin/bats
+# Add submodule location to search path for better discoverability
+set(BATS_POSSIBLE_PATHS
+    "${CMAKE_CURRENT_SOURCE_DIR}/cli/bats/bin/bats"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cli/bats/bin"
+    "$ENV{BATS_BIN_DIR}"
+    "$ENV{PATH}"
+)
+
+find_program(BATS_PROGRAM bats
+    HINTS ${BATS_POSSIBLE_PATHS}
+    PATHS ${BATS_POSSIBLE_PATHS}
+)
+
 find_program(JQ_PROGRAM jq)
 
 # Add CLI tests only if bats and jq are available

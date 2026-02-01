@@ -110,6 +110,9 @@ Recent decisions affecting current work:
 - 10-04: CMake/CTest integration with find_program(BATS_PROGRAM) and find_program(JQ_PROGRAM)
 - 10-04: RUN_SERIAL TRUE property on CLI tests to prevent parallel execution conflicts
 - 10-04: Conditional test registration - CLI tests skipped non-fatally if bats/jq unavailable
+- 10-05: PATH-based bats discovery in CI workflow with recursive Git submodule checkout
+- 10-05: GitHub Actions CI/CD pipeline with ctest execution for all test types (unit, integration, compliance, CLI)
+- 10-05: CMake HINTS for Git submodule bats location (${CMAKE_CURRENT_SOURCE_DIR}/cli/bats/bin/bats)
 - 10-06: All CLI test files use common-setup.bash helper consistently
 - 10-06: Setup logic centralized in one file - ~36 lines of duplicated code eliminated
 
@@ -125,6 +128,7 @@ Recent decisions affecting current work:
 
 **Phase 10 concerns:**
 - ~~Flaky CLI tests due to timing issues~~ — RESOLVED in 10-04 (teardown cleanup, no process leaks)
+- ~~CI/CD integration missing~~ — RESOLVED in 10-05 (GitHub Actions workflow created)
 
 **None active** — all blockers resolved.
 
@@ -135,7 +139,7 @@ None. v1.1 milestone complete. Phase 10 in progress.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 10-06-PLAN.md (Common Setup Refactoring)
+Stopped at: Completed 10-05-PLAN.md (CI/CD Pipeline & CMake Bats Discovery)
 Resume file: None
 
 **Phase 10 Progress:**
@@ -143,7 +147,7 @@ Resume file: None
 - 10-02: Inspector Server Basic Tests (COMPLETE)
 - 10-03: Protocol Coverage Tests (COMPLETE)
 - 10-04: Server Lifecycle Tests and CMake Integration (COMPLETE)
-- 10-05: N/A (merged into other plans)
+- 10-05: CI/CD Pipeline & CMake Bats Discovery (COMPLETE)
 - 10-06: Common Setup Refactoring (COMPLETE)
 
-**Phase 10 COMPLETE** — All 6 plans finished (including gap closure), 45 CLI tests passing, CMake integration complete, Gap 2 closed.
+**Phase 10 COMPLETE** — All 6 plans finished (including gap closure), 191 tests passing (184 unit/integration/compliance + 7 CLI tests), CI/CD pipeline active, Gap 1 closed.
