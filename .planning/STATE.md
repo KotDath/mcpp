@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Developers can build MCP clients and servers in C++ that are fast, correct, and support the complete protocol spec without wrestling with JSON-RPC details or transport plumbing
 
-**Current focus:** Phase 9 Complete - Inspector Server Integration
+**Current focus:** Phase 10 - Automated CLI Testing
 
 ## Current Position
 
-Phase: 9 of 9 (Inspector Server Integration)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-01 — Completed 09-03 (Inspector Server Integration)
+Phase: 10 of 10 (Automated CLI Testing)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-02-01 — Completed 10-01 (BATS Testing Infrastructure)
 
-Progress: [██████████████████] 100% (48/48 plans complete)
+Progress: [████████░░░░░░░░░░░░] 52% (49/52 complete counting Phase 10 plans)
 
 ## Milestone Archive
 
@@ -39,7 +39,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 51 (48 v1.0 + 3 v1.1)
+- Total plans completed: 52 (48 v1.0 + 3 v1.1 + 1 phase 10)
 - v1.0 duration: 105 days (~2.3 days/plan average, includes research and delays)
 - v1.1 duration: 1 day (rapid bug fixes and Inspector integration)
 
@@ -56,13 +56,15 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 | 7 | 6 | Complete |
 | 8 | 2 | Complete |
 | 9 | 3 | Complete |
+| 10 | 1 of 4 | In progress |
 
 **Recent Trend:**
 - v1.0 completed successfully 2026-02-01
 - Phase 8 (Bug Fix Foundation) complete — JsonRpcRequest::from_json() validation + stdio protocol helpers
 - Phase 9 complete: Inspector server integration with MCP stdio transport, notification handling, and full UI/CLI compatibility
+- Phase 10 started: BATS testing infrastructure setup
 
-*Updated: 2026-02-01 (Phase 9 complete - v1.1 milestone complete)*
+*Updated: 2026-02-01 (Phase 10-01 complete)*
 
 ## Accumulated Context
 
@@ -91,6 +93,10 @@ Recent decisions affecting current work:
 - 09-03: Non-JSON-RPC messages silently skipped to avoid corrupting stdio stream
 - 09-03: MCP stdio transport uses Content-Length headers for message framing
 - 09-03: progressToken supports both string and number types
+- 10-01: Git submodules for BATS testing framework (bats-core, bats-support, bats-assert, bats-file) instead of system package installation for reproducibility
+- 10-01: MCPP_DEBUG=1 exported by default for all test executions
+- 10-01: PATH-based binary discovery for inspector_server in tests
+- 10-01: Common _common_setup() function pattern for all CLI test files
 
 ### Blockers/Concerns
 
@@ -101,29 +107,24 @@ Recent decisions affecting current work:
 **v1.1 risks addressed:**
 - Stdout pollution could corrupt JSON-RPC stream — addressed by 08-02 (MCPP_DEBUG_LOG)
 - Missing newline delimiters could cause parse errors — addressed by 08-02 (to_string_delimited)
-- Flaky CLI tests due to timing issues — would be addressed by TEST-04 (deferred)
 
-**None active** — all v1.1 blockers resolved.
+**Phase 10 concerns:**
+- Flaky CLI tests due to timing issues — will be addressed by 10-04 (test stabilization)
+
+**None active** — all blockers resolved.
 
 ### Pending Todos
 
-None. v1.1 milestone complete.
+None. v1.1 milestone complete. Phase 10 in progress.
 
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 09-03-PLAN.md (Inspector Server Integration)
+Stopped at: Completed 10-01-PLAN.md (BATS Testing Infrastructure)
 Resume file: None
 
-**Milestone v1.1 Phase 9 Complete:**
-- 09-01: Extract Request ID Helper
-- 09-02: Inspector Server Request Validation
-- 09-03: Inspector Server Integration (mcp.json, TESTING.md, stdio transport)
-- Inspector UI mode verified working (tools/list, tools/call, resources/list)
-- Inspector CLI mode verified working
-- All protocol operations tested and passing
-
-**v1.1 Milestone COMPLETE**
-- JSON-RPC parse errors fixed
-- MCP Inspector integration complete
-- Manual testing documentation provided
+**Phase 10 Progress:**
+- 10-01: BATS Testing Infrastructure (COMPLETE)
+- 10-02: Inspector Server Basic Tests (pending)
+- 10-03: Protocol Coverage Tests (pending)
+- 10-04: Test Stabilization (pending)
