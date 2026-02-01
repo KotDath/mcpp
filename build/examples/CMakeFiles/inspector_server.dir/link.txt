@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/inspector_server.dir/link.d CMakeFiles/inspector_server.dir/inspector_server.cpp.o -o inspector_server  -Wl,-rpath,/home/kotdath/omp/personal/cpp/mcpp/build ../libmcpp.so.0.1.0

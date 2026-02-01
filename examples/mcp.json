@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "mcpp-inspector-server": {
-      "command": "build/examples/inspector_server",
+      "command": "./build/examples/inspector_server",
       "args": [],
       "env": {
         "MCPP_DEBUG": "1"

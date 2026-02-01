@@ -1,0 +1,5 @@
+if(EXISTS "/home/kotdath/omp/personal/cpp/mcpp/build/tests/mcpp_integration_tests[1]_tests.cmake")
+  include("/home/kotdath/omp/personal/cpp/mcpp/build/tests/mcpp_integration_tests[1]_tests.cmake")
+else()
+  add_test(mcpp_integration_tests_NOT_BUILT mcpp_integration_tests_NOT_BUILT)
+endif()

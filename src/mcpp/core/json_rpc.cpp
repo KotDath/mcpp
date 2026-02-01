@@ -135,24 +135,27 @@ std::optional<JsonRpcRequest> JsonRpcRequest::from_json(const JsonValue& j) {
             return std::nullopt;
         }
 
-        // Check for id field (required for requests)
-        if (!j.contains("id")) {
-            return std::nullopt;
-        }
-        auto id_opt = detail::parse_request_id(j["id"]);
-        if (!id_opt) {
-            return std::nullopt;
-        }
-
-        // Check for method field
+        // Check for method field (required for both requests and notifications)
         if (!j.contains("method") || !j["method"].is_string()) {
             return std::nullopt;
         }
 
         JsonRpcRequest request;
         request.jsonrpc = jsonrpc_version;
-        request.id = *id_opt;
         request.method = j["method"].get<std::string>();
+
+        // Parse id field - optional for notifications (JSON-RPC 2.0)
+        // Requests have id, notifications don't have id
+        if (j.contains("id")) {
+            auto id_opt = detail::parse_request_id(j["id"]);
+            if (!id_opt) {
+                return std::nullopt;
+            }
+            request.id = *id_opt;
+        } else {
+            // Notification: use null ID (int64_t 0 as sentinel)
+            request.id = static_cast<int64_t>(0);
+        }
 
         // Check for params (optional, but must be object or array if present)
         if (j.contains("params")) {

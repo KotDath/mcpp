@@ -357,6 +357,8 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
+        MCPP_DEBUG_LOG("Received: {}", line);
+
         try {
             // Parse raw JSON
             json raw = json::parse(line);

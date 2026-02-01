@@ -1,0 +1,216 @@
+{
+  "valid_requests": {
+    "with_positional_params": {
+      "jsonrpc": "2.0",
+      "method": "subtract",
+      "params": [42, 23],
+      "id": 1
+    },
+    "with_named_params": {
+      "jsonrpc": "2.0",
+      "method": "subtract",
+      "params": {"subtrahend": 23, "minuend": 42},
+      "id": 2
+    },
+    "no_params": {
+      "jsonrpc": "2.0",
+      "method": "initialize",
+      "id": 3
+    },
+    "string_id": {
+      "jsonrpc": "2.0",
+      "method": "update",
+      "params": {"value": 100},
+      "id": "req-123"
+    },
+    "null_id": {
+      "jsonrpc": "2.0",
+      "method": "notification",
+      "params": {"message": "hello"},
+      "id": null
+    },
+    "array_params": {
+      "jsonrpc": "2.0",
+      "method": "process",
+      "params": ["a", "b", "c"],
+      "id": 4
+    },
+    "null_params": {
+      "jsonrpc": "2.0",
+      "method": "test",
+      "params": null,
+      "id": 5
+    }
+  },
+
+  "valid_responses": {
+    "success_result": {
+      "jsonrpc": "2.0",
+      "result": 19,
+      "id": 1
+    },
+    "success_object": {
+      "jsonrpc": "2.0",
+      "result": {"status": "ok", "data": [1, 2, 3]},
+      "id": 2
+    },
+    "success_null": {
+      "jsonrpc": "2.0",
+      "result": null,
+      "id": 3
+    },
+    "success_array": {
+      "jsonrpc": "2.0",
+      "result": ["item1", "item2"],
+      "id": 4
+    },
+    "error_parse": {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32700,
+        "message": "Parse error"
+      },
+      "id": null
+    },
+    "error_invalid_request": {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32600,
+        "message": "Invalid Request"
+      },
+      "id": null
+    },
+    "error_method_not_found": {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32601,
+        "message": "Method not found",
+        "data": "unknown_method"
+      },
+      "id": 1
+    },
+    "error_invalid_params": {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32602,
+        "message": "Invalid params"
+      },
+      "id": 2
+    },
+    "error_internal": {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32603,
+        "message": "Internal error"
+      },
+      "id": 3
+    },
+    "error_custom_data": {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32000,
+        "message": "Server error",
+        "data": {"details": "Database connection failed"}
+      },
+      "id": 4
+    },
+    "error_with_object_data": {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32602,
+        "message": "Invalid params",
+        "data": {"field": "age", "expected": "integer", "got": "string"}
+      },
+      "id": 5
+    }
+  },
+
+  "valid_notifications": {
+    "without_params": {
+      "jsonrpc": "2.0",
+      "method": "notifications/cancelled"
+    },
+    "with_params": {
+      "jsonrpc": "2.0",
+      "method": "notifications/message",
+      "params": {"content": "Hello, world!"}
+    },
+    "with_array_params": {
+      "jsonrpc": "2.0",
+      "method": "notifications/update",
+      "params": [1, 2, 3]
+    },
+    "with_null_params": {
+      "jsonrpc": "2.0",
+      "method": "notifications/ping",
+      "params": null
+    }
+  },
+
+  "invalid_requests": {
+    "missing_jsonrpc": {
+      "method": "test",
+      "id": 1
+    },
+    "wrong_jsonrpc_version": {
+      "jsonrpc": "1.0",
+      "method": "test",
+      "id": 1
+    },
+    "missing_method": {
+      "jsonrpc": "2.0",
+      "id": 1
+    },
+    "non_string_method": {
+      "jsonrpc": "2.0",
+      "method": 123,
+      "id": 1
+    },
+    "wrong_params_type": {
+      "jsonrpc": "2.0",
+      "method": "test",
+      "params": "invalid",
+      "id": 1
+    },
+    "invalid_id_type": {
+      "jsonrpc": "2.0",
+      "method": "test",
+      "id": true
+    }
+  },
+
+  "batch_requests": {
+    "valid_batch": [
+      {"jsonrpc": "2.0", "method": "method1", "params": [1, 2], "id": 1},
+      {"jsonrpc": "2.0", "method": "method2", "params": {"arg": "value"}, "id": 2},
+      {"jsonrpc": "2.0", "method": "method3", "id": 3}
+    ],
+    "batch_with_notification": [
+      {"jsonrpc": "2.0", "method": "notify", "params": [1, 2]},
+      {"jsonrpc": "2.0", "method": "method", "id": 1}
+    ],
+    "batch_all_notifications": [
+      {"jsonrpc": "2.0", "method": "notify1"},
+      {"jsonrpc": "2.0", "method": "notify2"}
+    ],
+    "empty_batch": []
+  },
+
+  "malformed_json": [
+    "{\"jsonrpc\": \"2.0\", \"method\": \"test\", \"id\": 1",
+    "{\"jsonrpc\": \"2.0\", \"method\": 123, \"id\": }",
+    "not json at all",
+    "{invalid json",
+    "{'jsonrpc': '2.0', 'method': 'test'}"
+  ],
+
+  "error_codes": {
+    "parse_error": -32700,
+    "invalid_request": -32600,
+    "method_not_found": -32601,
+    "invalid_params": -32602,
+    "internal_error": -32603,
+    "server_error_min": -32099,
+    "server_error_max": -32000
+  }
+}
