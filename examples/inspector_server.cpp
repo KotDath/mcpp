@@ -22,6 +22,7 @@
  */
 
 #include "mcpp/server/mcp_server.h"
+#include "mcpp/transport/null_transport.h"
 
 #include <iostream>
 #include <fstream>
@@ -246,8 +247,12 @@ int main(int argc, char* argv[]) {
     std::cerr << "Connect with: mcp-inspector connect stdio ./build/examples/inspector_server" << std::endl;
     std::cerr << std::endl;
 
+    // Create null transport for progress notifications (no-op for stdio server)
+    auto null_transport = std::make_unique<transport::NullTransport>();
+
     // Create MCP server
     McpServer server("mcpp Inspector Server", "0.1.0");
+    server.set_transport(*null_transport);
 
     // Register tools
     json calculate_schema = json::parse(R"({
@@ -359,6 +364,42 @@ int main(int argc, char* argv[]) {
             }
             // Notifications have no response
         } catch (const json::exception& e) {
+            // Try to extract the ID from the partially malformed request
+            // This is a best-effort attempt to provide a valid ID for the error response
+            json id = nullptr;
+
+            // Try to find "id" field in the raw line using simple string search
+            size_t id_pos = line.find("\"id\"");
+            if (id_pos != std::string::npos) {
+                size_t colon_pos = line.find(":", id_pos);
+                if (colon_pos != std::string::npos) {
+                    size_t value_start = line.find_first_not_of(" \t\n\r", colon_pos + 1);
+                    if (value_start != std::string::npos) {
+                        char next_char = line[value_start];
+                        if (next_char == '"') {
+                            // String ID - extract until closing quote
+                            size_t value_end = line.find('"', value_start + 1);
+                            if (value_end != std::string::npos) {
+                                std::string id_str = line.substr(value_start + 1, value_end - value_start - 1);
+                                id = id_str;
+                            }
+                        } else if (next_char >= '0' && next_char <= '9' || next_char == '-') {
+                            // Numeric ID - try to extract
+                            size_t value_end = line.find_first_not_of("0123456789-", value_start);
+                            if (value_end != std::string::npos) {
+                                std::string id_str = line.substr(value_start, value_end - value_start);
+                                try {
+                                    int id_val = std::stoi(id_str);
+                                    id = id_val;
+                                } catch (...) {
+                                    // Fall through to use default
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             json error = {
                 {"jsonrpc", "2.0"},
                 {"error", {
@@ -366,7 +407,7 @@ int main(int argc, char* argv[]) {
                     {"message", "Parse error"},
                     {"data", e.what()}
                 }},
-                {"id", nullptr}
+                {"id", id}
             };
             std::cout << error.dump() << std::endl;
         }

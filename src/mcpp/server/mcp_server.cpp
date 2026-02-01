@@ -139,6 +139,16 @@ std::optional<nlohmann::json> McpServer::handle_request(
         return make_error(JSONRPC_METHOD_NOT_FOUND, "Method not found", id);
     }
 
+    // Check if handler returned an error response (has "error" key at top level)
+    // Error responses should not be wrapped in "result"
+    if (result.contains("error") && result["error"].is_object()) {
+        return nlohmann::json{
+            {"jsonrpc", "2.0"},
+            {"id", id},
+            {"error", result["error"]}
+        };
+    }
+
     // Build successful response
     return nlohmann::json{
         {"jsonrpc", "2.0"},
