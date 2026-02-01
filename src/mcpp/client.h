@@ -46,6 +46,9 @@
 
 namespace mcpp {
 
+// Bring JsonValue into scope (defined in core::JsonValue and client::JsonValue)
+using core::JsonValue;
+
 /**
  * @brief Low-level callback-based MCP client
  *

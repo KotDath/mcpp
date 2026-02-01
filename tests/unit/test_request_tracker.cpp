@@ -301,13 +301,14 @@ TEST_F(TimeoutManagerTest, CheckTimeouts_BeforeTimeout_NoExpiry) {
 }
 
 TEST_F(TimeoutManagerTest, CheckTimeouts_AfterTimeout_ReturnsExpiredId) {
-    RequestId id = 1;
+    int64_t id_val = 1;
+    RequestId id = id_val;
     std::chrono::milliseconds timeout(30);
     bool timeout_called = false;
 
-    mgr->set_timeout(id, timeout, [&timeout_called](RequestId expired_id) {
+    mgr->set_timeout(id, timeout, [&timeout_called, &id_val](RequestId expired_id) {
         timeout_called = true;
-        EXPECT_EQ(expired_id, id);
+        EXPECT_EQ(std::get<int64_t>(expired_id), id_val);
     });
 
     // Wait for timeout to expire
@@ -397,13 +398,14 @@ TEST_F(TimeoutManagerTest, SetTimeout_ReplacesExistingTimeout) {
 }
 
 TEST_F(TimeoutManagerTest, StringId_Supported) {
-    RequestId id = std::string("req-string-123");
+    std::string id_str = "req-string-123";
+    RequestId id = id_str;
     bool timeout_called = false;
 
     mgr->set_timeout(id, std::chrono::milliseconds(30),
-        [&timeout_called, &id](RequestId expired_id) {
+        [&timeout_called, &id_str](RequestId expired_id) {
             timeout_called = true;
-            EXPECT_EQ(expired_id, id);
+            EXPECT_EQ(std::get<std::string>(expired_id), id_str);
         });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));

@@ -139,12 +139,11 @@ TEST(ToolRegistry, CallTool_WithAnnotations) {
         "properties": {"result": {"type": "string"}}
     })");
 
-    ToolAnnotations annotations{
-        .destructive = true,
-        .read_only = false,
-        .audience = "assistant",
-        .priority = 10
-    };
+    ToolAnnotations annotations;
+    annotations.destructive = true;
+    annotations.read_only = false;
+    annotations.audience = "assistant";
+    annotations.priority = 10;
 
     bool registered = registry.register_tool(
         "delete_file",

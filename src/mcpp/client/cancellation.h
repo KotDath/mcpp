@@ -122,9 +122,9 @@ public:
     CancellationSource(const CancellationSource&) = delete;
     CancellationSource& operator=(const CancellationSource&) = delete;
 
-    // Non-movable
-    CancellationSource(CancellationSource&&) = delete;
-    CancellationSource& operator=(CancellationSource&&) = delete;
+    // Movable (for transferring ownership to CancellationManager)
+    CancellationSource(CancellationSource&&) noexcept = default;
+    CancellationSource& operator=(CancellationSource&&) noexcept = default;
 
     /**
      * @brief Get a token associated with this source

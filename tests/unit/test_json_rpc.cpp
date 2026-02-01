@@ -26,8 +26,10 @@ TEST(JsonRpcRequest, DefaultConstruction) {
 }
 
 TEST(JsonRpcRequest, ParameterizedConstruction_WithId) {
-    nlohmann::json id = 42;
-    JsonRpcRequest req("test/method", nlohmann::json::object(), id);
+    JsonRpcRequest req;
+    req.method = "test/method";
+    req.params = nlohmann::json::object();
+    req.id = int64_t{42};
 
     EXPECT_EQ(req.jsonrpc, "2.0");
     EXPECT_EQ(req.method, "test/method");
@@ -36,15 +38,21 @@ TEST(JsonRpcRequest, ParameterizedConstruction_WithId) {
 }
 
 TEST(JsonRpcRequest, ParameterizedConstruction_WithStringId) {
-    nlohmann::json id = "req-123";
-    JsonRpcRequest req("test/method", nlohmann::json::object(), id);
+    JsonRpcRequest req;
+    req.method = "test/method";
+    req.params = nlohmann::json::object();
+    req.id = std::string("req-123");
 
     EXPECT_EQ(req.method, "test/method");
     EXPECT_EQ(std::get<std::string>(req.id), "req-123");
 }
 
 TEST(JsonRpcRequest, ToJson_ValidRequest) {
-    JsonRpcRequest req("test/method", {{"key", "value"}}, 1);
+    JsonRpcRequest req;
+    req.method = "test/method";
+    req.params = {{"key", "value"}};
+    req.id = int64_t{1};
+
     nlohmann::json j = req.to_json();
 
     EXPECT_EQ(j["jsonrpc"], "2.0");
@@ -54,7 +62,11 @@ TEST(JsonRpcRequest, ToJson_ValidRequest) {
 }
 
 TEST(JsonRpcRequest, ToJson_WithNullParams) {
-    JsonRpcRequest req("method/no_params", nullptr, 1);
+    JsonRpcRequest req;
+    req.method = "method/no_params";
+    req.params = nullptr;
+    req.id = int64_t{1};
+
     nlohmann::json j = req.to_json();
 
     EXPECT_EQ(j["method"], "method/no_params");
@@ -62,7 +74,11 @@ TEST(JsonRpcRequest, ToJson_WithNullParams) {
 }
 
 TEST(JsonRpcRequest, ToJson_WithArrayParams) {
-    JsonRpcRequest req("subtract", nlohmann::json::array({42, 23}), 1);
+    JsonRpcRequest req;
+    req.method = "subtract";
+    req.params = nlohmann::json::array({42, 23});
+    req.id = int64_t{1};
+
     nlohmann::json j = req.to_json();
 
     EXPECT_EQ(j["method"], "subtract");
@@ -72,14 +88,22 @@ TEST(JsonRpcRequest, ToJson_WithArrayParams) {
 }
 
 TEST(JsonRpcRequest, ToJson_StringId) {
-    JsonRpcRequest req("test/method", nlohmann::json::object(), std::string("abc"));
+    JsonRpcRequest req;
+    req.method = "test/method";
+    req.params = nlohmann::json::object();
+    req.id = std::string("abc");
+
     nlohmann::json j = req.to_json();
 
     EXPECT_EQ(j["id"], "abc");
 }
 
 TEST(JsonRpcRequest, ToString_SerializesCorrectly) {
-    JsonRpcRequest req("test/method", {{"arg", "value"}}, 1);
+    JsonRpcRequest req;
+    req.method = "test/method";
+    req.params = {{"arg", "value"}};
+    req.id = int64_t{1};
+
     std::string str = req.to_string();
 
     EXPECT_TRUE(str.find("\"jsonrpc\":\"2.0\"") != std::string::npos);
@@ -98,19 +122,19 @@ TEST(JsonRpcResponse, SuccessResult) {
 
     EXPECT_FALSE(resp.is_error());
     EXPECT_TRUE(resp.is_success());
-    EXPECT_EQ(resp.result["status"], "ok");
+    EXPECT_EQ((*resp.result)["status"], "ok");
 }
 
 TEST(JsonRpcResponse, ErrorResult) {
-    JsonRpcError error(JsonRpcError::ErrorCode::InvalidParams, "Invalid parameters");
+    JsonRpcError error(INVALID_PARAMS, "Invalid parameters");
     JsonRpcResponse resp;
     resp.error = error;
     resp.id = 2;
 
     EXPECT_TRUE(resp.is_error());
     EXPECT_FALSE(resp.is_success());
-    EXPECT_EQ(resp.error.code, -32602);
-    EXPECT_EQ(resp.error.message, "Invalid parameters");
+    EXPECT_EQ((*resp.error).code, -32602);
+    EXPECT_EQ((*resp.error).message, "Invalid parameters");
 }
 
 TEST(JsonRpcResponse, ToJson_SuccessResponse) {
@@ -127,7 +151,7 @@ TEST(JsonRpcResponse, ToJson_SuccessResponse) {
 }
 
 TEST(JsonRpcResponse, ToJson_ErrorResponse) {
-    JsonRpcError error(JsonRpcError::ErrorCode::MethodNotFound, "Method not found");
+    JsonRpcError error(METHOD_NOT_FOUND, "Method not found");
     error.data = 42;
     JsonRpcResponse resp;
     resp.error = error;
@@ -230,7 +254,9 @@ TEST(JsonRpcError, FactoryWithoutDetails) {
 // ============================================================================
 
 TEST(JsonRpcNotification, Construction) {
-    JsonRpcNotification notif("notifications/message", {{"content", "hello"}});
+    JsonRpcNotification notif;
+    notif.method = "notifications/message";
+    notif.params = {{"content", "hello"}};
 
     EXPECT_EQ(notif.jsonrpc, "2.0");
     EXPECT_EQ(notif.method, "notifications/message");
@@ -238,14 +264,19 @@ TEST(JsonRpcNotification, Construction) {
 }
 
 TEST(JsonRpcNotification, Construction_WithNullParams) {
-    JsonRpcNotification notif("test/notification", nullptr);
+    JsonRpcNotification notif;
+    notif.method = "test/notification";
+    notif.params = nullptr;
 
     EXPECT_EQ(notif.method, "test/notification");
     EXPECT_TRUE(notif.params.is_null());
 }
 
 TEST(JsonRpcNotification, ToJson) {
-    JsonRpcNotification notif("test/notification", nlohmann::json::object());
+    JsonRpcNotification notif;
+    notif.method = "test/notification";
+    notif.params = nlohmann::json::object();
+
     nlohmann::json j = notif.to_json();
 
     EXPECT_EQ(j["jsonrpc"], "2.0");
@@ -254,8 +285,10 @@ TEST(JsonRpcNotification, ToJson) {
 }
 
 TEST(JsonRpcNotification, ToJson_WithParams) {
-    JsonRpcNotification notif("notifications/cancelled",
-                              {{"reason", "user aborted"}, {"requestId", 42}});
+    JsonRpcNotification notif;
+    notif.method = "notifications/cancelled";
+    notif.params = {{"reason", "user aborted"}, {"requestId", 42}};
+
     nlohmann::json j = notif.to_json();
 
     EXPECT_EQ(j["method"], "notifications/cancelled");
@@ -265,7 +298,10 @@ TEST(JsonRpcNotification, ToJson_WithParams) {
 }
 
 TEST(JsonRpcNotification, ToString_SerializesCorrectly) {
-    JsonRpcNotification notif("notify/update", {{"value", 100}});
+    JsonRpcNotification notif;
+    notif.method = "notify/update";
+    notif.params = {{"value", 100}};
+
     std::string str = notif.to_string();
 
     EXPECT_TRUE(str.find("\"jsonrpc\":\"2.0\"") != std::string::npos);
@@ -313,7 +349,10 @@ TEST(RequestId, StringId_Visit) {
 
 TEST(JsonRpcIntegration, RequestResponseRoundTrip) {
     // Create a request
-    JsonRpcRequest req("tools/call", {{"name", "echo"}, {"arguments", {{"message", "hello"}}}}, 1);
+    JsonRpcRequest req;
+    req.method = "tools/call";
+    req.params = {{"name", "echo"}, {"arguments", {{"message", "hello"}}}};
+    req.id = int64_t{1};
     nlohmann::json req_json = req.to_json();
 
     // Simulate a response
@@ -334,7 +373,10 @@ TEST(JsonRpcIntegration, RequestResponseRoundTrip) {
 
 TEST(JsonRpcIntegration, ErrorResponseRoundTrip) {
     // Create a request
-    JsonRpcRequest req("unknown/method", nullptr, 99);
+    JsonRpcRequest req;
+    req.method = "unknown/method";
+    req.params = nullptr;
+    req.id = int64_t{99};
 
     // Simulate an error response
     JsonRpcResponse resp;
@@ -349,8 +391,10 @@ TEST(JsonRpcIntegration, ErrorResponseRoundTrip) {
 }
 
 TEST(JsonRpcIntegration, NotificationNoId) {
-    JsonRpcNotification notif("notifications/progress",
-                              {{"progress", 50.0}, {"message", "Processing..."}});
+    JsonRpcNotification notif;
+    notif.method = "notifications/progress";
+    notif.params = {{"progress", 50.0}, {"message", "Processing..."}};
+
     nlohmann::json j = notif.to_json();
 
     EXPECT_TRUE(j.contains("method"));

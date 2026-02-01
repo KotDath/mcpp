@@ -96,11 +96,14 @@ TEST(PaginatedResult, JsonIntItems) {
     PaginatedResult<int> result(items, "abc", 5);
 
     // Test with a simple serialization function
-    nlohmann::json j = nlohmann::json{
-        {"items", result.items},
-        {"nextCursor", result.nextCursor},
-        {"total", result.total}
-    };
+    nlohmann::json j;
+    j["items"] = result.items;
+    if (result.nextCursor) {
+        j["nextCursor"] = *result.nextCursor;
+    }
+    if (result.total) {
+        j["total"] = *result.total;
+    }
 
     EXPECT_EQ(j["items"].size(), 3);
     EXPECT_EQ(j["items"][0], 1);
@@ -123,8 +126,8 @@ TEST(PaginatedResult, JsonStringItems) {
 
 TEST(ListAll, SinglePage) {
     // Mock function that returns a paginated result without more pages
-    auto fetch_page = [](const std::string& cursor) -> PaginatedResult<int> {
-        if (cursor.empty()) {
+    auto fetch_page = [](const std::optional<std::string>& cursor) -> PaginatedResult<int> {
+        if (!cursor || cursor->empty()) {
             return {{1, 2, 3}, std::nullopt, 3};
         }
         return {{}, std::nullopt, 0};
@@ -140,13 +143,13 @@ TEST(ListAll, SinglePage) {
 TEST(ListAll, MultiplePages) {
     int call_count = 0;
 
-    auto fetch_page = [&call_count](const std::string& cursor) -> PaginatedResult<int> {
+    auto fetch_page = [&call_count](const std::optional<std::string>& cursor) -> PaginatedResult<int> {
         call_count++;
-        if (cursor.empty()) {
+        if (!cursor || cursor->empty()) {
             return {{1, 2}, "page2", 5};
-        } else if (cursor == "page2") {
+        } else if (*cursor == "page2") {
             return {{3, 4}, "page3", 5};
-        } else if (cursor == "page3") {
+        } else if (*cursor == "page3") {
             return {{5}, std::nullopt, 5};
         }
         return {{}, std::nullopt, 0};
@@ -164,7 +167,7 @@ TEST(ListAll, MultiplePages) {
 }
 
 TEST(ListAll, EmptyResult) {
-    auto fetch_page = [](const std::string& cursor) -> PaginatedResult<int> {
+    auto fetch_page = [](const std::optional<std::string>& cursor) -> PaginatedResult<int> {
         return {{}, std::nullopt, 0};
     };
 
@@ -177,18 +180,18 @@ TEST(ListAll, EmptyResult) {
 TEST(ListAll, LargeDataset) {
     int total_items = 0;
 
-    auto fetch_page = [&total_items](const std::string& cursor) -> PaginatedResult<int> {
-        if (cursor.empty()) {
+    auto fetch_page = [&total_items](const std::optional<std::string>& cursor) -> PaginatedResult<int> {
+        if (!cursor || cursor->empty()) {
             total_items += 50;
             std::vector<int> page;
             for (int i = 0; i < 50; ++i) page.push_back(i);
             return {page, "page2", 150};
-        } else if (cursor == "page2") {
+        } else if (*cursor == "page2") {
             total_items += 50;
             std::vector<int> page;
             for (int i = 50; i < 100; ++i) page.push_back(i);
             return {page, "page3", 150};
-        } else if (cursor == "page3") {
+        } else if (*cursor == "page3") {
             total_items += 50;
             std::vector<int> page;
             for (int i = 100; i < 150; ++i) page.push_back(i);
@@ -205,10 +208,10 @@ TEST(ListAll, LargeDataset) {
 }
 
 TEST(ListAll, StringItems) {
-    auto fetch_page = [](const std::string& cursor) -> PaginatedResult<std::string> {
-        if (cursor.empty()) {
+    auto fetch_page = [](const std::optional<std::string>& cursor) -> PaginatedResult<std::string> {
+        if (!cursor || cursor->empty()) {
             return {{"alpha", "beta"}, "page2", 4};
-        } else if (cursor == "page2") {
+        } else if (*cursor == "page2") {
             return {{"gamma", "delta"}, std::nullopt, 4};
         }
         return {{}, std::nullopt, 0};
@@ -224,14 +227,14 @@ TEST(ListAll, StringItems) {
 }
 
 TEST(ListAll, JsonItems) {
-    auto fetch_page = [](const std::string& cursor) -> PaginatedResult<nlohmann::json> {
-        if (cursor.empty()) {
+    auto fetch_page = [](const std::optional<std::string>& cursor) -> PaginatedResult<nlohmann::json> {
+        if (!cursor || cursor->empty()) {
             return {
                 {{{"id", 1}, {"name", "one"}}, {{"id", 2}, {"name", "two"}}},
                 "page2",
                 4
             };
-        } else if (cursor == "page2") {
+        } else if (*cursor == "page2") {
             return {
                 {{{"id", 3}, {"name", "three"}}, {{"id", 4}, {"name", "four"}}},
                 std::nullopt,
@@ -300,10 +303,10 @@ TEST(PaginationIntegration, RegistryStylePagination) {
         {"item4", 4}, {"item5", 5}, {"item6", 6}
     };
 
-    auto fetch_page = [&all_db_items](const std::string& cursor) -> PaginatedResult<Item> {
+    auto fetch_page = [&all_db_items](const std::optional<std::string>& cursor) -> PaginatedResult<Item> {
         int offset = 0;
-        if (!cursor.empty()) {
-            offset = std::stoi(cursor);
+        if (cursor && !cursor->empty()) {
+            offset = std::stoi(*cursor);
         }
 
         const size_t page_size = 2;
@@ -332,14 +335,14 @@ TEST(PaginationIntegration, EmptyPages) {
     // Test handling of empty pages in the middle of pagination
     int page_num = 0;
 
-    auto fetch_page = [&page_num](const std::string& cursor) -> PaginatedResult<int> {
-        if (cursor.empty()) {
+    auto fetch_page = [&page_num](const std::optional<std::string>& cursor) -> PaginatedResult<int> {
+        if (!cursor || cursor->empty()) {
             page_num = 1;
             return {{1}, "page2", 3};
-        } else if (cursor == "page2") {
+        } else if (*cursor == "page2") {
             page_num = 2;
             return {{}, "page3", 3};  // Empty page
-        } else if (cursor == "page3") {
+        } else if (*cursor == "page3") {
             page_num = 3;
             return {{2, 3}, std::nullopt, 3};
         }
@@ -356,10 +359,10 @@ TEST(PaginationIntegration, EmptyPages) {
 
 TEST(PaginationIntegration, ConsistentTotal) {
     // Test that total is consistent across pages
-    auto fetch_page = [](const std::string& cursor) -> PaginatedResult<int> {
-        if (cursor.empty()) {
+    auto fetch_page = [](const std::optional<std::string>& cursor) -> PaginatedResult<int> {
+        if (!cursor || cursor->empty()) {
             return {{1, 2}, "page2", 100};
-        } else if (cursor == "page2") {
+        } else if (*cursor == "page2") {
             return {{3, 4}, "page3", 100};
         }
         return {{5}, std::nullopt, 100};

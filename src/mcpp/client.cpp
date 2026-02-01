@@ -180,7 +180,7 @@ void McpClient::send_request(
 
     // Create cancellation source and register for this request
     client::CancellationSource cancel_source;
-    cancellation_manager_.register_request(id, cancel_source);
+    cancellation_manager_.register_request(id, std::move(cancel_source));
 
     // Create JSON-RPC request
     core::JsonRpcRequest request;
