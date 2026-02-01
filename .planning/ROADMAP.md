@@ -32,6 +32,8 @@ mcpp v1.0 delivered a complete MCP 2025-11-25 implementation with dual transport
 
 **Milestone Goal:** Fix critical JSON-RPC parse error bug and enable MCP Inspector CLI testing
 
+**Milestone Goal:** Fix critical JSON-RPC parse error bug and enable MCP Inspector CLI testing
+
 #### Phase 8: Bug Fix Foundation
 **Goal**: Library provides proper JSON-RPC request validation and stdio protocol compliance
 **Depends on**: Phase 7 (v1.0 complete)
@@ -43,8 +45,8 @@ mcpp v1.0 delivered a complete MCP 2025-11-25 implementation with dual transport
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Implement JsonRpcRequest::from_json() validation with ParseError diagnostics
-- [ ] 08-02-PLAN.md — Add newline-delimited output helpers and stderr-only debug logging macro
+- [x] 08-01-PLAN.md — Implement JsonRpcRequest::from_json() validation with ParseError diagnostics
+- [x] 08-02-PLAN.md — Add newline-delimited output helpers and stderr-only debug logging macro
 
 #### Phase 9: Inspector Server Integration
 **Goal**: Example server uses new validation layer and is compatible with MCP Inspector
@@ -92,9 +94,9 @@ Phases execute in numeric order: 8 → 9 → 10 → 11
 | 5. Content & Tasks | v1.0 | 4/4 | Complete | 2026-01-31 |
 | 6. High-Level API | v1.0 | 7/7 | Complete | 2026-02-01 |
 | 7. Build & Validation | v1.0 | 6/6 | Complete | 2026-02-01 |
-| 8. Bug Fix Foundation | v1.1 | 0/2 | Not started | - |
+| 8. Bug Fix Foundation | v1.1 | 2/2 | Complete | 2026-02-01 |
 | 9. Inspector Server Integration | v1.1 | 0/TBD | Not started | - |
 | 10. Automated CLI Testing | v1.1 | 0/TBD | Not started | - |
 | 11. Documentation | v1.1 | 0/TBD | Not started | - |
 
-**v1.1 Progress:** [░░░░░░░░░░] 0% (0/ 2 plans)
+**v1.1 Progress:** [████░░░░░░] 50% (2/4 phases complete; 2/2 plans in Phase 8)

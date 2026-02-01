@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 8 of 11 (Bug Fix Foundation)
-Plan: 1 of TBD in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-01T08:37:40Z — Completed 08-01-PLAN.md
+Last activity: 2026-02-01T08:37:35Z — Completed 08-02-PLAN.md (I/O Helpers)
 
-Progress: [████████░░░░░░░░░░] 58% (46/46 plans from v1.0 complete; 1/?? plans from v1.1 complete)
+Progress: [████████░░░░░░░░░░] 59% (46/46 plans from v1.0 complete; 2/4 plans from v1.1 complete)
 
 ## Milestone Archive
 
@@ -31,7 +31,7 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 46 (v1.0)
+- Total plans completed: 48 (46 v1.0 + 2 v1.1)
 - v1.0 duration: 105 days (~2.3 days/plan average, includes research and delays)
 
 **By Phase (v1.0):**
@@ -48,9 +48,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 
 **Recent Trend:**
 - v1.0 completed successfully 2026-02-01
-- v1.1 planning complete, ready to execute
+- v1.1 execution in progress - 08-01, 08-02 complete
 
-*Updated: 2026-02-01 (v1.1 roadmap created)*
+*Updated: 2026-02-01 (08-02-PLAN.md executed)*
 
 ## Accumulated Context
 
@@ -65,6 +65,8 @@ Recent decisions affecting current work:
 - v1.1: Bug fix strategy focuses on library layer first (JsonRpcRequest::from_json())
 - 08-01: ParseError messages exclude raw JSON content for security (avoid echoing malicious input)
 - 08-01: ID extraction from malformed requests deferred to Phase 09 when error responses are constructed
+- 08-02: to_string_delimited() methods added to all JSON-RPC types for stdio transport
+- 08-02: MCPP_DEBUG_LOG macro always writes to stderr (no conditional compilation)
 
 ### Blockers/Concerns
 
@@ -73,9 +75,9 @@ Recent decisions affecting current work:
 - CMake 3.31 with GCC 15 has object file directory creation issue (workaround documented)
 
 **v1.1 risks identified in research:**
-- Stdout pollution could corrupt JSON-RPC stream — addressed by BUGFIX-03
-- Missing newline delimiters could cause parse errors — addressed by BUGFIX-02
-- Flaky CLI tests due to timing issues — addressed by TEST-04 (lifecycle helpers)
+- ~~Stdout pollution could corrupt JSON-RPC stream~~ — addressed by 08-02 (MCPP_DEBUG_LOG)
+- ~~Missing newline delimiters could cause parse errors~~ — addressed by 08-02 (to_string_delimited)
+- Flaky CLI tests due to timing issues — will be addressed by TEST-04 (lifecycle helpers)
 
 ### Pending Todos
 
@@ -83,16 +85,15 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01T08:37:40Z
-Stopped at: Completed 08-01-PLAN.md (JSON-RPC Request Validation)
+Last session: 2026-02-01T08:37:35Z
+Stopped at: Completed 08-02-PLAN.md (I/O Helpers)
 Resume file: None
 
-**Milestone v1.1 Phase 8 Plan 01 complete:**
-- JsonRpcRequest::from_json() validation implemented
-- ParseError diagnostics struct with 8 error codes
+**Milestone v1.1 Phase 8 progress:**
+- 08-01 complete: JsonRpcRequest::from_json() validation with ParseError diagnostics
+- 08-02 complete: to_string_delimited() methods + MCPP_DEBUG_LOG macro
 - All 184 tests passing
-- Ready for Phase 08-02 or Phase 09 planning
 
 **Next steps:**
-- Continue with Phase 08 plans (BUGFIX-02, BUGFIX-03, TEST-04)
-- Or proceed to Phase 09 (Example Server) when 08-01 complete
+- Continue with Phase 08-03 (BUGFIX-03: Zero stdout pollution in client)
+- Or continue to Phase 09 (Example Server) after Phase 08 complete
