@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive  # Critical: fetches bats-core and helper libraries
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++ libssl-dev jq nlohmann-json3-dev
+
+    - name: Configure CMake
+      run: |
+        export PATH="${PWD}/tests/cli/bats/bin:${PATH}"
+        cmake -B build -DCMAKE_BUILD_TYPE=Debug
+
+    - name: Build
+      run: cmake --build build
+
+    - name: Run tests
+      run: |
+        export PATH="${PWD}/tests/cli/bats/bin:${PATH}"
+        cd build && ctest --output-on-failure
