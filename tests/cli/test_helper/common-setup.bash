@@ -2,18 +2,19 @@
 # This file provides consistent test environment configuration
 
 # Load bats-support helper library
-load "${BATS_TEST_DIRNAME}/bats-support/load.bash"
+# The bats helper libraries are in test_helper/ subdirectory
+load "${BATS_TEST_DIRNAME}/test_helper/bats-support/load.bash"
 
 # Load bats-assert helper library
-load "${BATS_TEST_DIRNAME}/bats-assert/load.bash"
+load "${BATS_TEST_DIRNAME}/test_helper/bats-assert/load.bash"
 
 # Load bats-file helper library for filesystem assertions
-load "${BATS_TEST_DIRNAME}/bats-file/load.bash"
+load "${BATS_TEST_DIRNAME}/test_helper/bats-file/load.bash"
 
 # Determine project root from test file location
-# BATS_TEST_FILENAME is the absolute path to the current test file
-# We navigate up to the project root (mcpp directory)
-PROJECT_ROOT="$(cd "${BATS_TEST_DIRNAME}/../../.." && pwd)"
+# BATS_TEST_DIRNAME is the directory containing the test files (tests/cli/)
+# We navigate up two levels to get to the project root (mcpp directory)
+PROJECT_ROOT="$(cd "${BATS_TEST_DIRNAME}/../.." && pwd)"
 
 # Export MCPP_DEBUG for server debug output during tests
 export MCPP_DEBUG=1
