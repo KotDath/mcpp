@@ -363,6 +363,12 @@ int main(int argc, char* argv[]) {
             // Parse raw JSON
             json raw = json::parse(line);
 
+            // Skip messages without jsonrpc field (Inspector internal messages, keep-alives, etc.)
+            if (!raw.contains("jsonrpc")) {
+                MCPP_DEBUG_LOG("Skipping non-JSON-RPC message");
+                continue;
+            }
+
             // Use Phase 8 validation layer - validates full JSON-RPC 2.0 structure
             if (auto parsed = mcpp::core::JsonRpcRequest::from_json(raw)) {
                 // Valid JSON-RPC request - process with server
@@ -373,7 +379,7 @@ int main(int argc, char* argv[]) {
                 }
                 // Notifications have no response
             } else {
-                // Validation failed - extract ID for proper error response
+                // Validation failed - has jsonrpc field but invalid JSON-RPC structure
                 mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(line);
 
                 json error_response = {
@@ -395,26 +401,32 @@ int main(int argc, char* argv[]) {
                 std::cout << error_response.dump() << "\n" << std::flush;
             }
         } catch (const json::exception& e) {
-            // Completely malformed JSON - still try to extract ID for error response
-            mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(line);
+            // Completely malformed JSON - check if it has jsonrpc before sending error
+            if (line.find("\"jsonrpc\"") != std::string::npos) {
+                // Has jsonrpc field but malformed - return parse error
+                mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(line);
 
-            json error_response = {
-                {"jsonrpc", "2.0"},
-                {"error", {
-                    {"code", -32700},
-                    {"message", "Parse error"}
-                }},
-                {"id", std::visit([](auto&& v) -> json {
-                    using T = std::decay_t<decltype(v)>;
-                    if constexpr (std::is_same_v<T, int64_t>) {
-                        return v;
-                    } else if constexpr (std::is_same_v<T, std::string>) {
-                        return v;
-                    }
-                    return nullptr;
-                }, id)}
-            };
-            std::cout << error_response.dump() << "\n" << std::flush;
+                json error_response = {
+                    {"jsonrpc", "2.0"},
+                    {"error", {
+                        {"code", -32700},
+                        {"message", "Parse error"}
+                    }},
+                    {"id", std::visit([](auto&& v) -> json {
+                        using T = std::decay_t<decltype(v)>;
+                        if constexpr (std::is_same_v<T, int64_t>) {
+                            return v;
+                        } else if constexpr (std::is_same_v<T, std::string>) {
+                            return v;
+                        }
+                        return nullptr;
+                    }, id)}
+                };
+                std::cout << error_response.dump() << "\n" << std::flush;
+            } else {
+                // Not a JSON-RPC message at all - skip silently
+                MCPP_DEBUG_LOG("Skipping non-JSON-RPC message (malformed)");
+            }
         }
     }
 
