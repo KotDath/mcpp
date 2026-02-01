@@ -48,6 +48,56 @@ std::optional<RequestId> parse_request_id(const JsonValue& j) {
 
 } // namespace detail
 
+// JsonRpcRequest implementation
+
+std::optional<JsonRpcRequest> JsonRpcRequest::from_json(const JsonValue& j) {
+    try {
+        // Check for jsonrpc field
+        if (!j.contains("jsonrpc") || !j["jsonrpc"].is_string()) {
+            return std::nullopt;
+        }
+        std::string jsonrpc_version = j["jsonrpc"].get<std::string>();
+        if (jsonrpc_version != "2.0") {
+            return std::nullopt;
+        }
+
+        // Check for id field (required for requests)
+        if (!j.contains("id")) {
+            return std::nullopt;
+        }
+        auto id_opt = detail::parse_request_id(j["id"]);
+        if (!id_opt) {
+            return std::nullopt;
+        }
+
+        // Check for method field
+        if (!j.contains("method") || !j["method"].is_string()) {
+            return std::nullopt;
+        }
+
+        JsonRpcRequest request;
+        request.jsonrpc = jsonrpc_version;
+        request.id = *id_opt;
+        request.method = j["method"].get<std::string>();
+
+        // Check for params (optional, but must be object or array if present)
+        if (j.contains("params")) {
+            const JsonValue& params = j["params"];
+            if (!params.is_object() && !params.is_array()) {
+                return std::nullopt;
+            }
+            request.params = params;
+        }
+
+        return request;
+
+    } catch (const nlohmann::json::exception&) {
+        return std::nullopt;
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
 // JsonRpcResponse implementation
 
 std::optional<JsonRpcResponse> JsonRpcResponse::from_json(const JsonValue& j) {
