@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Developers can build MCP clients and servers in C++ that are fast, correct, and support the complete protocol spec without wrestling with JSON-RPC details or transport plumbing
 
-**Current focus:** Phase 10 - Automated CLI Testing
+**Current focus:** Phase 11 - Documentation
 
 ## Current Position
 
-Phase: 10 of 10 (Automated CLI Testing)
-Plan: 6 of 6 in current phase
-Status: Phase complete, verified
-Last activity: 2026-02-01 — Phase 10 verified, all gaps closed
+Phase: 11 of 11 (Documentation)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-01 — Completed 11-01: README Inspector Testing section
 
-Progress: [████████████████████] 100% (54/54 complete including gap closure plans)
+Progress: [████████████████░░░] 96% (55/57 complete)
 
 ## Milestone Archive
 
@@ -58,14 +58,16 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 | 8 | 2 | Complete |
 | 9 | 3 | Complete |
 | 10 | 6 | Complete |
+| 11 | 2 | In Progress |
 
 **Recent Trend:**
 - v1.0 completed successfully 2026-02-01
 - Phase 8 (Bug Fix Foundation) complete — JsonRpcRequest::from_json() validation + stdio protocol helpers
 - Phase 9 complete: Inspector server integration with MCP stdio transport, notification handling, and full UI/CLI compatibility
 - Phase 10 complete: BATS testing infrastructure, 45 CLI tests passing, CMake/CTest integration
+- Phase 11 in progress: README Inspector Testing section complete
 
-*Updated: 2026-02-01 (Phase 10 complete)*
+*Updated: 2026-02-01 (Phase 11-01 complete)*
 
 ## Accumulated Context
 
@@ -115,6 +117,10 @@ Recent decisions affecting current work:
 - 10-05: CMake HINTS for Git submodule bats location (${CMAKE_CURRENT_SOURCE_DIR}/cli/bats/bin/bats)
 - 10-06: All CLI test files use common-setup.bash helper consistently
 - 10-06: Setup logic centralized in one file - ~36 lines of duplicated code eliminated
+- 11-01: README.md Inspector Testing section placed after Examples, before Testing sections
+- 11-01: Both UI mode (interactive) and CLI mode (scriptable) examples provided
+- 11-01: ASCII diagram showing stdio message flow for visual understanding
+- 11-01: Quick Start updated to include Inspector testing verification step
 
 ### Blockers/Concerns
 
@@ -134,22 +140,16 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-Phase 11 (Documentation) — Update README with Inspector testing instructions and create testing guide for custom Inspector tests.
+Phase 11 (Documentation) — 11-02: Create TESTING.md guide for writing custom BATS tests.
 
-v1.1 milestone: 4/5 phases complete (Phases 8, 9, 10, 11 pending documentation).
+v1.1 milestone: 4/5 phases complete (Phases 8, 9, 10 complete; Phase 11 in progress - 1/2 plans complete).
 
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Phase 10 verified, all gap closure plans complete
+Stopped at: Completed 11-01: README Inspector Testing section
 Resume file: None
 
-**Phase 10 Progress:**
-- 10-01: BATS Testing Infrastructure (COMPLETE)
-- 10-02: Inspector Server Basic Tests (COMPLETE)
-- 10-03: Protocol Coverage Tests (COMPLETE)
-- 10-04: Server Lifecycle Tests and CMake Integration (COMPLETE)
-- 10-05: CI/CD Pipeline & CMake Bats Discovery (COMPLETE)
-- 10-06: Common Setup Refactoring (COMPLETE)
-
-**Phase 10 COMPLETE & VERIFIED** — All 6 plans finished (including gap closure), 191 tests passing (184 unit/integration/compliance + 7 CLI tests), CI/CD pipeline configured, both gaps (CI/CD Integration, common-setup Usage) closed.
+**Phase 11 Progress:**
+- 11-01: README Inspector Testing Section (COMPLETE)
+- 11-02: BATS Testing Guide (PENDING)
