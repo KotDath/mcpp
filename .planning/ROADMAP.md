@@ -91,7 +91,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. README includes MCP Inspector testing instructions
   2. Testing guide explains how to write custom Inspector tests
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — Update README.md with Inspector Testing section (UI and CLI modes)
+- [ ] 11-02-PLAN.md — Create TESTING.md with BATS testing guide
 
 ## Progress
 
@@ -110,6 +114,6 @@ Phases execute in numeric order: 8 → 9 → 10 → 11
 | 8. Bug Fix Foundation | v1.1 | 2/2 | Complete | 2026-02-01 |
 | 9. Inspector Server Integration | v1.1 | 3/3 | Complete | 2026-02-01 |
 | 10. Automated CLI Testing | v1.1 | 6/6 | Complete | 2026-02-01 |
-| 11. Documentation | v1.1 | 0/TBD | Not started | - |
+| 11. Documentation | v1.1 | 0/2 | Not started | - |
 
-**v1.1 Progress:** [████████░░] 100% (4/4 phases complete; Phase 11 pending)
+**v1.1 Progress:** [████████░░] 80% (4/5 phases complete; Phase 11 planning ready)
