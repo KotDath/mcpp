@@ -141,6 +141,20 @@ struct JsonRpcRequest {
     std::string to_string_delimited() const {
         return to_json().dump() + "\n";
     }
+
+    /**
+     * Parse a JSON value into a JsonRpcRequest
+     *
+     * Validates JSON-RPC 2.0 request structure including:
+     * - jsonrpc field equals "2.0"
+     * - id field is present and valid (string, number, or null)
+     * - method field is present and is a string
+     * - params field (if present) is object or array
+     *
+     * @param j JSON value to parse
+     * @return Parsed request, or nullopt if parsing fails
+     */
+    static std::optional<JsonRpcRequest> from_json(const JsonValue& j);
 };
 
 /**
