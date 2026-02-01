@@ -442,6 +442,7 @@ int main(int argc, char* argv[]) {
 
         json raw;
         bool uses_content_length = false;
+        bool parse_success = false;
 
         // Check if this is a Content-Length header
         if (header_line.find("Content-Length:") == 0) {
@@ -475,11 +476,53 @@ int main(int argc, char* argv[]) {
             std::cin.get();  // Consume trailing newline
 
             MCPP_DEBUG_LOG("Content-Length mode: received %zu bytes", json_payload.size());
-            raw = json::parse(json_payload);
+
+            try {
+                raw = json::parse(json_payload);
+                parse_success = true;
+            } catch (const json::exception& e) {
+                MCPP_DEBUG_LOG("JSON parse error in Content-Length mode: %s", e.what());
+            }
         } else {
             // Line-delimited JSON mode (Inspector CLI, manual testing)
             MCPP_DEBUG_LOG("Line-delimited mode: parsing as JSON");
-            raw = json::parse(header_line);
+
+            try {
+                raw = json::parse(header_line);
+                parse_success = true;
+            } catch (const json::exception& e) {
+                MCPP_DEBUG_LOG("JSON parse error in line-delimited mode: %s", e.what());
+            }
+        }
+
+        // If parsing failed, send parse error response
+        if (!parse_success) {
+            mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(header_line);
+
+            json error_response = {
+                {"jsonrpc", "2.0"},
+                {"error", {
+                    {"code", -32700},
+                    {"message", "Parse error"}
+                }},
+                {"id", std::visit([](auto&& v) -> json {
+                    using T = std::decay_t<decltype(v)>;
+                    if constexpr (std::is_same_v<T, int64_t>) {
+                        return v;
+                    } else if constexpr (std::is_same_v<T, std::string>) {
+                        return v;
+                    }
+                    return nullptr;
+                }, id)}
+            };
+            std::string error_str = error_response.dump();
+            if (uses_content_length) {
+                std::cout << "Content-Length: " << error_str.size() << "\r\n\r\n" << error_str << std::flush;
+            } else {
+                std::cout << error_str << "\n" << std::flush;
+            }
+            MCPP_DEBUG_LOG("Sent parse error response");
+            continue;
         }
 
         MCPP_DEBUG_LOG("Parsed method: %s", raw["method"].get<std::string>().c_str());
