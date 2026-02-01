@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 9 of 11 (Inspector Server Integration)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-01 — Completed 09-01 (Extract Request ID Helper)
+Last activity: 2026-02-01 — Completed 09-02 (Inspector Server Request Validation)
 
-Progress: [███████████░░░░░░] 65% (46/46 plans from v1.0 complete; 1/3 plans from Phase 9 complete)
+Progress: [████████████░░░░░] 67% (46/46 plans from v1.0 complete; 2/3 plans from Phase 9 complete)
 
 ## Milestone Archive
 
@@ -46,14 +46,14 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 | 6 | 7 | Complete |
 | 7 | 6 | Complete |
 | 8 | 2 | Complete |
-| 9 | 3 | In progress (1/3) |
+| 9 | 3 | In progress (2/3) |
 
 **Recent Trend:**
 - v1.0 completed successfully 2026-02-01
 - Phase 8 (Bug Fix Foundation) complete — JsonRpcRequest::from_json() validation + stdio protocol helpers
-- v1.1 execution continuing — Phase 9 (Inspector Server Integration) next
+- Phase 9-02 complete: Inspector server updated with from_json() validation and MCPP_DEBUG_LOG
 
-*Updated: 2026-02-01 (Phase 8 complete)*
+*Updated: 2026-02-01 (Phase 9-02 complete)*
 
 ## Accumulated Context
 
@@ -73,6 +73,10 @@ Recent decisions affecting current work:
 - 08-complete: Test coverage gaps deferred to Phase 10 (Automated CLI Testing)
 - 09-01: JsonRpcRequest::extract_request_id() uses string search for malformed JSON (not JSON parsing)
 - 09-01: Null ID (int64_t=0) as universal fallback for request ID extraction failures
+- 09-02: inspector_server.cpp uses from_json() for request validation before processing
+- 09-02: Parse error responses include extracted ID via extract_request_id() helper
+- 09-02: Startup/shutdown messages remain as std::cerr (user-facing), not debug output
+- 09-02: All stdout protocol output uses "\n" + std::flush for proper stdio framing
 
 ### Blockers/Concerns
 
@@ -92,14 +96,15 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 09-01-PLAN.md (Extract Request ID Helper)
+Stopped at: Completed 09-02-PLAN.md (Inspector Server Request Validation)
 Resume file: None
 
-**Milestone v1.1 Phase 9 Plan 1 complete:**
-- 09-01: JsonRpcRequest::extract_request_id() static helper for ID extraction from malformed JSON
-- Supports string, numeric, and null ID formats per JSON-RPC 2.0 spec
-- Best-effort parsing using string search (works on malformed input)
-- All 121 unit tests passing
+**Milestone v1.1 Phase 9 Plan 2 complete:**
+- 09-02: inspector_server.cpp updated with from_json() validation
+- 35+ lines of manual ID extraction code removed
+- MCPP_DEBUG_LOG macro added for runtime debug output
+- All protocol output uses "\n" + std::flush for stdio framing
+- All 184 tests passing
 
 **Next steps:**
-- Execute 09-02-PLAN.md: Integrate extract_request_id() into inspector server error handling
+- Execute 09-03-PLAN.md: Manual testing with MCP Inspector (create mcp.json, TESTING.md)
