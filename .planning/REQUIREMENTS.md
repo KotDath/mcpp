@@ -9,9 +9,9 @@ Requirements for Stability & Inspector Integration milestone. Each maps to roadm
 
 ### Bug Fixes
 
-- [ ] **BUGFIX-01**: Library provides JsonRpcRequest::from_json() for proper request validation
-- [ ] **BUGFIX-02**: All JSON output includes trailing newline delimiter for stdio compliance
-- [ ] **BUGFIX-03**: Debug output goes to stderr, not stdout (prevents protocol pollution)
+- [x] **BUGFIX-01**: Library provides JsonRpcRequest::from_json() for proper request validation
+- [x] **BUGFIX-02**: All JSON output includes trailing newline delimiter for stdio compliance
+- [x] **BUGFIX-03**: Debug output goes to stderr, not stdout (prevents protocol pollution)
 - [ ] **BUGFIX-04**: Example server uses new request validation layer
 - [ ] **BUGFIX-05**: Parse error responses include properly extracted request ID
 
@@ -62,9 +62,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUGFIX-01 | Phase 8 | Pending |
-| BUGFIX-02 | Phase 8 | Pending |
-| BUGFIX-03 | Phase 8 | Pending |
+| BUGFIX-01 | Phase 8 | Complete |
+| BUGFIX-02 | Phase 8 | Complete |
+| BUGFIX-03 | Phase 8 | Complete |
 | BUGFIX-04 | Phase 9 | Pending |
 | BUGFIX-05 | Phase 9 | Pending |
 | INSPECT-01 | Phase 9 | Pending |
