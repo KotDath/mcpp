@@ -282,6 +282,28 @@ private:
  */
 inline Logger& logger() { return Logger::global(); }
 
+/**
+ * @brief Debug logging macro for stderr-only output
+ *
+ * MCPP_DEBUG_LOG writes debug messages directly to stderr, avoiding
+ * any stdout pollution that could corrupt the JSON-RPC stdio protocol.
+ *
+ * Use this for temporary debug output or diagnostics in library code paths.
+ * For structured logging, use the Logger class instead.
+ *
+ * Usage:
+ *   MCPP_DEBUG_LOG("Request validation failed: code=%d", error_code);
+ *   MCPP_DEBUG_LOG("Processing request with method=%s", method.c_str());
+ *
+ * Format uses printf-style formatting with std::fprintf.
+ *
+ * @note This macro is always active (no debug build gating) to ensure
+ *       debug output is always routed to stderr, never stdout.
+ */
+#ifndef MCPP_DEBUG_LOG
+#define MCPP_DEBUG_LOG(fmt, ...) std::fprintf(stderr, "[MCPP_DEBUG] " fmt "\n", ##__VA_ARGS__)
+#endif
+
 } // namespace mcpp::util
 
 #endif // MCPP_UTIL_LOGGER_H
