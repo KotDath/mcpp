@@ -4,17 +4,38 @@
 
 A modern C++17 library for building Model Context Protocol (MCP) clients and servers. Provides full MCP 2025-11-25 spec coverage with all transports (stdio, SSE), fast JSON-RPC handling, and minimal blocking operations. Distributed under MIT license for both static and shared library use.
 
-**Current State:** v1.1 in development — fixing critical JSON-RPC parse error bug, adding MCP Inspector integration, improving test coverage
+**Current State:** v1.1 shipped (2026-02-01) — JSON-RPC parse error bug fixed, MCP Inspector integration complete, automated CLI testing via BATS framework
 
-## Current Milestone: v1.1 Stability & Inspector Integration
+## Current State: v1.1
 
-**Goal:** Fix critical JSON-RPC parse error bug and enable proper testing via MCP Inspector CLI mode.
+**Shipped:** 2026-02-01
 
-**Target features:**
-- Fix JSON-RPC parse error (-32700) affecting all tool calls
-- Build example server compatible with `npx @modelcontextprotocol/inspector`
-- Create automated CLI testing scripts for CI/CD
-- Add comprehensive edge case and integration tests
+**Delivered:**
+- Fixed JSON-RPC parse error (-32700) affecting all tool calls
+- Stdio transport protocol compliance (newline delimiters, stderr-only debug logging)
+- MCP Inspector UI/CLI compatibility
+- BATS automated testing framework (45 CLI tests)
+- GitHub Actions CI/CD pipeline
+- README Inspector Testing section and TESTING.md BATS testing guide
+
+**Stats:**
+- 13 plans across 4 phases (Phases 8-11)
+- 15,800+ lines of C++ code
+- 191 tests passing (184 unit/integration/compliance + 7 CLI tests)
+- 1 day rapid stabilization effort
+
+**Archives:**
+- Roadmap: `.planning/milestones/v1.1-ROADMAP.md`
+- Requirements: `.planning/milestones/v1.1-REQUIREMENTS.md`
+
+## Next Milestone Goals
+
+Potential areas for v1.2+:
+- Tool result streaming tests
+- Performance benchmarks under Inspector
+- WebSocket transport testing (when added to spec)
+- Memory sanitizer testing integration
+- Zero-copy types for performance optimization
 
 ## Core Value
 
@@ -35,13 +56,16 @@ Developers can build MCP clients and servers in C++ that are fast, correct, and 
 - ✓ Linux primary, cross-platform support (documented patterns for macOS, Windows) — v1.0
 - ✓ MIT license — v1.0
 - ✓ Static and shared library distribution — v1.0
+- ✓ JSON-RPC parse error (-32700) fixed with from_json() validation — v1.1
+- ✓ Stdio transport protocol compliance (newline delimiters, stderr logging) — v1.1
+- ✓ MCP Inspector UI/CLI compatibility with mcp.json configuration — v1.1
+- ✓ Automated CLI testing via BATS framework (45 tests) — v1.1
+- ✓ CI/CD pipeline with GitHub Actions — v1.1
+- ✓ Inspector testing documentation (README + TESTING.md) — v1.1
 
 ### Active
 
-- [ ] Fix JSON-RPC parse error (-32700) on tool calls — v1.1
-- [ ] MCP Inspector example server for CLI/UI testing — v1.1
-- [ ] Automated CLI testing scripts for CI/CD — v1.1
-- [ ] Improved test coverage (edge cases, integration tests) — v1.1
+None — v1.1 complete, awaiting next milestone definition
 
 ### Out of Scope
 
@@ -65,7 +89,7 @@ Developers can build MCP clients and servers in C++ that are fast, correct, and 
 **Technical environment:**
 - Build system: CMake
 - Language: C++17 (gcc-11/g++-11)
-- Testing: Google Test + MCP Inspector
+- Testing: Google Test + BATS (CLI) + MCP Inspector
 - Dependencies: nlohmann/json, openssl, networking libs as needed
 
 **Known challenges addressed:**
@@ -96,14 +120,37 @@ Developers can build MCP clients and servers in C++ that are fast, correct, and 
 
 </details>
 
+<details>
+<summary>v1.1 Key Decisions</summary>
+
+**Bug Fix Strategy:**
+- Library layer first (JsonRpcRequest::from_json()) before example server updates
+- ParseError messages exclude raw JSON content for security (avoid echoing malicious input)
+- ID extraction from malformed requests uses string search (not JSON parsing)
+- Null ID (int64_t=0) as universal fallback for request ID extraction failures
+
+**Testing Infrastructure:**
+- Git submodules for BATS framework instead of system packages (reproducibility)
+- Code-first documentation: walkthrough existing tests before teaching template
+- PATH-based binary discovery for inspector_server in tests
+- Common _common_setup() function pattern for all CLI test files
+
+**Stdio Protocol:**
+- to_string_delimited() methods added to all JSON-RPC types
+- MCPP_DEBUG_LOG macro always writes to stderr (no conditional compilation)
+- Content-Length headers for MCP stdio message framing
+
+</details>
+
 **Current codebase state:**
-- LOC: 15,511 lines of C++ (headers/sources)
-- Test coverage: 184 tests (100% pass rate)
+- LOC: ~15,800 lines of C++ (headers/sources)
+- Test coverage: 191 tests (184 unit/integration/compliance + 7 CLI tests, 100% pass rate)
 - Build targets: Static library (libmcpp.a) and shared library (libmcpp.so.0.1.0)
 - Sanitizer testing: AddressSanitizer/LeakSanitizer and ThreadSanitizer documented in README
+- CI/CD: GitHub Actions workflow with CMake/CTest integration
 
 **Known issues:**
-- **CRITICAL**: JSON-RPC parse error (-32700) on all tool calls — needs investigation and fix
+- ~~JSON-RPC parse error (-32700) on all tool calls~~ — FIXED in v1.1
 - CMake 3.31 with GCC 15 has object file directory creation issue (workaround documented)
 - Optional nlohmann/json-schema-validator dependency (conditionally compiled via MCPP_HAS_JSON_SCHEMA)
 - NullTransport not exported in public headers (internal use only)
@@ -124,21 +171,13 @@ Developers can build MCP clients and servers in C++ that are fast, correct, and 
 | Layered API (low-level core + high-level wrappers) | Low-level for power users and spec updates; high-level for ergonomics | ✓ Both patterns working, users have choice |
 | Async model: callback core with future wrappers | Streaming needs callbacks; simple RPC works with futures | ✓ Streaming and simple calls both supported |
 | Pragmatic dependencies | nlohmann/json, openssl, networking libs are proven and reliable | ✓ Stable dependency chain |
-| Traditional library structure | Header-only would slow compiles; separate headers/sources scale better | ✓ 15K LOC builds quickly |
+| Traditional library structure | Header-only would slow compiles; separate headers/sources scale better | ✓ 15K+ LOC builds quickly |
 | MCP 2025-11-25 spec | Latest standard with streaming and enhanced capabilities | ✓ Full spec coverage achieved |
 | std::stop_token for cancellation | C++20 feature for better composability with std::jthread | ✓ Cancellation working cleanly |
 | User-provided HTTP server integration | Library provides MCP protocol, not HTTP infrastructure | ✓ Template adapter pattern working |
 | Optional json-schema dependency | Not all users need output validation | ✓ Conditional compilation working |
-
-## Future Milestones
-
-Potential areas for v1.2+:
-- WebSocket transport (if added to MCP spec)
-- Zero-copy types for performance optimization
-- Header-only build option for easier distribution
-- Native macOS build support
-- Native Windows build support (MSVC)
-- Additional examples and tutorials
+| Library-first bug fix strategy (v1.1) | Fix core validation before example server updates | ✓ Clean separation of concerns |
+| BATS via Git submodules (v1.1) | Reproducible testing across environments | ✓ Consistent test infrastructure |
 
 ---
-*Last updated: 2026-02-01 after starting v1.1 milestone*
+*Last updated: 2026-02-01 after v1.1 milestone completion*
