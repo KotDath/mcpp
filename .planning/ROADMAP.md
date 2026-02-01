@@ -1,20 +1,18 @@
-# Roadmap: mcpp
+# Roadmap: mcpp - C++ MCP Library
 
 ## Overview
 
-✅ **v1.0 SHIPPED 2026-02-01** — See `.planning/milestones/v1.0-ROADMAP.md` for complete details.
-
-A modern C++17 library for the Model Context Protocol (MCP) with full MCP 2025-11-25 spec coverage, stdio and HTTP (SSE) transports, thread-safe async design, production-ready build system, and comprehensive testing.
+mcpp v1.0 delivered a complete MCP 2025-11-25 implementation with dual transports (stdio, SSE), thread-safe async design, and comprehensive testing. v1.1 is a focused stabilization milestone fixing the critical JSON-RPC parse error bug (-32700) and enabling proper testing via MCP Inspector CLI integration. The work follows a clear dependency chain: fix library layer first, update example server to use fixes, add automated tests to prevent regression, and document the new testing capabilities.
 
 ## Milestones
 
-- ✅ **v1.0 Initial Release** — Phases 1-7 (shipped 2026-02-01)
-- 📋 **v1.1** — Not yet defined (run `/gsd:new-milestone` to plan)
+- ✅ **v1.0 Initial Release** - Phases 1-7 (shipped 2026-02-01)
+- 🚧 **v1.1 Stability & Inspector Integration** - Phases 8-11 (in progress)
 
-## Completed Milestones
+## Phases
 
 <details>
-<summary>✅ v1.0 Initial Release (Phases 1-7) — SHIPPED 2026-02-01</summary>
+<summary>✅ v1.0 Initial Release (Phases 1-7) - SHIPPED 2026-02-01</summary>
 
 **[See full archived roadmap: `.planning/milestones/v1.0-ROADMAP.md`](.planning/milestones/v1.0-ROADMAP.md)**
 
@@ -30,18 +28,69 @@ A modern C++17 library for the Model Context Protocol (MCP) with full MCP 2025-1
 
 </details>
 
+### 🚧 v1.1 Stability & Inspector Integration (In Progress)
+
+**Milestone Goal:** Fix critical JSON-RPC parse error bug and enable MCP Inspector CLI testing
+
+#### Phase 8: Bug Fix Foundation
+**Goal**: Library provides proper JSON-RPC request validation and stdio protocol compliance
+**Depends on**: Phase 7 (v1.0 complete)
+**Requirements**: BUGFIX-01, BUGFIX-02, BUGFIX-03
+**Success Criteria** (what must be TRUE):
+  1. Library provides JsonRpcRequest::from_json() for proper request validation
+  2. All JSON output includes trailing newline delimiter for stdio compliance
+  3. Debug output goes to stderr, not stdout (prevents protocol pollution)
+**Plans**: TBD
+
+#### Phase 9: Inspector Server Integration
+**Goal**: Example server uses new validation layer and is compatible with MCP Inspector
+**Depends on**: Phase 8
+**Requirements**: BUGFIX-04, BUGFIX-05, INSPECT-01, INSPECT-02, INSPECT-03, INSPECT-04
+**Success Criteria** (what must be TRUE):
+  1. Example server uses JsonRpcRequest::from_json() for request parsing
+  2. Parse error responses include properly extracted request ID
+  3. mcp.json configuration enables standard Inspector compatibility
+  4. Manual testing with MCP Inspector CLI succeeds (tools/call works)
+**Plans**: TBD
+
+#### Phase 10: Automated CLI Testing
+**Goal**: Bats-core test suite validates all MCP methods via Inspector
+**Depends on**: Phase 9
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06
+**Success Criteria** (what must be TRUE):
+  1. Bats-core 1.11.0+ test framework integrated with CMake
+  2. Basic integration tests pass (tools/list, tools/call, resources/list, prompts/list)
+  3. JSON responses validated using jq
+  4. Server lifecycle helpers (startup, shutdown, cleanup) prevent process leaks
+  5. CI/CD runs cli-tests target as part of test suite
+**Plans**: TBD
+
+#### Phase 11: Documentation
+**Goal**: Users can run Inspector tests and write custom integration tests
+**Depends on**: Phase 10
+**Requirements**: DOCS-01, DOCS-02
+**Success Criteria** (what must be TRUE):
+  1. README includes MCP Inspector testing instructions
+  2. Testing guide explains how to write custom Inspector tests
+**Plans**: TBD
+
 ## Progress
 
-**v1.0 COMPLETE — All phases shipped**
+**Execution Order:**
+Phases execute in numeric order: 8 → 9 → 10 → 11
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Protocol Foundation | 6/6 | Complete | 2026-01-31 |
-| 2. Core Server | 6/6 | Complete | 2026-01-31 |
-| 3. Client Capabilities | 8/8 | Complete | 2026-01-31 |
-| 4. Advanced Features & HTTP Transport | 6/6 | Complete | 2026-01-31 |
-| 5. Content & Tasks | 4/4 | Complete | 2026-01-31 |
-| 6. High-Level API | 7/7 | Complete | 2026-02-01 |
-| 7. Build & Validation | 6/6 | Complete | 2026-02-01 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Protocol Foundation | v1.0 | 6/6 | Complete | 2026-01-31 |
+| 2. Core Server | v1.0 | 6/6 | Complete | 2026-01-31 |
+| 3. Client Capabilities | v1.0 | 8/8 | Complete | 2026-01-31 |
+| 4. Advanced Features & HTTP Transport | v1.0 | 6/6 | Complete | 2026-01-31 |
+| 5. Content & Tasks | v1.0 | 4/4 | Complete | 2026-01-31 |
+| 6. High-Level API | v1.0 | 7/7 | Complete | 2026-02-01 |
+| 7. Build & Validation | v1.0 | 6/6 | Complete | 2026-02-01 |
+| 8. Bug Fix Foundation | v1.1 | 0/TBD | Not started | - |
+| 9. Inspector Server Integration | v1.1 | 0/TBD | Not started | - |
+| 10. Automated CLI Testing | v1.1 | 0/TBD | Not started | - |
+| 11. Documentation | v1.1 | 0/TBD | Not started | - |
 
-**Progress:** █████████ 100%
+**v1.1 Progress:** [░░░░░░░░░░] 0% (0/ TBD plans)
