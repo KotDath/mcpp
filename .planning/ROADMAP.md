@@ -74,7 +74,13 @@ Plans:
   3. JSON responses validated using jq
   4. Server lifecycle helpers (startup, shutdown, cleanup) prevent process leaks
   5. CI/CD runs cli-tests target as part of test suite
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Set up bats-core Git submodules and common setup helper
+- [ ] 10-02-PLAN.md — Create initialize and tools/list endpoint tests
+- [ ] 10-03-PLAN.md — Create tools/call, resources, and prompts endpoint tests
+- [ ] 10-04-PLAN.md — Create server lifecycle tests and CMake integration
 
 #### Phase 11: Documentation
 **Goal**: Users can run Inspector tests and write custom integration tests
@@ -101,7 +107,7 @@ Phases execute in numeric order: 8 → 9 → 10 → 11
 | 7. Build & Validation | v1.0 | 6/6 | Complete | 2026-02-01 |
 | 8. Bug Fix Foundation | v1.1 | 2/2 | Complete | 2026-02-01 |
 | 9. Inspector Server Integration | v1.1 | 3/3 | Complete | 2026-02-01 |
-| 10. Automated CLI Testing | v1.1 | 0/TBD | Not started | - |
+| 10. Automated CLI Testing | v1.1 | 0/4 | Ready for execution | - |
 | 11. Documentation | v1.1 | 0/TBD | Not started | - |
 
-**v1.1 Progress:** [█████░░░░░] 75% (3/4 phases complete; 3/3 plans in Phase 9)
+**v1.1 Progress:** [█████░░░░░] 75% (3/4 phases complete; 0/4 plans in Phase 10)
