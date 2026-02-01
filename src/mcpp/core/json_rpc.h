@@ -53,6 +53,49 @@ using RequestId = std::variant<int64_t, std::string>;
  * {"jsonrpc": "2.0", "id": 1, "method": "subtract", "params": [42, 23]}
  */
 struct JsonRpcRequest {
+    // ParseError diagnostics struct
+    struct ParseError {
+        enum class Code {
+            MissingJsonrpc,
+            InvalidJsonrpcVersion,
+            MissingId,
+            InvalidIdType,
+            MissingMethod,
+            InvalidMethodType,
+            InvalidParamsType,
+            MalformedJson
+        };
+
+        Code code;
+        std::string message;  // Human-readable, NO raw JSON content (security)
+
+        // Factory methods for common errors
+        static ParseError missing_jsonrpc() {
+            return {Code::MissingJsonrpc, "Missing required 'jsonrpc' field"};
+        }
+        static ParseError invalid_jsonrpc_version() {
+            return {Code::InvalidJsonrpcVersion, "Invalid 'jsonrpc' version (must be '2.0')"};
+        }
+        static ParseError missing_id() {
+            return {Code::MissingId, "Missing required 'id' field"};
+        }
+        static ParseError invalid_id_type() {
+            return {Code::InvalidIdType, "Invalid 'id' type (must be string, number, or null)"};
+        }
+        static ParseError missing_method() {
+            return {Code::MissingMethod, "Missing required 'method' field"};
+        }
+        static ParseError invalid_method_type() {
+            return {Code::InvalidMethodType, "Invalid 'method' type (must be string)"};
+        }
+        static ParseError invalid_params_type() {
+            return {Code::InvalidParamsType, "Invalid 'params' type (must be object or array)"};
+        }
+        static ParseError malformed_json() {
+            return {Code::MalformedJson, "Malformed JSON"};
+        }
+    };
+
     std::string jsonrpc = "2.0";
     RequestId id;
     std::string method;
