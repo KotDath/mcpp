@@ -24,12 +24,12 @@ Requirements for Stability & Inspector Integration milestone. Each maps to roadm
 
 ### Automated Testing
 
-- [ ] **TEST-01**: Bats-core 1.11.0+ test framework integrated for CLI testing
-- [ ] **TEST-02**: Basic integration tests (tools/list, tools/call, resources/list, prompts/list)
-- [ ] **TEST-03**: JSON response validation using jq
-- [ ] **TEST-04**: Server lifecycle helpers (startup, shutdown, cleanup)
-- [ ] **TEST-05**: Full endpoint coverage (all MCP methods)
-- [ ] **TEST-06**: CI/CD integration with CMake test suite
+- [x] **TEST-01**: Bats-core 1.11.0+ test framework integrated for CLI testing
+- [x] **TEST-02**: Basic integration tests (tools/list, tools/call, resources/list, prompts/list)
+- [x] **TEST-03**: JSON response validation using jq
+- [x] **TEST-04**: Server lifecycle helpers (startup, shutdown, cleanup)
+- [x] **TEST-05**: Full endpoint coverage (all MCP methods)
+- [x] **TEST-06**: CI/CD integration with CMake test suite
 
 ### Documentation
 
@@ -71,12 +71,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INSPECT-02 | Phase 9 | Pending |
 | INSPECT-03 | Phase 9 | Pending |
 | INSPECT-04 | Phase 9 | Pending |
-| TEST-01 | Phase 10 | Pending |
-| TEST-02 | Phase 10 | Pending |
-| TEST-03 | Phase 10 | Pending |
-| TEST-04 | Phase 10 | Pending |
-| TEST-05 | Phase 10 | Pending |
-| TEST-06 | Phase 10 | Pending |
+| TEST-01 | Phase 10 | Complete |
+| TEST-02 | Phase 10 | Complete |
+| TEST-03 | Phase 10 | Complete |
+| TEST-04 | Phase 10 | Complete |
+| TEST-05 | Phase 10 | Complete |
+| TEST-06 | Phase 10 | Complete |
 | DOCS-01 | Phase 11 | Pending |
 | DOCS-02 | Phase 11 | Pending |
 
