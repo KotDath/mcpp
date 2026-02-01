@@ -35,12 +35,14 @@
  * 2. HttpSseWriterAdapter - wraps user's HTTP response for SSE streaming
  * 3. Session management via Mcp-Session-Id header
  * 4. Non-blocking I/O patterns
+ * 5. JSON-RPC request validation using JsonRpcRequest::from_json()
  *
  * NOTE: This is pseudo-code for demonstration. To run with a real HTTP server,
  * adapt the adapter classes to your server's API (e.g., cpp-httplib, drogon).
  */
 
 #include "mcpp/transport/http_transport.h"
+#include "mcpp/core/json_rpc.h"
 
 #include <iostream>
 #include <string>
@@ -196,6 +198,22 @@ int main() {
     // -------------------------------------------------------------------------
     server.Post("/mcp", [&](const HttpRequest& req, HttpResponse& res) {
         std::string session_id = req.get_header("Mcp-Session-Id");
+
+        // NOTE: For proper JSON-RPC request validation in production, wrap request parsing:
+        // try {
+        //     nlohmann::json body_json = nlohmann::json::parse(req.body);
+        //     auto parsed = mcpp::core::JsonRpcRequest::from_json(body_json);
+        //     if (!parsed) {
+        //         // Send parse error with extracted ID
+        //         mcpp::core::RequestId id = mcpp::core::JsonRpcRequest::extract_request_id(req.body);
+        //         // Return HTTP 400 with error response...
+        //     }
+        //     // Process valid request...
+        // } catch (const nlohmann::json::exception&) {
+        //     // Completely malformed JSON - return HTTP 400
+        // }
+        //
+        // This example shows HttpTransport usage without full validation for brevity.
 
         // Create adapter wrapping user's HTTP response
         // HttpResponseAdapter is a nested class template in HttpTransport
