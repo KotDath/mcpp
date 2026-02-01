@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 10 of 10 (Automated CLI Testing)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-02-01 — Completed 10-02 (Inspector Server Basic Tests)
+Last activity: 2026-02-01 — Completed 10-03 (Protocol Coverage Tests)
 
-Progress: [█████████░░░░░░░░░░░] 53% (50/52 complete counting Phase 10 plans)
+Progress: [██████████░░░░░░░░░░] 55% (51/52 complete counting Phase 10 plans)
 
 ## Milestone Archive
 
@@ -62,9 +62,9 @@ See `.planning/milestones/v1.0-ROADMAP.md` for full details.
 - v1.0 completed successfully 2026-02-01
 - Phase 8 (Bug Fix Foundation) complete — JsonRpcRequest::from_json() validation + stdio protocol helpers
 - Phase 9 complete: Inspector server integration with MCP stdio transport, notification handling, and full UI/CLI compatibility
-- Phase 10 progressing: BATS testing infrastructure complete, basic MCP protocol tests complete
+- Phase 10 progressing: BATS testing infrastructure complete, all MCP endpoint tests complete (40 passing)
 
-*Updated: 2026-02-01 (Phase 10-02 complete)*
+*Updated: 2026-02-01 (Phase 10-03 complete)*
 
 ## Accumulated Context
 
@@ -101,6 +101,10 @@ Recent decisions affecting current work:
 - 10-02: Project root calculated as BATS_TEST_DIRNAME/../.. from tests/cli/
 - 10-02: Inline JSON requests in tests to avoid subshell export issues
 - 10-02: JSON-RPC validation pattern using jq -e for structure checking
+- 10-03: Multi-request batching with brace blocks { echo req1; echo req2; } | server
+- 10-03: stderr suppression (2>/dev/null) to prevent MCPP_DEBUG output pollution
+- 10-03: tail -1 extraction for final response when batching requests
+- 10-03: jq pretty-prints JSON with spaces, use substring patterns without exact colon:value matches
 
 ### Blockers/Concerns
 
@@ -124,11 +128,11 @@ None. v1.1 milestone complete. Phase 10 in progress.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 10-02-PLAN.md (Inspector Server Basic Tests)
+Stopped at: Completed 10-03-PLAN.md (Protocol Coverage Tests)
 Resume file: None
 
 **Phase 10 Progress:**
 - 10-01: BATS Testing Infrastructure (COMPLETE)
 - 10-02: Inspector Server Basic Tests (COMPLETE)
-- 10-03: Protocol Coverage Tests (pending)
+- 10-03: Protocol Coverage Tests (COMPLETE)
 - 10-04: Test Stabilization (pending)
