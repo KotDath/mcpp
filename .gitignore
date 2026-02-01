@@ -40,3 +40,10 @@
 # debug information files
 *.dwo
 thirdparty/
+
+# Build directories
+build/
+Testing/
+
+# VS Code serena extension
+.serena/

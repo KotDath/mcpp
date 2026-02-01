@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/http_server_integration.dir/link.d CMakeFiles/http_server_integration.dir/http_server_integration.cpp.o -o http_server_integration  -Wl,-rpath,/home/kotdath/omp/personal/cpp/mcpp/build ../libmcpp.so.0.1.0
