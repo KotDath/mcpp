@@ -104,11 +104,17 @@ std::optional<nlohmann::json> McpServer::handle_request(
     nlohmann::json params = request_json.value("params", nlohmann::json::object());
     nlohmann::json id = request_json.value("id", nlohmann::json());
 
+    // Check if this is a notification (no id field)
+    bool is_notification = !request_json.contains("id");
+
     // Route to appropriate handler
-    nlohmann::json result;
+    std::optional<nlohmann::json> result;
 
     if (method == "initialize") {
         result = handle_initialize(params);
+    } else if (method == "notifications/initialized") {
+        // Standard MCP notification after initialization - no response needed
+        return std::nullopt;
     } else if (method == "tools/list") {
         result = handle_tools_list();
     } else if (method == "tools/call") {
@@ -136,16 +142,32 @@ std::optional<nlohmann::json> McpServer::handle_request(
     } else if (method == "tasks/list") {
         result = handle_tasks_list(params);
     } else {
+        // For unknown methods on notifications, return no response (per JSON-RPC spec)
+        if (is_notification) {
+            return std::nullopt;
+        }
         return make_error(JSONRPC_METHOD_NOT_FOUND, "Method not found", id);
     }
 
+    // For notifications, no response should be sent (per JSON-RPC spec)
+    if (is_notification) {
+        return std::nullopt;
+    }
+
+    // If handler returned nullopt, it means no response (e.g., successful notification)
+    if (!result.has_value()) {
+        return std::nullopt;
+    }
+
+    nlohmann::json result_value = *result;
+
     // Check if handler returned an error response (has "error" key at top level)
     // Error responses should not be wrapped in "result"
-    if (result.contains("error") && result["error"].is_object()) {
+    if (result_value.contains("error") && result_value["error"].is_object()) {
         return nlohmann::json{
             {"jsonrpc", "2.0"},
             {"id", id},
-            {"error", result["error"]}
+            {"error", result_value["error"]}
         };
     }
 
@@ -153,7 +175,7 @@ std::optional<nlohmann::json> McpServer::handle_request(
     return nlohmann::json{
         {"jsonrpc", "2.0"},
         {"id", id},
-        {"result", result}
+        {"result", result_value}
     };
 }
 

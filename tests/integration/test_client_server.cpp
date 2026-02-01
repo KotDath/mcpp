@@ -498,11 +498,11 @@ TEST_F(ClientServerIntegration, NotificationHasNoResponse) {
         // No "id" field = notification
     };
 
-    // The current McpServer implementation doesn't handle notifications specially
-    // It will return a method not found error for unknown notification methods
+    // Per JSON-RPC spec, notifications (requests without "id") receive no response
+    // even if the method is unknown
     auto response = test_server->handle_request(notification);
-    // Verify we get a response (even if it's an error for unknown method)
-    EXPECT_TRUE(response.has_value());
+    // Verify we get no response for notifications
+    EXPECT_FALSE(response.has_value());
 }
 
 // ============================================================================
