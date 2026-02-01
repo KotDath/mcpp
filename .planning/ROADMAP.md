@@ -94,8 +94,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Update README.md with Inspector Testing section (UI and CLI modes)
-- [ ] 11-02-PLAN.md — Create TESTING.md with BATS testing guide
+- [x] 11-01-PLAN.md — Update README.md with Inspector Testing section (UI and CLI modes)
+- [x] 11-02-PLAN.md — Create TESTING.md with BATS testing guide
 
 ## Progress
 
@@ -114,6 +114,6 @@ Phases execute in numeric order: 8 → 9 → 10 → 11
 | 8. Bug Fix Foundation | v1.1 | 2/2 | Complete | 2026-02-01 |
 | 9. Inspector Server Integration | v1.1 | 3/3 | Complete | 2026-02-01 |
 | 10. Automated CLI Testing | v1.1 | 6/6 | Complete | 2026-02-01 |
-| 11. Documentation | v1.1 | 0/2 | Not started | - |
+| 11. Documentation | v1.1 | 2/2 | Complete | 2026-02-01 |
 
-**v1.1 Progress:** [████████░░] 80% (4/5 phases complete; Phase 11 planning ready)
+**v1.1 Progress:** [██████████] 100% (5/5 phases complete)
